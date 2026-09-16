@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Ruby portatil embebido (lo baja scripts/setup-ruby.ps1) y la copia de
+# edit_rxdata.rb/driver que genera build.rs en cada build - nunca se comitean.
+# El directorio resources/ruby/ en si se versiona vacio (.gitkeep) porque
+# Tauri valida que exista incluso para `cargo check`.
+src-tauri/resources/ruby/*
+!src-tauri/resources/ruby/.gitkeep
+src-tauri/resources/rxdata/
+
+# backups con fecha que genera save_document() al probar contra test_saves/
+*.bak
