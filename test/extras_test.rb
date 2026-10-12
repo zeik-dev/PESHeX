@@ -324,6 +324,17 @@ class ExtrasTest < Minitest::Test
     assert r['applied'], r.inspect
   end
 
+  def test_importar_con_datos_mal_formados_da_errores_claros_y_no_deja_rastro
+    link
+    dst = free_box_slot
+    [nil, 0, 'texto', [1], 3.5, { species: 'TORRACAT', moves: 0 }, { species: 'TORRACAT', moves: [nil] },
+     { species: 'TORRACAT', iv: 5 }, { species: 'TORRACAT', ev: [1] }].each do |bad|
+      err = assert_raises(DriverError, "data=#{bad.inspect}") { hax([{ op: 'pokemon.add', to: dst, data: bad }]) }
+      assert_equal 'ValidationError', err.error_type
+      assert_equal @original, @h.session.doc.to_bytes
+    end
+  end
+
   def test_importar_sin_especie_falla
     assert_equal 'ValidationError', assert_raises(DriverError) { hax([{ op: 'pokemon.add', to: 'auto', data: { level: 5 } }]) }.error_type
   end

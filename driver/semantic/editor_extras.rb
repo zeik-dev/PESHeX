@@ -326,7 +326,7 @@ module Sem
 
     # Datos (importados de JSON/Showdown o creados a mano): ver Transfer.export para el formato.
     def op_pokemon_add(builder, op)
-      data = op['data'] || {}
+      data = validate_import_data(op['data'])
       species = data['species']
       raise DriverError.new('ValidationError', 'falta la especie', { code: 'no_species' }) if species.nil? || species.to_s.empty?
 
@@ -352,6 +352,19 @@ module Sem
         end
       end
       place_new(builder, clone, spot)
+    end
+
+    # La forma de los datos importados (viene de texto/JSON que puede estar editado a mano): un error claro
+    # en lugar de un NoMethodError dentro de la operacion.
+    def validate_import_data(data)
+      bad = ->(code, what) { raise DriverError.new('ValidationError', "datos de importacion no validos: #{what}", { code: code }) }
+      bad.call('bad_data', 'se esperaba un objeto') unless data.is_a?(Hash)
+      %w[iv ev].each { |k| bad.call("bad_#{k}", k) unless data[k].nil? || data[k].is_a?(Hash) }
+      moves = data['moves']
+      unless moves.nil? || (moves.is_a?(Array) && moves.all? { |m| m.is_a?(Hash) })
+        bad.call('bad_moves', 'moves')
+      end
+      data
     end
 
     # Sustituye TODOS los movimientos del clon (la lista nueva sale de los del propio nodo como plantilla).
