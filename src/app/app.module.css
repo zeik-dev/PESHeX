@@ -385,3 +385,13 @@
   padding: 3px 12px;
   border-bottom: 2px solid #111;
 }
+
+.hbtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 960px) {
+  .hideNarrow {
+    display: none;
+  }
+}

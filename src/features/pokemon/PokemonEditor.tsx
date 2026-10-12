@@ -17,6 +17,7 @@ import {
 import { FlagList } from "../legality/FlagList";
 import { LegalityBadge } from "../legality/LegalityBadge";
 import { ExtrasList } from "../shared/ExtrasList";
+import { QuickActions } from "./QuickActions";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
 import styles from "./pokemon.module.css";
@@ -71,6 +72,7 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
             {t("banner.sharedBody", { paths: pk.shared.join(", ") })}
           </Banner>
         )}
+        <QuickActions pk={pk} editable={editable} />
         <Tabs
           value={tab}
           onChange={setTab}
@@ -105,6 +107,7 @@ function usePatch(ref: string) {
 function General({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
   const { t, dynOr } = useT();
   const patch = usePatch(pk.ref);
+  const apply = useEdit((s) => s.apply);
   const speciesEditable = editable && typeof pk.species?.id === "string";
   const linked = useGame((s) => s.status.linked);
   const speciesOptions = useSpeciesOptions();
@@ -147,7 +150,7 @@ function General({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
         <Field label={t("pokemon.level")} hint={t("pokemon.levelNote")}>
           {(id) => (
             <NumberField id={id} value={pk.level} min={1} max={pk.limits.maxLevel} disabled={!editable}
-              onCommit={(n) => patch({ level: n })} />
+              onCommit={(n) => void apply([{ op: "pokemon.level", ref: pk.ref, level: n }])} />
           )}
         </Field>
         <Field label={t("pokemon.exp")}>

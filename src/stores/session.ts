@@ -12,7 +12,8 @@ import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
 
 export type ViewId =
-  | "overview" | "trainer" | "party" | "boxes" | "bag" | "unclassified" | "changes" | "advanced" | "settings";
+  | "overview" | "trainer" | "party" | "boxes" | "bag" | "pokedex" | "world" | "unclassified" | "changes" | "backups"
+  | "advanced" | "settings";
 
 export interface SaveConfirm {
   reason: "roundtrip_diff";

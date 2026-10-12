@@ -16,23 +16,52 @@ una Poké Ball.
 
 | Pestaña | Contenido |
 |---|---|
-| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), base detectada y cobertura de clasificación |
+| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), legalidad, base detectada y cobertura de clasificación |
 | **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
-| **Equipo** | Tarjetas de los Pokémon y editor lateral: nivel, apodo, naturaleza, habilidad, objeto, **IV/EV** (con acciones rápidas), movimientos, datos del dueño y extras personalizados |
-| **PC** | Cajas con sus Pokémon (mismo editor) |
+| **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**: caja de 6×5 con el fondo y los iconos de *tu* juego, bandeja de equipo y panel de datos. Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo; editor lateral con **IV/EV**, movimientos, objeto, naturaleza, habilidad… |
 | **Mochila** | Bolsillos, búsqueda, cantidades, añadir/quitar objetos, favoritos |
+| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista |
+| **Mundo** | Interruptores y variables (con sus nombres), estadísticas y Salón de la Fama |
 | **Todo detectado** | Lista completa de lo que contiene la partida y cómo se clasificó (*clasificado · personalizado · mundo y motor · sin clasificar*). Nada se pierde |
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
+| **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
 | **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (auto/ES/EN), tema (auto/claro/oscuro), color de Poké Ball, copia de seguridad, detección de la base |
+| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, carpeta del juego, modo HeX/HaX y detección de la base |
 
-- **Seguro:** guardar crea siempre una copia `.bak`, los valores fuera de los
-  límites normales piden confirmación (las bases personalizadas pueden
-  cambiarlos), y *editar + deshacer todo* devuelve el archivo byte a byte.
-- **Sin datos del juego** (de momento) los nombres de especies, objetos y
-  movimientos son el ID interno embellecido (`OLDAMBER` → «Oldamber») o el
-  nombre que la propia partida lleve embebido. Los sprites y los nombres reales
-  llegarán al elegir la carpeta del juego (ver *Hoja de ruta*).
+Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y`,
+**acciones rápidas** (curar, IV al máximo, EV preestablecidos, recalcular
+estadísticas, subir de nivel con su experiencia) y **clonar / importar /
+exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
+
+### Modos HeX y HaX
+
+- **HeX** (por defecto) no deja introducir Pokémon ni valores **ilegales para
+  tu juego**: especie inexistente, movimientos que no puede aprender,
+  habilidad no permitida, nivel o experiencia fuera de rango, IV/EV imposibles,
+  PP de más, objetos o bolsillos erróneos… Lo que la partida ya traía se marca
+  pero no impide editar otras cosas.
+- **HaX** permite cualquier cambio; los problemas se muestran como avisos y
+  nunca se bloquea nada.
+
+Las reglas se calculan con los datos de **tu** juego (ver abajo). Si una regla
+no se puede comprobar de forma fiable (por ejemplo, en juegos con *randomizer*
+los movimientos aprendibles no coinciden con los datos), se **omite** y la app
+lo avisa como «legalidad parcial». Sin carpeta de juego solo se aplican las
+reglas básicas.
+
+### Carpeta del juego
+
+Al vincular la carpeta de tu fangame (la que tiene `Game.ini`, `Data` y
+`Graphics`), PESHeX lee de ella —**solo lectura**— los nombres de especies,
+movimientos, objetos y habilidades (`Data/*.dat`, con `PBS/` como respaldo),
+los límites de `Settings` y los nombres de interruptores y variables
+(`System.rxdata`), y usa **tus propios gráficos** para los iconos y las cajas.
+**PESHeX no incluye ningún sprite ni artwork oficial.** Sin esa carpeta todo
+funciona igual, con el ID interno embellecido en lugar del nombre y marcadores
+de color en lugar de iconos.
+
+- **Seguro:** guardar crea siempre una copia `.bak`, y *editar + deshacer todo*
+  devuelve el archivo byte a byte (hay pruebas automáticas que lo comprueban).
 
 ## Cómo detecta la base
 
@@ -127,15 +156,14 @@ EOF
 
 ## Hoja de ruta
 
-- **Iteración 2 — carpeta del juego:** elegir la carpeta del fangame para leer
-  `Data/*.dat` / `PBS/` (nombres reales de especies, objetos, movimientos),
-  `Graphics/` (sprites e iconos reales, con resolución por convención de
-  nombre + coincidencia difusa), selectores con búsqueda y recálculo de stats.
-- **Iteración 3:** Pokédex, switches/variables con nombre, clonar/importar/
-  exportar Pokémon, backups con restaurar y diff entre dos partidas, búsqueda
-  global.
-- **Más adelante (opcional):** clasificador ligero de assets (hash perceptual y
-  embeddings sobre los propios assets del juego) para casos huérfanos.
+- **Hecho en la 1.0.0:** detección de bases v16–v21, interfaz estilo PC con los
+  gráficos del propio juego, carpeta del juego (nombres, límites, calibración),
+  modos HeX/HaX, Pokédex, mundo, copias y comparación, búsqueda global, atajos,
+  acciones rápidas e importar/exportar Pokémon.
+- **Pendiente / ideas:** panel para asignar a mano gráficos que no se
+  resuelven solos (el mapa `assetmap.json` ya se respeta si existe), firma de
+  código del ejecutable, perfiles afinados con más saves reales de otras bases
+  y tema alternativo basado en el logo.
 
 ## Licencias y recursos
 

@@ -173,6 +173,21 @@ module Sem
         ownedAdded: (da[:owned] - db[:owned]).first(LIMIT), ownedRemoved: (db[:owned] - da[:owned]).first(LIMIT) }
     end
 
+    # Valores simples por valor; contenedores y objetos por su serializacion Marshal (el id de objeto no vale:
+    # son documentos distintos y nunca compartirian identidad).
+    def same?(a, b)
+      return UI.same_value?(a, b) if Tree.leaf?(a) && Tree.leaf?(b)
+      return false if Tree.leaf?(a) || Tree.leaf?(b)
+
+      marshal_bytes(a) == marshal_bytes(b)
+    rescue StandardError
+      false
+    end
+
+    def marshal_bytes(node)
+      RxMarshal::Writer.new.write_stream(node).out
+    end
+
     def world_diff
       %w[switches variables].to_h do |kind|
         ea = Extras.new(@a_session)
@@ -185,7 +200,7 @@ module Sem
         changes = (0...[a.items.size, b.items.size].max).filter_map do |i|
           va = a.items[i]
           vb = b.items[i]
-          next if i.zero? || UI.same_value?(va, vb)
+          next if i.zero? || same?(va, vb)
 
           { id: i, name: names[i], a: Tree.summarize(va)[:display], b: Tree.summarize(vb)[:display] }
         end

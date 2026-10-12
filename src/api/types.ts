@@ -309,7 +309,25 @@ export type EditOp =
   | { op: "extra.set"; ref: string; ivar: string; value: string | number | boolean | null }
   | { op: "pokemon.move"; from: string; to: string }
   | { op: "pokemon.remove"; ref: string }
-  | { op: "box.patch"; index: number; name?: string; background?: number };
+  | { op: "pokemon.heal"; ref: string }
+  | { op: "pokemon.recalc"; ref: string }
+  | { op: "pokemon.level"; ref: string; level: number }
+  | { op: "pokemon.clone"; ref: string; to?: string }
+  | { op: "pokemon.add"; to?: string; data: PokemonImport }
+  | { op: "box.patch"; index: number; name?: string; background?: number }
+  | { op: "pokedex.set"; id: string; seen?: boolean; owned?: boolean }
+  | { op: "pokedex.bulk"; mode: PokedexBulkMode; ids: string[] }
+  | { op: "world.switch"; id: number; value: boolean }
+  | { op: "world.variable"; id: number; value: number | string | null };
+
+export type PokedexBulkMode = "seen_all" | "owned_all" | "clear_all" | "unown_all";
+
+/** Datos de un Pokemon que se crea (importar/crear): ver `Sem::Transfer` en el driver. */
+export interface PokemonImport extends PokemonPatch {
+  species: string;
+  /** false = no recalcular estadisticas aunque se pueda. */
+  recalc?: boolean;
+}
 
 export interface PokemonPatch {
   species?: string | number;
@@ -387,3 +405,124 @@ export interface SaveResult {
   backupPath?: string;
   changesApplied?: number;
 }
+
+// ── Iteracion 3: Pokedex, mundo, estadisticas, copias, comparacion, busqueda ──
+
+export interface PokedexView {
+  available: boolean;
+  path?: string;
+  layout?: "hash" | "array";
+  seen?: string[];
+  owned?: string[];
+  caught?: Record<string, number>;
+  defeated?: Record<string, number>;
+  /** Todas las especies que el save menciona (vistas, capturadas o con contadores). */
+  ids?: string[];
+  unlockedDexes?: number[] | null;
+}
+
+export type WorldKind = "switches" | "variables";
+
+export interface WorldRow {
+  id: number;
+  name: string | null;
+  value: ValueSummary;
+}
+
+export interface WorldPage {
+  available: boolean;
+  kind: WorldKind;
+  path?: string;
+  total?: number;
+  count?: number;
+  page?: number;
+  pageSize?: number;
+  /** Hay nombres (Data/System.rxdata de la carpeta del juego). */
+  named?: boolean;
+  rows?: WorldRow[];
+}
+
+export interface StatEntry {
+  name: string;
+  value: ValueSummary;
+  group: "battle" | "money" | "travel" | "pokemon" | "time" | "other";
+}
+
+export interface StatsView {
+  available: boolean;
+  path?: string;
+  playTime?: number | null;
+  entries?: StatEntry[];
+}
+
+export interface HallOfFameEntry {
+  index: number;
+  members: PokemonSummary[];
+  display: string;
+}
+
+export interface HallOfFameView {
+  available: boolean;
+  path?: string;
+  entries?: HallOfFameEntry[];
+}
+
+export interface SearchHit {
+  ref?: string;
+  index?: number;
+  id?: string | number;
+  kind?: WorldKind;
+  label: string;
+  sub?: string;
+}
+
+export interface SearchResult {
+  q: string;
+  total: number;
+  groups: Partial<Record<"pokemon" | "items" | "boxes" | "world", SearchHit[]>>;
+}
+
+export interface BackupEntry {
+  file: string;
+  size: number;
+  mtime: string;
+  stamp: string;
+  kind: "backup" | "prerestore";
+}
+
+export interface DiffMon {
+  ref: string;
+  species: string | null;
+  nickname: string | null;
+  level: number | null;
+}
+
+export interface FieldDiff {
+  field: string;
+  a: unknown;
+  b: unknown;
+}
+
+export interface SaveDiff {
+  against: string;
+  profile: { current: string; other: string };
+  trainer: FieldDiff[];
+  bag: { id: string; name: string | null; a: number; b: number }[];
+  pokemon: {
+    added: DiffMon[];
+    removed: DiffMon[];
+    changed: (DiffMon & { against: string; diffs: FieldDiff[] })[];
+    moved: (DiffMon & { from: string })[];
+    totals: { current: number; other: number };
+  };
+  pokedex: { available?: boolean; seenAdded: string[]; seenRemoved: string[]; ownedAdded: string[]; ownedRemoved: string[] };
+  world: Record<WorldKind, { changed: number; sample: { id: number; name: string | null; a: string; b: string }[] }>;
+  summary: {
+    trainer: number; bag: number; pokemonAdded: number; pokemonRemoved: number; pokemonChanged: number;
+    pokemonMoved: number; pokedex: number; world: number;
+  };
+}
+
+export type ExportResult =
+  | { format: "json"; data: Record<string, unknown> }
+  | { format: "showdown"; text: string };

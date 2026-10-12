@@ -5,6 +5,7 @@ import { displayName, genderSymbol } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { BallIcon, Button, Chip, HpBar, ItemIcon, PokemonIcon, TypeChip } from "../../ui";
+import { QuickActions } from "../pokemon/QuickActions";
 import { FlagList } from "../legality/FlagList";
 import { LegalityBadge } from "../legality/LegalityBadge";
 import { useSemanticQuery } from "../queries";
@@ -100,6 +101,8 @@ export function InfoPanel({ pokemonRef, emptySlot, editable, partial, onEdit, on
       <div className={styles.sectionLabel}>{t("legality.title")}</div>
       <LegalityBadge flags={pk.flags} partial={partial} />
       {pk.flags.some((f) => f.severity !== "info") && <FlagList flags={pk.flags.filter((f) => f.severity !== "info")} limit={3} />}
+
+      <QuickActions pk={pk} editable={editable} />
 
       <div className={styles.actions}>
         <Button variant="primary" size="sm" onClick={() => onEdit(pk.ref)}>

@@ -8,6 +8,7 @@ import { Button, Card, Field, PageTitle, AppLogo, SelectField, Switch } from "..
 import type { LangPref } from "../../i18n";
 import { ProfileCard } from "../shared/ProfileCard";
 import { ModeSwitch } from "../../app/ModeSwitch";
+import { AssetsCard } from "./AssetsCard";
 import { GameFolderCard } from "./GameFolderCard";
 import shared from "../shared/shared.module.css";
 
@@ -82,6 +83,23 @@ export function Settings() {
         </div>
       </Card>
 
+      <Card title={t("shortcuts.title")}>
+        <dl className={shared.kv}>
+          {([
+            ["Ctrl + K", t("shortcuts.palette")],
+            ["Ctrl + S", t("shortcuts.save")],
+            ["Ctrl + Z", t("shortcuts.undoKeys")],
+            [t("shortcuts.redoCombo"), t("shortcuts.redoKeys")],
+          ] as const).map(([keys, what]) => (
+            <div key={keys} style={{ display: "contents" }}>
+              <dt className={shared.kvLabel}><kbd className="mono">{keys}</kbd></dt>
+              <dd className={shared.kvValue} style={{ margin: 0 }}>{what}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>{t("shortcuts.hint")}</p>
+      </Card>
+
       <Card title={t("settings.detection")}>
         {profile ? (
           <div className={shared.stack}>
@@ -105,6 +123,7 @@ export function Settings() {
       </Card>
 
       <GameFolderCard />
+      <AssetsCard />
 
       <Card title={t("settings.about")}>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>

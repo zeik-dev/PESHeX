@@ -1,4 +1,4 @@
-import { Monitor, Users } from "lucide-react";
+import { HeartPulse, Monitor, Upload, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { semantic } from "../../api/semantic";
 import { displayName } from "../../lib/pokemon";
@@ -7,8 +7,10 @@ import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
 import { usePc } from "../../stores/pc";
 import { useSession } from "../../stores/session";
+import { useUi } from "../../stores/ui";
 import { Banner, Button, ConfirmDialog, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Switch } from "../../ui";
 import { useLegality } from "../legality/useLegality";
+import { healOps } from "../pokemon/quick";
 import { useSemanticQuery } from "../queries";
 import { BoxPanel } from "./BoxPanel";
 import { InfoPanel } from "./InfoPanel";
@@ -137,6 +139,13 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
           {t("legality.onlyIllegal")}
         </label>
         {report && report.summary.illegal > 0 && <span className="muted">{t("legality.illegal", { count: report.summary.illegal })}</span>}
+        <span style={{ flex: 1 }} />
+        <Button size="sm" disabled={!editable || party.length === 0} onClick={() => void apply(healOps(party.map((p) => p.ref)))}>
+          <HeartPulse size={14} /> {t("quick.healParty")}
+        </Button>
+        <Button size="sm" disabled={!editable} onClick={() => useUi.getState().setImportOpen(true)}>
+          <Upload size={14} /> {t("transfer.import")}
+        </Button>
       </div>
       {dnd.grab && <div role="status" className={styles.grabHint}>{t("pc.grabHint")}</div>}
       <div className={styles.layout} data-mode={mode}>

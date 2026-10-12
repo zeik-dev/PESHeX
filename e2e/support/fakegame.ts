@@ -101,7 +101,26 @@ export interface FakeGame {
 }
 
 /** Crea la carpeta de juego sintetica en `dir` a partir de `savePath`. */
-export function buildFakeGame(repoRoot: string, dir: string, savePath: string, renames: Record<string, string> = {}): FakeGame {
+export interface FakeGameOptions {
+  /** Archivo (sin extension) con el que se guarda el icono de una especie en lugar de su nombre habitual. */
+  iconAliases?: Record<string, string>;
+  /** Tambien genera `Graphics/Pokemon/Front/<especie>.png` (referencia para las sugerencias por parecido). */
+  fronts?: boolean;
+}
+
+/** Disco grande del color de la especie (sprite de combate inventado). */
+function frontSprite(name: string): Buffer {
+  const [r, g, b] = hsl(hue(name), 0.65, 0.5);
+  return encodePng(96, 96, (x, y) => {
+    const cx = x - 48;
+    const cy = y - 48;
+    return cx * cx + cy * cy < 36 * 36 ? [r, g, b, 255] : [0, 0, 0, 0];
+  });
+}
+
+export function buildFakeGame(
+  repoRoot: string, dir: string, savePath: string, renames: Record<string, string> = {}, opts: FakeGameOptions = {},
+): FakeGame {
   fs.mkdirSync(dir, { recursive: true });
   const args = [path.join(repoRoot, "test", "fixtures", "build_game_cli.rb"), dir, savePath, ...Object.entries(renames).map(([k, v]) => `${k}=${v}`)];
   const out = execFileSync("ruby", ["-E", "UTF-8", ...args], { env: { ...process.env, RUBYOPT: "", LC_ALL: "C.UTF-8" } }).toString();
@@ -114,7 +133,8 @@ export function buildFakeGame(repoRoot: string, dir: string, savePath: string, r
   };
   for (const [sp, form] of manifest.species) {
     const base = form > 0 ? `${sp}_${form}` : sp;
-    write(`Graphics/Pokemon/Icons/${base}.png`, iconStrip(base));
+    write(`Graphics/Pokemon/Icons/${opts.iconAliases?.[base] ?? base}.png`, iconStrip(base));
+    if (opts.fronts) write(`Graphics/Pokemon/Front/${base}.png`, frontSprite(base));
     write(`Graphics/Pokemon/Icons shiny/${base}.png`, iconStrip(`${base}-shiny`));
   }
   write("Graphics/Pokemon/Icons/000.png", iconStrip("000"));

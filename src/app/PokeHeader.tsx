@@ -1,25 +1,14 @@
-import { Backpack, History, LayoutDashboard, Monitor, ScanSearch, Settings, User, Users, Wrench, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { Redo2, Search, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppLogo } from "../ui";
-import { useSession, type ViewId } from "../stores/session";
+import { useSession } from "../stores/session";
+import { useUi } from "../stores/ui";
 import { fileName } from "../lib/format";
 import { cx } from "../ui";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
 import { ModeSwitch } from "./ModeSwitch";
+import { visibleNav } from "./nav";
 import styles from "./app.module.css";
-
-const NAV: { id: ViewId; icon: ReactNode; needs?: string }[] = [
-  { id: "overview", icon: <LayoutDashboard size={17} /> },
-  { id: "trainer", icon: <User size={17} />, needs: "trainer" },
-  { id: "party", icon: <Users size={17} />, needs: "trainer" },
-  { id: "boxes", icon: <Monitor size={17} />, needs: "storage" },
-  { id: "bag", icon: <Backpack size={17} />, needs: "bag" },
-  { id: "unclassified", icon: <ScanSearch size={17} /> },
-  { id: "changes", icon: <History size={17} /> },
-  { id: "advanced", icon: <Wrench size={17} /> },
-  { id: "settings", icon: <Settings size={17} /> },
-];
 
 /** Cabecera en dos mitades como una Poké Ball: franja superior (color primario),
  *  costura oscura con el boton central (= Guardar) y franja inferior con la navegacion. */
@@ -33,6 +22,10 @@ export function PokeHeader() {
   const saving = useSession((s) => s.saving);
   const save = useSession((s) => s.save);
   const close = useSession((s) => s.close);
+  const undo = useSession((s) => s.undo);
+  const redo = useSession((s) => s.redo);
+  const redoCount = useSession((s) => s.redoCount);
+  const setPalette = useUi((s) => s.setPalette);
 
   const roles = profile?.roles ?? {};
   const dirty = pending > 0;
@@ -47,6 +40,15 @@ export function PokeHeader() {
           </span>
         )}
         <span className={styles.spacer} />
+        <button type="button" className={styles.hbtn} onClick={() => setPalette(true)} aria-label={t("palette.open")} title={t("palette.openHint")}>
+          <Search size={16} /> <span className={styles.hideNarrow}>{t("palette.short")}</span>
+        </button>
+        <button type="button" className={styles.hbtn} disabled={!dirty} onClick={() => void undo()} aria-label={t("common.undo")} title={t("shortcuts.undo")}>
+          <Undo2 size={16} />
+        </button>
+        <button type="button" className={styles.hbtn} disabled={redoCount === 0} onClick={() => void redo()} aria-label={t("common.redo")} title={t("shortcuts.redo")}>
+          <Redo2 size={16} />
+        </button>
         <ModeSwitch />
         <LangSwitch />
         <ThemeToggle />
@@ -72,7 +74,7 @@ export function PokeHeader() {
         </button>
       </div>
       <nav className={styles.bottom} aria-label="Principal">
-        {NAV.filter((n) => !n.needs || roles[n.needs]).map((n) => (
+        {visibleNav(roles).map((n) => (
           <button
             key={n.id}
             type="button"

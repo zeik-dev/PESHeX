@@ -208,6 +208,14 @@ class ExtrasTest < Minitest::Test
     assert_equal 'BackupNotFound', err.error_type
   end
 
+  def test_diff_de_una_copia_identica_no_tiene_diferencias
+    with_save_copy('Partida_2.rxdata') do |path|
+      d = @h.call('diff_saves', against: path)
+      assert_equal 0, d['summary'].values.sum, d['summary'].inspect
+      assert_equal 0, d['world']['variables']['changed']
+    end
+  end
+
   def test_diff_de_dos_partidas_distintas_no_falla
     d = @h.call('diff_saves', against: save_path('Partida.rxdata'))
     assert_operator d['summary']['pokemonAdded'] + d['summary']['pokemonRemoved'], :>, 0

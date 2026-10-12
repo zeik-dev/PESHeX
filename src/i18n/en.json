@@ -47,7 +47,10 @@
     "unclassified": "Everything found",
     "changes": "Changes",
     "advanced": "Advanced",
-    "settings": "Settings"
+    "settings": "Settings",
+    "pokedex": "Pokédex",
+    "world": "World",
+    "backups": "Backups"
   },
   "header": {
     "closeFile": "Close file",
@@ -303,7 +306,9 @@
       "key_item_multiple": "{{subject}} is a key item with quantity {{qty}}.",
       "party_size": "The party has {{count}} Pokémon (maximum {{max}}).",
       "party_empty": "The party is empty.",
-      "egg_only_party": "The party only has eggs."
+      "egg_only_party": "The party only has eggs.",
+      "dex_species_unknown": "The Pokédex species “{{subject}}” does not exist in the game.",
+      "dex_owned_not_seen": "The species “{{subject}}” is marked as caught but not as seen."
     }
   },
   "mode": {
@@ -348,7 +353,7 @@
     "status": "Status",
     "hp": "Current HP",
     "totalHp": "Max HP",
-    "levelNote": "Stored stats (Attack, Defense…) are not recalculated here: the game updates them on level-up or when healing.",
+    "levelNote": "With the game folder linked, changing the level also adjusts the experience and the stored stats.",
     "iv": "IV",
     "ev": "EV",
     "evTotal": "Total EVs",
@@ -509,7 +514,12 @@
         "pokemon": {
           "patch": "Edit Pokémon {{ref}}",
           "move": "Move Pokémon ({{ref}} → {{to}})",
-          "remove": "Release Pokémon {{ref}}"
+          "remove": "Release Pokémon {{ref}}",
+          "heal": "Heal Pokémon {{ref}}",
+          "recalc": "Recalculate stats of {{ref}}",
+          "level": "Change the level of {{ref}}",
+          "clone": "Clone Pokémon {{ref}}",
+          "add": "Add a Pokémon"
         },
         "bag": {
           "set": "Edit the bag"
@@ -524,6 +534,14 @@
         "raw": "Advanced edit: {{path}}",
         "box": {
           "patch": "Edit the box"
+        },
+        "pokedex": {
+          "set": "Edit the Pokédex",
+          "bulk": "Edit several Pokédex species"
+        },
+        "world": {
+          "switch": "Change a switch",
+          "variable": "Change a variable"
         }
       }
     }
@@ -722,7 +740,12 @@
     "AppDataDir": "Could not find the application's data folder.",
     "Internal": "Internal error: {{message}}",
     "PartyFull": "The party is full (maximum {{max}}).",
-    "PartyTooSmall": "The party cannot be left empty."
+    "PartyTooSmall": "The party cannot be left empty.",
+    "RecalcUnavailable": "Stats cannot be recalculated: they need the game folder linked and verified stats.",
+    "PcFull": "The PC is full: there is no free slot left.",
+    "SlotOccupied": "That slot is not free.",
+    "BackupNotFound": "That backup was not found.",
+    "NoPokemonTemplate": "The save has no Pokémon to use as a template for a new one."
   },
   "save": {
     "done": "Save written.",
@@ -737,5 +760,259 @@
     "title": "You have unsaved changes",
     "body": "If you close the file, the pending changes will be lost.",
     "confirm": "Close without saving"
+  },
+  "palette": {
+    "open": "Search and commands",
+    "openHint": "Search and commands (Ctrl+K)",
+    "short": "Search",
+    "title": "Search and commands",
+    "placeholder": "Search a Pokémon, item, box, switch… or type a command",
+    "noResults": "No results.",
+    "hint": "↑ ↓ to move · Enter to run · Esc to close",
+    "goto": "Go to {{view}}",
+    "save": "Save changes",
+    "toggleMode": "Switch to {{mode}} mode",
+    "healParty": "Heal the whole party",
+    "importPokemon": "Import Pokémon…",
+    "toggleTheme": "Toggle light/dark theme",
+    "toggleLang": "Switch language (ES/EN)",
+    "groupViews": "Go to",
+    "groupActions": "Actions",
+    "groups": {
+      "pokemon": "Pokémon",
+      "items": "Items",
+      "boxes": "Boxes",
+      "world": "Switches and variables"
+    }
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Y)",
+    "save": "Save changes",
+    "palette": "Search and commands",
+    "undoKeys": "Undo the last change",
+    "redoKeys": "Redo",
+    "hint": "In a text field, Ctrl+Z and Ctrl+Y undo the text you are typing, not changes to the save.",
+    "redoCombo": "Ctrl + Y / Ctrl + Shift + Z"
+  },
+  "quick": {
+    "title": "Quick actions",
+    "heal": "Heal",
+    "perfectIv": "Max IVs",
+    "recalc": "Recalculate stats",
+    "recalcHint": "Recalculates the stored stats with the game's formula",
+    "recalcUnavailable": "Needs the game folder linked and verified stats",
+    "clone": "Clone",
+    "export": "Export…",
+    "evPreset": "EV presets",
+    "evChoose": "Choose…",
+    "ev": {
+      "none": "No EVs",
+      "physical": "Physical attacker (Atk + Spe)",
+      "special": "Special attacker (SpA + Spe)",
+      "bulky": "Bulky (HP + Def)"
+    },
+    "cloned": "Pokémon cloned into the first free PC slot.",
+    "healParty": "Heal party"
+  },
+  "transfer": {
+    "import": "Import",
+    "export": "Export",
+    "exportTitle": "Export Pokémon",
+    "importTitle": "Import Pokémon",
+    "showdown": "Text (Showdown)",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy to the clipboard. Select the text and copy it by hand.",
+    "exportText": "Exported text",
+    "jsonHint": "PESHeX JSON: keeps all the data and can be imported back here.",
+    "showdownHint": "Pokémon Showdown text format (nickname, item, ability, EVs/IVs, nature and moves).",
+    "importHelp": "Paste one or more Pokémon Showdown sets, or the JSON exported by PESHeX. They are added to the first free PC slots.",
+    "importText": "Text to import",
+    "importPlaceholder": "Pikachu @ Light Ball\nAbility: Static\nLevel: 50\nTimid Nature\n- Thunderbolt",
+    "pickFile": "Choose file…",
+    "preview": "Preview",
+    "importAction_one": "Import {{count}} Pokémon",
+    "importAction_other": "Import {{count}} Pokémon",
+    "imported_one": "{{count}} Pokémon imported.",
+    "imported_other": "{{count}} Pokémon imported.",
+    "error": {
+      "unknown_species": "That species does not exist in this game.",
+      "invalid_json": "The JSON is not valid.",
+      "not_peshex": "That JSON is not a Pokémon exported by PESHeX.",
+      "no_species": "The species is missing."
+    },
+    "warn": {
+      "unknown_item": "Unknown item: “{{name}}” (skipped).",
+      "unknown_ability": "Unknown ability: “{{name}}” (skipped).",
+      "unknown_move": "Unknown move: “{{name}}” (skipped).",
+      "unknown_nature": "Unknown nature: “{{name}}” (skipped)."
+    }
+  },
+  "pokedex": {
+    "title": "Pokédex",
+    "counts": "{{seen}} seen · {{owned}} caught · {{total}} total",
+    "none": "This save has no editable Pokédex.",
+    "noCatalogTitle": "Only the species the save mentions are shown",
+    "noCatalog": "Link the game folder in Settings to see every species, with names and graphics.",
+    "search": "Search by name or number",
+    "filter": "Filter",
+    "filters": {
+      "all": "All",
+      "seen": "Seen",
+      "owned": "Caught",
+      "unseen": "Not seen",
+      "seenOnly": "Seen, not caught"
+    },
+    "bulkTitle": "Actions on the list",
+    "bulkOn": "On the {{count}} in the list:",
+    "markSeen": "Mark seen",
+    "markOwned": "Mark caught",
+    "unmarkOwned": "Unmark caught",
+    "clear": "Clear entry",
+    "noMatches": "No species match.",
+    "seen": "Seen",
+    "owned": "Caught",
+    "more": "Show {{count}} more",
+    "shown_one": "{{count}} species",
+    "shown_other": "{{count}} species"
+  },
+  "world": {
+    "title": "World",
+    "subtitle": "Switches, variables, statistics and Hall of Fame",
+    "switches": "Switches",
+    "variables": "Variables",
+    "stats": "Statistics",
+    "hof": "Hall of Fame",
+    "none": "This save does not have that data.",
+    "noNamesTitle": "No names",
+    "noNames": "Link the game folder in Settings to see the name of each switch and variable.",
+    "search": "Search by number, name or value",
+    "onlyNonDefault": "Only those not at their initial value",
+    "onlyOn": "Only those switched on",
+    "noMatches": "Nothing matches the search.",
+    "name": "Name",
+    "value": "Value",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} of {{pages}}",
+    "readOnly": "This value cannot be edited here",
+    "statsNone": "This save does not store statistics.",
+    "playTime": "Play time: {{time}}",
+    "group": {
+      "battle": "Battles",
+      "money": "Money and shopping",
+      "travel": "Travel",
+      "pokemon": "Pokémon",
+      "time": "Time",
+      "other": "Other"
+    },
+    "hofNone": "There are no Hall of Fame entries yet.",
+    "hofEntry": "Entry {{n}}",
+    "total_one": "{{count}} result",
+    "total_other": "{{count}} results"
+  },
+  "backups": {
+    "title": "Backups and comparison",
+    "subtitle": "The copies PESHeX makes when saving, to compare or restore",
+    "pendingTitle": "There are unsaved changes",
+    "pendingBody": "Save or discard the pending changes to be able to restore a backup. Comparing is always possible.",
+    "list": "Copies next to the save",
+    "compareFile": "Compare with another file…",
+    "empty": "There are no backups yet. They are created when saving (you can turn this off in Settings).",
+    "size": "{{size}} KB",
+    "prerestore": "Before restoring",
+    "compare": "Compare",
+    "restore": "Restore",
+    "diffTitle": "Comparison with “{{name}}”",
+    "restoreTitle": "Restore this backup?",
+    "restoreBody": "The current save will be replaced by “{{file}}”. A copy of the current save is made first, so nothing is lost.",
+    "restored": "Backup restored.",
+    "safety": "Previous copy: {{file}}",
+    "pickTitle": "Choose the save to compare with"
+  },
+  "diff": {
+    "field": "Field",
+    "current": "Current",
+    "other": "Other",
+    "identical": "Identical",
+    "differences_one": "{{count}} difference",
+    "differences_other": "{{count}} differences",
+    "sumTrainer": "Trainer: {{count}}",
+    "sumBag": "Bag: {{count}}",
+    "sumChanged": "{{count}} changed",
+    "sumDex": "Pokédex: {{count}}",
+    "sumWorld": "World: {{count}}",
+    "note": "Pokémon in the current save: {{current}} · in the other: {{other}}. They are matched by personal ID.",
+    "trainer": "Trainer",
+    "bag": "Bag",
+    "item": "Item",
+    "onlyCurrent": "Only in the current save",
+    "onlyOther": "Only in the other save",
+    "changedMon": "Changes in {{name}}",
+    "moved": "Moved around",
+    "pokedex": "Pokédex",
+    "dexSeenAdded_one": "{{count}} more species seen",
+    "dexSeenAdded_other": "{{count}} more species seen",
+    "dexSeenRemoved_one": "{{count}} fewer species seen",
+    "dexSeenRemoved_other": "{{count}} fewer species seen",
+    "dexOwnedAdded_one": "{{count}} more species caught",
+    "dexOwnedAdded_other": "{{count}} more species caught",
+    "dexOwnedRemoved_one": "{{count}} fewer species caught",
+    "dexOwnedRemoved_other": "{{count}} fewer species caught",
+    "world": {
+      "switches_one": "Different switches: {{count}}",
+      "switches_other": "Different switches: {{count}}",
+      "variables_one": "Different variables: {{count}}",
+      "variables_other": "Different variables: {{count}}"
+    },
+    "fields": {
+      "trainer": {
+        "name": "Name",
+        "money": "Money",
+        "coins": "Coins",
+        "battle_points": "Battle Points",
+        "soot": "Soot",
+        "id": "ID",
+        "play_time": "Play time",
+        "badges": "Badges"
+      },
+      "pokemon": {
+        "species": "Species",
+        "form": "Form",
+        "nickname": "Nickname",
+        "level": "Level",
+        "exp": "Experience",
+        "nature": "Nature",
+        "ability": "Ability",
+        "item": "Item",
+        "ball": "Ball",
+        "gender": "Gender",
+        "shiny": "Shiny",
+        "happiness": "Happiness",
+        "moves": "Moves",
+        "iv": "IVs",
+        "ev": "EVs"
+      }
+    }
+  },
+  "assets": {
+    "title": "Unresolved icons",
+    "intro": "Some icons do not follow the usual file name and cannot be matched automatically. Pick the file for each species by hand or accept a look-alike suggestion. It is stored on your computer, never inside the game folder.",
+    "missing_one": "{{count}} species without an icon",
+    "missing_other": "{{count}} species without an icon",
+    "orphans_one": "{{count}} unassigned file",
+    "orphans_other": "{{count}} unassigned files",
+    "suggest": "Suggest by look",
+    "suggesting": "Comparing images… {{done}}/{{total}}",
+    "suggestNote": "Suggestions compare the look with the species' battle sprite. Nothing is assigned until you accept it.",
+    "search": "Search species",
+    "assign": "Choose icon…",
+    "accept": "Accept",
+    "more": "Show {{count}} more",
+    "manual_one": "{{count}} manual assignment",
+    "manual_other": "{{count}} manual assignments",
+    "remove": "Remove assignment"
   }
 }

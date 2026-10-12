@@ -47,7 +47,10 @@
     "unclassified": "Todo detectado",
     "changes": "Cambios",
     "advanced": "Avanzado",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "pokedex": "Pokédex",
+    "world": "Mundo",
+    "backups": "Copias"
   },
   "header": {
     "closeFile": "Cerrar archivo",
@@ -305,7 +308,9 @@
       "key_item_multiple": "{{subject}} es un objeto clave y tiene cantidad {{qty}}.",
       "party_size": "El equipo tiene {{count}} Pokémon (máximo {{max}}).",
       "party_empty": "El equipo está vacío.",
-      "egg_only_party": "El equipo solo tiene huevos."
+      "egg_only_party": "El equipo solo tiene huevos.",
+      "dex_species_unknown": "La especie «{{subject}}» del Pokédex no existe en el juego.",
+      "dex_owned_not_seen": "La especie «{{subject}}» figura como capturada pero no como vista."
     }
   },
   "mode": {
@@ -350,7 +355,7 @@
     "status": "Estado",
     "hp": "PS actuales",
     "totalHp": "PS máximos",
-    "levelNote": "Las estadísticas guardadas (Ataque, Defensa…) no se recalculan aquí: el juego las actualiza al subir de nivel o al curar.",
+    "levelNote": "Con la carpeta del juego vinculada, al cambiar el nivel también se ajustan la experiencia y las estadísticas guardadas.",
     "iv": "IV",
     "ev": "EV",
     "evTotal": "EV totales",
@@ -512,7 +517,12 @@
         "pokemon": {
           "patch": "Editar Pokémon {{ref}}",
           "move": "Mover Pokémon ({{ref}} → {{to}})",
-          "remove": "Liberar Pokémon {{ref}}"
+          "remove": "Liberar Pokémon {{ref}}",
+          "heal": "Curar Pokémon {{ref}}",
+          "recalc": "Recalcular estadísticas de {{ref}}",
+          "level": "Cambiar el nivel de {{ref}}",
+          "clone": "Clonar Pokémon {{ref}}",
+          "add": "Añadir un Pokémon"
         },
         "bag": {
           "set": "Editar la mochila"
@@ -527,6 +537,14 @@
         "raw": "Edición avanzada: {{path}}",
         "box": {
           "patch": "Editar la caja"
+        },
+        "pokedex": {
+          "set": "Editar el Pokédex",
+          "bulk": "Editar varias especies del Pokédex"
+        },
+        "world": {
+          "switch": "Cambiar un interruptor",
+          "variable": "Cambiar una variable"
         }
       }
     }
@@ -725,7 +743,12 @@
     "AppDataDir": "No se pudo encontrar la carpeta de datos de la aplicación.",
     "Internal": "Error interno: {{message}}",
     "PartyFull": "El equipo está lleno (máximo {{max}}).",
-    "PartyTooSmall": "El equipo no puede quedar vacío."
+    "PartyTooSmall": "El equipo no puede quedar vacío.",
+    "RecalcUnavailable": "No se pueden recalcular las estadísticas: necesitan la carpeta del juego vinculada y estadísticas verificadas.",
+    "PcFull": "El PC está lleno: no queda ninguna casilla libre.",
+    "SlotOccupied": "Esa casilla no está libre.",
+    "BackupNotFound": "No se encontró esa copia de seguridad.",
+    "NoPokemonTemplate": "La partida no tiene ningún Pokémon que sirva de plantilla para crear uno nuevo."
   },
   "save": {
     "done": "Partida guardada.",
@@ -740,5 +763,259 @@
     "title": "Hay cambios sin guardar",
     "body": "Si cierras el archivo, se perderán los cambios pendientes.",
     "confirm": "Cerrar sin guardar"
+  },
+  "palette": {
+    "open": "Buscar y comandos",
+    "openHint": "Buscar y comandos (Ctrl+K)",
+    "short": "Buscar",
+    "title": "Buscar y comandos",
+    "placeholder": "Busca un Pokémon, objeto, caja, interruptor… o escribe un comando",
+    "noResults": "Sin resultados.",
+    "hint": "↑ ↓ para moverte · Intro para ejecutar · Esc para cerrar",
+    "goto": "Ir a {{view}}",
+    "save": "Guardar cambios",
+    "toggleMode": "Cambiar a modo {{mode}}",
+    "healParty": "Curar a todo el equipo",
+    "importPokemon": "Importar Pokémon…",
+    "toggleTheme": "Alternar tema claro/oscuro",
+    "toggleLang": "Cambiar de idioma (ES/EN)",
+    "groupViews": "Ir a",
+    "groupActions": "Acciones",
+    "groups": {
+      "pokemon": "Pokémon",
+      "items": "Objetos",
+      "boxes": "Cajas",
+      "world": "Interruptores y variables"
+    }
+  },
+  "shortcuts": {
+    "title": "Atajos de teclado",
+    "undo": "Deshacer (Ctrl+Z)",
+    "redo": "Rehacer (Ctrl+Y)",
+    "save": "Guardar cambios",
+    "palette": "Buscar y comandos",
+    "undoKeys": "Deshacer el último cambio",
+    "redoKeys": "Rehacer",
+    "hint": "En un campo de texto, Ctrl+Z y Ctrl+Y deshacen el texto que estás escribiendo, no los cambios de la partida.",
+    "redoCombo": "Ctrl + Y / Ctrl + Mayús + Z"
+  },
+  "quick": {
+    "title": "Acciones rápidas",
+    "heal": "Curar",
+    "perfectIv": "IV al máximo",
+    "recalc": "Recalcular estadísticas",
+    "recalcHint": "Recalcula las estadísticas guardadas con la fórmula del juego",
+    "recalcUnavailable": "Necesita la carpeta del juego vinculada y estadísticas verificadas",
+    "clone": "Clonar",
+    "export": "Exportar…",
+    "evPreset": "EV preestablecidos",
+    "evChoose": "Elegir…",
+    "ev": {
+      "none": "Sin EV",
+      "physical": "Atacante físico (Ataq + Vel)",
+      "special": "Atacante especial (At. Esp + Vel)",
+      "bulky": "Resistente (PS + Def)"
+    },
+    "cloned": "Pokémon clonado en la primera casilla libre del PC.",
+    "healParty": "Curar equipo"
+  },
+  "transfer": {
+    "import": "Importar",
+    "export": "Exportar",
+    "exportTitle": "Exportar Pokémon",
+    "importTitle": "Importar Pokémon",
+    "showdown": "Texto (Showdown)",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar al portapapeles. Selecciona el texto y cópialo a mano.",
+    "exportText": "Texto exportado",
+    "jsonHint": "JSON de PESHeX: conserva todos los datos y se puede volver a importar aquí.",
+    "showdownHint": "Formato de texto de Pokémon Showdown (apodo, objeto, habilidad, EV/IV, naturaleza y movimientos).",
+    "importHelp": "Pega uno o varios sets de Pokémon Showdown, o el JSON que exportó PESHeX. Se añaden en las primeras casillas libres del PC.",
+    "importText": "Texto a importar",
+    "importPlaceholder": "Pikachu @ Light Ball\nAbility: Static\nLevel: 50\nTimid Nature\n- Thunderbolt",
+    "pickFile": "Elegir archivo…",
+    "preview": "Vista previa",
+    "importAction_one": "Importar {{count}} Pokémon",
+    "importAction_other": "Importar {{count}} Pokémon",
+    "imported_one": "{{count}} Pokémon importado.",
+    "imported_other": "{{count}} Pokémon importados.",
+    "error": {
+      "unknown_species": "La especie no existe en este juego.",
+      "invalid_json": "El JSON no es válido.",
+      "not_peshex": "Ese JSON no es un Pokémon exportado por PESHeX.",
+      "no_species": "Falta la especie."
+    },
+    "warn": {
+      "unknown_item": "Objeto desconocido: «{{name}}» (se omite).",
+      "unknown_ability": "Habilidad desconocida: «{{name}}» (se omite).",
+      "unknown_move": "Movimiento desconocido: «{{name}}» (se omite).",
+      "unknown_nature": "Naturaleza desconocida: «{{name}}» (se omite)."
+    }
+  },
+  "pokedex": {
+    "title": "Pokédex",
+    "counts": "{{seen}} vistos · {{owned}} capturados · {{total}} en total",
+    "none": "Esta partida no tiene Pokédex que se pueda editar.",
+    "noCatalogTitle": "Solo se ven las especies que la partida menciona",
+    "noCatalog": "Vincula la carpeta del juego en Ajustes para ver todas las especies, con sus nombres y gráficos.",
+    "search": "Buscar por nombre o número",
+    "filter": "Filtro",
+    "filters": {
+      "all": "Todas",
+      "seen": "Vistas",
+      "owned": "Capturadas",
+      "unseen": "No vistas",
+      "seenOnly": "Vistas sin capturar"
+    },
+    "bulkTitle": "Acciones sobre la lista",
+    "bulkOn": "Sobre las {{count}} de la lista:",
+    "markSeen": "Marcar vistas",
+    "markOwned": "Marcar capturadas",
+    "unmarkOwned": "Quitar capturadas",
+    "clear": "Borrar registro",
+    "noMatches": "Ninguna especie coincide.",
+    "seen": "Visto",
+    "owned": "Capturado",
+    "more": "Mostrar {{count}} más",
+    "shown_one": "{{count}} especie",
+    "shown_other": "{{count}} especies"
+  },
+  "world": {
+    "title": "Mundo",
+    "subtitle": "Interruptores, variables, estadísticas y Salón de la Fama",
+    "switches": "Interruptores",
+    "variables": "Variables",
+    "stats": "Estadísticas",
+    "hof": "Salón de la Fama",
+    "none": "Esta partida no tiene esos datos.",
+    "noNamesTitle": "Sin nombres",
+    "noNames": "Vincula la carpeta del juego en Ajustes para ver el nombre de cada interruptor y variable.",
+    "search": "Buscar por número, nombre o valor",
+    "onlyNonDefault": "Solo los que no tienen el valor inicial",
+    "onlyOn": "Solo los activados",
+    "noMatches": "Nada coincide con la búsqueda.",
+    "name": "Nombre",
+    "value": "Valor",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {{page}} de {{pages}}",
+    "readOnly": "Este valor no se puede editar aquí",
+    "statsNone": "Esta partida no guarda estadísticas.",
+    "playTime": "Tiempo de juego: {{time}}",
+    "group": {
+      "battle": "Combates",
+      "money": "Dinero y compras",
+      "travel": "Viajes",
+      "pokemon": "Pokémon",
+      "time": "Tiempo",
+      "other": "Otros"
+    },
+    "hofNone": "Todavía no hay entradas en el Salón de la Fama.",
+    "hofEntry": "Entrada {{n}}",
+    "total_one": "{{count}} resultado",
+    "total_other": "{{count}} resultados"
+  },
+  "backups": {
+    "title": "Copias y comparación",
+    "subtitle": "Las copias que PESHeX crea al guardar, para comparar o restaurar",
+    "pendingTitle": "Hay cambios sin guardar",
+    "pendingBody": "Guarda o descarta los cambios pendientes para poder restaurar una copia. Comparar sí se puede.",
+    "list": "Copias junto a la partida",
+    "compareFile": "Comparar con otro archivo…",
+    "empty": "Todavía no hay copias. Se crean al guardar (puedes desactivarlo en Ajustes).",
+    "size": "{{size}} KB",
+    "prerestore": "Antes de restaurar",
+    "compare": "Comparar",
+    "restore": "Restaurar",
+    "diffTitle": "Comparación con «{{name}}»",
+    "restoreTitle": "¿Restaurar esta copia?",
+    "restoreBody": "La partida actual se sustituirá por «{{file}}». Antes se guarda una copia de la partida actual, así que no se pierde nada.",
+    "restored": "Copia restaurada.",
+    "safety": "Copia previa: {{file}}",
+    "pickTitle": "Elige la partida con la que comparar"
+  },
+  "diff": {
+    "field": "Dato",
+    "current": "Actual",
+    "other": "Otra",
+    "identical": "Idénticas",
+    "differences_one": "{{count}} diferencia",
+    "differences_other": "{{count}} diferencias",
+    "sumTrainer": "Entrenador: {{count}}",
+    "sumBag": "Mochila: {{count}}",
+    "sumChanged": "{{count}} cambiados",
+    "sumDex": "Pokédex: {{count}}",
+    "sumWorld": "Mundo: {{count}}",
+    "note": "Pokémon en la partida actual: {{current}} · en la otra: {{other}}. Se emparejan por su ID personal.",
+    "trainer": "Entrenador",
+    "bag": "Mochila",
+    "item": "Objeto",
+    "onlyCurrent": "Solo en la partida actual",
+    "onlyOther": "Solo en la otra partida",
+    "changedMon": "Cambios en {{name}}",
+    "moved": "Movidos de sitio",
+    "pokedex": "Pokédex",
+    "dexSeenAdded_one": "{{count}} especie vista de más",
+    "dexSeenAdded_other": "{{count}} especies vistas de más",
+    "dexSeenRemoved_one": "{{count}} especie vista de menos",
+    "dexSeenRemoved_other": "{{count}} especies vistas de menos",
+    "dexOwnedAdded_one": "{{count}} especie capturada de más",
+    "dexOwnedAdded_other": "{{count}} especies capturadas de más",
+    "dexOwnedRemoved_one": "{{count}} especie capturada de menos",
+    "dexOwnedRemoved_other": "{{count}} especies capturadas de menos",
+    "world": {
+      "switches_one": "Interruptores distintos: {{count}}",
+      "switches_other": "Interruptores distintos: {{count}}",
+      "variables_one": "Variables distintas: {{count}}",
+      "variables_other": "Variables distintas: {{count}}"
+    },
+    "fields": {
+      "trainer": {
+        "name": "Nombre",
+        "money": "Dinero",
+        "coins": "Fichas",
+        "battle_points": "Puntos de combate",
+        "soot": "Hollín",
+        "id": "ID",
+        "play_time": "Tiempo de juego",
+        "badges": "Medallas"
+      },
+      "pokemon": {
+        "species": "Especie",
+        "form": "Forma",
+        "nickname": "Apodo",
+        "level": "Nivel",
+        "exp": "Experiencia",
+        "nature": "Naturaleza",
+        "ability": "Habilidad",
+        "item": "Objeto",
+        "ball": "Ball",
+        "gender": "Género",
+        "shiny": "Variocolor",
+        "happiness": "Felicidad",
+        "moves": "Movimientos",
+        "iv": "IV",
+        "ev": "EV"
+      }
+    }
+  },
+  "assets": {
+    "title": "Iconos sin resolver",
+    "intro": "Algunos iconos no siguen el nombre habitual y no se pueden asignar solos. Elige a mano el archivo de cada especie o acepta una sugerencia por parecido. Se guarda en tu equipo, nunca dentro de la carpeta del juego.",
+    "missing_one": "{{count}} especie sin icono",
+    "missing_other": "{{count}} especies sin icono",
+    "orphans_one": "{{count}} archivo sin asignar",
+    "orphans_other": "{{count}} archivos sin asignar",
+    "suggest": "Sugerir por parecido",
+    "suggesting": "Comparando imágenes… {{done}}/{{total}}",
+    "suggestNote": "Las sugerencias comparan el aspecto con el sprite de combate de la especie. Nada se asigna sin que lo aceptes.",
+    "search": "Buscar especie",
+    "assign": "Elegir icono…",
+    "accept": "Aceptar",
+    "more": "Mostrar {{count}} más",
+    "manual_one": "{{count}} asignación manual",
+    "manual_other": "{{count}} asignaciones manuales",
+    "remove": "Quitar asignación"
   }
 }

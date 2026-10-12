@@ -1,0 +1,302 @@
+import { expect, test, type Page } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import { buildFakeGame } from "./support/fakegame";
+import { openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
+
+let env: Env | undefined;
+
+test.afterEach(async () => {
+  await teardown(env);
+  env = undefined;
+});
+
+async function linkGame(page: Page, e: Env) {
+  const game = buildFakeGame(ROOT, path.join(e.workDir, "Mi Juego"), e.savePath, { TORRACAT: "Gatito Fuego" });
+  e.bridge.dialogDir = game.root;
+  await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+  await page.getByRole("button", { name: "Elegir carpeta…" }).click();
+  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 30_000 });
+  return game;
+}
+
+const nav = (page: Page, name: string) => page.getByRole("button", { name, exact: true }).click();
+const pending = (page: Page, n: number) => expect(page.getByRole("button", { name: `Cambios ${n}` })).toBeVisible();
+const noPending = (page: Page) => expect(page.getByRole("button", { name: /^Cambios \d/ })).toHaveCount(0);
+
+test("Pokédex: marcar una especie como capturada y deshacerlo con Ctrl+Z", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Pokédex");
+  await expect(page.getByRole("heading", { name: "Pokédex" })).toBeVisible();
+  await expect(page.getByText(/\d+ vistos · \d+ capturados/)).toBeVisible();
+
+  // Una especie vista y no capturada: se marca capturada
+  await page.getByLabel("Filtro").selectOption("seenOnly");
+  const first = page.getByRole("list", { name: "Pokédex" }).getByRole("listitem").first();
+  await expect(first).toBeVisible();
+  const owned = first.getByRole("switch").nth(1);
+  await expect(owned).toHaveAttribute("aria-checked", "false");
+  await owned.click();
+  await pending(page, 1);
+  await page.getByLabel("Filtro").selectOption("all");
+  await shot(page, "110-pokedex-es-light");
+
+  await page.keyboard.press("Control+z");
+  await noPending(page);
+});
+
+test("Pokédex: buscar y marcar vistas todas las que coinciden", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Pokédex");
+  const search = page.getByLabel("Buscar por nombre o número");
+  await search.fill("char");
+  await page.getByLabel("Filtro").selectOption("seen");
+  await expect(page.getByRole("list", { name: "Pokédex" }).getByText("Charmander")).toBeVisible();
+  await page.getByRole("button", { name: "Borrar registro" }).click();
+  await pending(page, 1);
+  await expect(page.getByText("Ninguna especie coincide.")).toBeVisible();
+  await page.getByRole("button", { name: "Deshacer", exact: true }).click();
+  await expect(page.getByRole("list", { name: "Pokédex" }).getByText("Charmander")).toBeVisible();
+});
+
+test("Mundo: interruptores y variables con los nombres de la carpeta del juego", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  await nav(page, "Mundo");
+  await page.getByLabel("Buscar por número, nombre o valor").fill("medalla");
+  const row = page.getByRole("row", { name: /Medalla 1/ });
+  await expect(row).toBeVisible();
+  await row.getByRole("switch").click();
+  await pending(page, 1);
+
+  await page.getByRole("tab", { name: "Variables" }).click();
+  await page.getByLabel("Buscar por número, nombre o valor").fill("pasos");
+  const v = page.getByRole("row", { name: /Pasos/ });
+  await v.getByLabel("Pasos").fill("4242");
+  await v.getByLabel("Pasos").press("Enter");
+  await pending(page, 2);
+  await shot(page, "111-world-es-light");
+
+  await page.getByRole("tab", { name: "Estadísticas" }).click();
+  await expect(page.getByText(/Tiempo de juego/)).toBeVisible();
+});
+
+test("Copias: comparar con la copia, restaurar y volver al estado anterior", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Entrenador");
+  const money = page.getByLabel("Dinero");
+  await money.fill("12345");
+  await money.press("Enter");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page.getByText("Partida guardada.")).toBeVisible();
+
+  await nav(page, "Copias");
+  await expect(page.getByTitle(/Partida_2\.rxdata\.\d{8}-\d{6}\.bak/)).toBeVisible();
+  await page.getByRole("button", { name: "Comparar", exact: true }).click();
+  const diff = page.getByTestId("diff-view");
+  await expect(diff).toBeVisible();
+  await expect(diff.getByRole("row", { name: /Dinero/ })).toContainText("12345");
+  await expect(diff.getByRole("row", { name: /Dinero/ })).toContainText("26350");
+  await shot(page, "112-backups-diff-es-light");
+
+  await page.getByRole("button", { name: "Restaurar", exact: true }).click();
+  await page.getByRole("dialog", { name: "¿Restaurar esta copia?" }).getByRole("button", { name: "Restaurar" }).click();
+  await expect(page.getByText("Copia restaurada.")).toBeVisible();
+  await nav(page, "Entrenador");
+  await expect(page.getByLabel("Dinero")).toHaveValue(/26[.,\s]?350/);
+  // la restauracion dejo una copia del estado anterior
+  await nav(page, "Copias");
+  await expect(page.getByText("Antes de restaurar")).toBeVisible();
+});
+
+test("Copias: con cambios pendientes se puede comparar pero no restaurar", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Entrenador");
+  await page.getByLabel("Dinero").fill("1");
+  await page.getByLabel("Dinero").press("Enter");
+  await page.getByRole("button", { name: "Guardar cambios" }).click();
+  await expect(page.getByText("Partida guardada.")).toBeVisible();
+  await page.getByLabel("Dinero").fill("2");
+  await page.getByLabel("Dinero").press("Enter");
+  await nav(page, "Copias");
+  await expect(page.getByText("Hay cambios sin guardar")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Restaurar", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Comparar", exact: true }).click();
+  await expect(page.getByTestId("diff-view")).toBeVisible();
+});
+
+test("Ctrl+K: ir a una vista, buscar un Pokémon y abrirlo", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: "Buscar y comandos" });
+  await expect(dialog).toBeVisible();
+  const input = dialog.getByRole("combobox");
+  await expect(input).toBeFocused();
+
+  await input.fill("mochila");
+  await expect(dialog.getByRole("option", { name: /Ir a Mochila/ })).toBeVisible();
+  await input.press("Enter");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Mochila", exact: true })).toBeVisible();
+
+  await page.keyboard.press("Control+k");
+  await dialog.getByRole("combobox").fill("grillita");
+  const hit = dialog.getByRole("option", { name: /Grillita/ });
+  await expect(hit).toBeVisible();
+  await shot(page, "113-palette-es-light");
+  await hit.click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("pc-info")).toContainText("Grillita");
+});
+
+test("atajos: Ctrl+S guarda, Ctrl+Z deshace y Ctrl+Y rehace", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Entrenador");
+  const money = page.getByLabel("Dinero");
+  await money.fill("777");
+  await money.press("Enter");
+  await pending(page, 1);
+
+  // dentro del campo, Ctrl+Z es del texto; fuera, de la partida
+  await page.getByRole("heading", { name: "Entrenador", exact: true }).click();
+  await page.keyboard.press("Control+z");
+  await noPending(page);
+  await page.keyboard.press("Control+y");
+  await pending(page, 1);
+  await page.keyboard.press("Control+Shift+z");
+  await pending(page, 1);
+
+  await page.keyboard.press("Control+s");
+  await expect(page.getByText("Partida guardada.")).toBeVisible();
+  await noPending(page);
+});
+
+test("el encabezado tiene deshacer y rehacer", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  const undo = page.getByRole("button", { name: "Deshacer", exact: true });
+  const redo = page.getByRole("button", { name: "Rehacer", exact: true });
+  await expect(undo).toBeDisabled();
+  await nav(page, "Entrenador");
+  await page.getByLabel("Dinero").fill("5");
+  await page.getByLabel("Dinero").press("Enter");
+  await expect(undo).toBeEnabled();
+  await undo.click();
+  await expect(redo).toBeEnabled();
+  await redo.click();
+  await pending(page, 1);
+});
+
+test("acciones rápidas: curar, IV al máximo, clonar y exportar un Pokémon", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await page.getByRole("button", { name: "PC", exact: true }).click();
+  await page.locator('[data-cell="party/1"]').click();
+  const info = page.getByTestId("pc-info");
+  await expect(info).toContainText("Grillita");
+  await shot(page, "115-pc-quick-actions-es-light");
+
+  await info.getByRole("button", { name: "IV al máximo" }).click();
+  await pending(page, 1);
+  await info.getByRole("button", { name: "Curar", exact: true }).click();
+
+  await info.getByRole("button", { name: "Clonar" }).click();
+  await expect(page.getByText("Pokémon clonado en la primera casilla libre del PC.")).toBeVisible();
+
+  await info.getByRole("button", { name: "Exportar…" }).click();
+  const dlg = page.getByRole("dialog", { name: "Exportar Pokémon" });
+  const text = dlg.getByLabel("Texto exportado");
+  await expect(text).toHaveValue(/Grillita \(TORRACAT\)|Grillita \(Torracat\)/);
+  await expect(text).toHaveValue(/Level: 23/);
+  await dlg.getByRole("tab", { name: "JSON" }).click();
+  await expect(text).toHaveValue(/"schema": "peshex.pokemon\/1"/);
+  await dlg.getByRole("button", { name: "Cerrar" }).click();
+
+  // todo se deshace de una vez, hasta los bytes originales
+  await page.getByRole("button", { name: /^Cambios \d/ }).click();
+  await page.getByRole("button", { name: "Deshacer todo" }).click();
+  await noPending(page);
+});
+
+test("importar un Pokémon desde texto Showdown (HaX) y verlo en el PC", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  await page.getByRole("radio", { name: "HaX" }).first().click();
+  await page.getByRole("button", { name: "PC", exact: true }).click();
+  await page.getByRole("button", { name: "Importar", exact: true }).click();
+  const dlg = page.getByRole("dialog", { name: "Importar Pokémon" });
+  await dlg.getByLabel("Texto a importar").fill("Chispa (Gatito Fuego)\nLevel: 31\nAdamant Nature\nEVs: 252 Atk\n- Tackle\n- Inventado Raro");
+  await expect(dlg.getByText("Movimiento desconocido: «Inventado Raro» (se omite).")).toBeVisible();
+  await shot(page, "114-import-es-light");
+  await dlg.getByRole("button", { name: "Importar 1 Pokémon" }).click();
+  await expect(page.getByText("1 Pokémon importado.")).toBeVisible();
+  await pending(page, 1);
+
+  // el recién llegado está en el PC: la búsqueda global lo encuentra
+  await page.keyboard.press("Control+k");
+  await page.getByRole("dialog", { name: "Buscar y comandos" }).getByRole("combobox").fill("chispa");
+  await expect(page.getByRole("option", { name: /Chispa/ })).toBeVisible();
+});
+
+test("una importación inválida no habilita el botón", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await page.getByRole("button", { name: "PC", exact: true }).click();
+  await page.getByRole("button", { name: "Importar", exact: true }).click();
+  const dlg = page.getByRole("dialog", { name: "Importar Pokémon" });
+  await dlg.getByLabel("Texto a importar").fill("{ no es json");
+  await expect(dlg.getByText("El JSON no es válido.")).toBeVisible();
+  await expect(dlg.getByRole("button", { name: /^Importar \d/ })).toBeDisabled();
+  expect(fs.existsSync(env.savePath)).toBe(true);
+});
+
+test("iconos sin resolver: aceptar una sugerencia por parecido y asignar otro a mano", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  const game = buildFakeGame(ROOT, path.join(env.workDir, "Mi Juego"), env.savePath, { TORRACAT: "Gatito Fuego" }, {
+    iconAliases: { TORRACAT: "misc_icon_07", GUMSHOOS: "misc_icon_08" },
+    fronts: true,
+  });
+  env.bridge.dialogDir = game.root;
+  await nav(page, "Ajustes");
+  await page.getByRole("button", { name: "Elegir carpeta…" }).click();
+  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 30_000 });
+
+  const card = page.locator("section", { has: page.getByRole("heading", { name: "Iconos sin resolver" }) });
+  await expect(card).toBeVisible();
+  await expect(card.getByText("2 archivos sin asignar")).toBeVisible();
+  await card.getByLabel("Buscar especie").fill("gatito");
+  await expect(card.getByRole("list").getByRole("listitem")).toHaveCount(1);
+
+  // la sugerencia por parecido llega y hay que aceptarla: nada se asigna solo
+  await card.getByRole("button", { name: "Sugerir por parecido" }).click();
+  const accept = card.getByRole("button", { name: "Aceptar" });
+  await expect(accept).toBeVisible({ timeout: 30_000 });
+  await expect(card.getByText("misc_icon_07.png")).toBeVisible();
+  await shot(page, "116-assets-suggestion-es-light");
+  await accept.click();
+  await expect(card.getByText("1 asignación manual")).toBeVisible();
+  await expect(card.getByText("1 archivo sin asignar")).toBeVisible();
+
+  // asignar el otro a mano con el selector
+  await card.getByLabel("Buscar especie").fill("gumshoos");
+  await card.getByRole("combobox", { name: /Elegir icono/ }).click();
+  await page.getByRole("option", { name: /misc_icon_08/ }).click();
+  await expect(card.getByText("2 asignaciones manuales")).toBeVisible();
+  await expect(card.getByText("0 archivos sin asignar")).toBeVisible();
+
+  // quitar una asignación la devuelve a la lista
+  await card.getByRole("button", { name: "Quitar asignación" }).first().click();
+  await expect(card.getByText("1 asignación manual")).toBeVisible();
+});
