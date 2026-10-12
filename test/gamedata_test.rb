@@ -232,6 +232,15 @@ class GameDataTest < Minitest::Test
   end
 
   def test_los_datos_de_juego_no_se_leen_con_marshal_load
-    Marshal.stub(:load, ->(*) { flunk 'Marshal.load no debe usarse con archivos del juego' }) { link }
+    # (sin minitest/mock: en Ruby 4 / minitest 6 ya no viene con minitest/autorun)
+    calls = 0
+    original = Marshal.method(:load)
+    Marshal.singleton_class.send(:define_method, :load) { |*_a, **_k| calls += 1 }
+    begin
+      link
+    ensure
+      Marshal.singleton_class.send(:define_method, :load, original)
+    end
+    assert_equal 0, calls, 'Marshal.load no debe usarse con archivos del juego'
   end
 end
