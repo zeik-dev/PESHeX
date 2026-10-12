@@ -1,5 +1,0 @@
-Esta carpeta la llena scripts/setup-ruby.ps1 con el Ruby portatil de
-Windows (bin/, lib/, LICENSE.txt, ...). Se mantiene vacia (solo con este
-placeholder) en el repo para que `cargo check`/`cargo build` funcionen
-justo despues de clonar, sin depender de haber corrido ese script - Tauri
-valida en build.rs que los directorios de `bundle.resources` existan.
