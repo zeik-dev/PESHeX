@@ -96,24 +96,59 @@ def raw_label(f)
   { key: 'op.raw', params: { path: f.path } }
 end
 
+# Guardia de legalidad de las ediciones crudas: se localizan las entidades (Pokemon, entrenador,
+# mochila) por la ruta del campo y, en HeX, se rechaza lo que introduzca ilegalidades nuevas.
+def raw_guard(session, f)
+  return nil unless session.semantic
+
+  guard = Sem::Legality::Guard.new(session, Sem::Legality::Engine.new(session))
+  [guard, guard.before_path(f.path)]
+end
+
+def raw_check!(session, pair, f)
+  return [] unless pair
+
+  guard, before = pair
+  flags = guard.new_flags_for_path(before, f.path)
+  raise Sem::Legality::IllegalEdit, flags if session.mode == 'hex' && flags.any? { |_ref, fl| fl.illegal? }
+
+  flags
+end
+
+def raw_rejection(session, err)
+  { applied: false, rejected: { code: 'illegal', mode: session.mode,
+                                flags: err.flags.map { |ref, fl| fl.to_h(ref) } } }
+end
+
 def apply_leaf(session, f, old_val, new_val)
+  pair = raw_guard(session, f)
+  flags = []
   session.journal.transaction(raw_label(f)) do |b|
     b.apply(Sem::SetSlot.new(Sem::Slot.from_field(f), new_val))
+    flags = raw_check!(session, pair, f)
   end
   session.semantic&.invalidate_coverage!
   { applied: true, old: value_summary(old_val), new: value_summary(new_val),
-    pendingCount: session.journal.pending_count, structuralRebuild: false }
+    pendingCount: session.journal.pending_count, structuralRebuild: false,
+    newFlags: flags.map { |ref, fl| fl.to_h(ref) } }
+rescue Sem::Legality::IllegalEdit => e
+  raw_rejection(session, e)
 end
 
 def apply_structural(session, f, old_val, new_val)
+  pair = raw_guard(session, f)
+  flags = []
   session.journal.transaction(raw_label(f)) do |b|
     b.apply(Sem::SetSlot.new(Sem::Slot.from_field(f), new_val, structural: true))
+    flags = raw_check!(session, pair, f)
   end
   session.rebuild_collector!
   session.semantic&.invalidate_coverage!
   { applied: true, old: value_summary(old_val), new: value_summary(new_val),
     pendingCount: session.journal.pending_count, structuralRebuild: true,
-    newFieldCount: session.collector.fields.size }
+    newFieldCount: session.collector.fields.size, newFlags: flags.map { |ref, fl| fl.to_h(ref) } }
+rescue Sem::Legality::IllegalEdit => e
+  raw_rejection(session, e)
 end
 
 def set_field_from_template(session, f, old_val, res, cls_arg, slot_arg)
@@ -165,10 +200,11 @@ Commands.register('open', needs_session: false) do |ctx, params|
 
   session = Session.new(doc: doc, file_path: path, output_path: path, page_size: page_size,
                         script_paths: script_paths)
+  session.mode = params['mode'] if Sem::Legality::MODES.include?(params['mode'])
   ctx.session = session
 
   data = { roots: doc.roots.size, wrapper: doc.wrapper.to_s, fileSize: File.size(path),
-           indexState: 'idle', roundtripChecked: false }
+           indexState: 'idle', roundtripChecked: false, mode: session.mode }
   # Carpeta del juego junto al save (solo juegos portables/antiguos). No se carga aqui:
   # la UI llama a set_game_folder justo despues para que `open` siga siendo rapido.
   data[:gameSuggestion] = Sem::GameData::Locator.find_from_save(path) if autodetect
@@ -366,12 +402,13 @@ Commands.register('save') do |ctx, params|
            message: 'Este archivo no se reconstruye identico byte a byte.' }
   end
 
-  # Validacion previa de las entidades editadas (limites blandos).
-  if session.semantic
-    issues = Sem::Validator.validate_refs(session.semantic.model, session.journal.touched_refs)
-    blocking = Sem::Validator.blocking(issues)
-    unless blocking.empty? || confirmed
-      next { applied: false, needsConfirmation: true, reason: 'validation', issues: issues }
+  # HeX: no se guarda nada que introduzca ilegalidades respecto a lo que el save traia al abrirlo
+  # (las ediciones se comprueban una a una, pero se pudieron hacer en HaX y cambiar de modo despues).
+  if session.semantic && session.mode == 'hex' && session.legality_baseline
+    guard = Sem::Legality::Guard.new(session, Sem::Legality::Engine.new(session))
+    illegal = guard.new_flags_vs_baseline(session.legality_baseline).select { |_ref, fl| fl.illegal? }
+    unless illegal.empty?
+      next { applied: false, rejected: { code: 'illegal', mode: 'hex', flags: illegal.map { |ref, fl| fl.to_h(ref) } } }
     end
   end
 

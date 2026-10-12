@@ -2,8 +2,8 @@
 
 import { driverCall } from "./tauri";
 import type {
-  ApplyResult, Bag, ChangeEntry, Coverage, EditOp, History, Overview, PokemonDetail, PokemonSummary,
-  Profile, RoundtripResult, SaveResult, Storage, Trainer, UnclassifiedPage,
+  ApplyResult, Bag, ChangeEntry, Coverage, EditOp, History, LegalityReport, Mode, Overview, PokemonDetail,
+  PokemonSummary, Profile, RoundtripResult, SaveResult, Storage, Trainer, UnclassifiedPage,
 } from "./types";
 
 export const semantic = {
@@ -18,8 +18,9 @@ export const semantic = {
   unclassified: (params: { bucket?: string; q?: string; page?: number; pageSize?: number }) =>
     driverCall<UnclassifiedPage>("list_unclassified", params),
 
-  applyOps: (ops: EditOp[], opts: { confirmed?: boolean } = {}) =>
-    driverCall<ApplyResult>("apply_ops", { ops, confirmed: !!opts.confirmed }),
+  applyOps: (ops: EditOp[], opts: { mode: Mode }) => driverCall<ApplyResult>("apply_ops", { ops, mode: opts.mode }),
+  setMode: (mode: Mode) => driverCall<{ mode: Mode }>("set_mode", { mode }),
+  legality: (opts: { includeInfo?: boolean } = {}) => driverCall<LegalityReport>("check_legality", { includeInfo: !!opts.includeInfo }),
   undo: () => driverCall<{ applied: boolean; pendingCount?: number; redoCount?: number }>("undo"),
   redo: () => driverCall<{ applied: boolean; pendingCount?: number; redoCount?: number }>("redo"),
   undoAll: () => driverCall<{ applied: boolean; pendingCount: number; redoCount: number }>("undo_all"),

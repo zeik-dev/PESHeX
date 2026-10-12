@@ -1,30 +1,16 @@
 import { useTranslation } from "react-i18next";
-import { issueText } from "../lib/errors";
 import { useEdit } from "../stores/edit";
 import { useSession } from "../stores/session";
-import { ConfirmDialog } from "../ui";
-import type { Issue } from "../api/types";
+import { ConfirmDialog, Modal, Button } from "../ui";
+import { FlagList } from "../features/legality/FlagList";
 
-function IssueList({ issues }: { issues: Issue[] }) {
-  const { t } = useTranslation();
-  return (
-    <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
-      {issues.map((i, n) => (
-        <li key={n} style={{ color: i.severity === "error" ? "var(--danger)" : "var(--warning)" }}>
-          {issueText(t, i)}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Dialogos globales: confirmar valores fuera de rango, guardar con avisos y
- *  cerrar con cambios pendientes. */
+/** Dialogos globales: rechazo de HeX, guardar con un archivo que no se reconstruye identico y
+ *  cerrar con cambios pendientes. (En HaX no hay confirmaciones de validacion: se permite todo.) */
 export function Hosts() {
   const { t } = useTranslation();
-  const confirm = useEdit((s) => s.confirm);
-  const confirmApply = useEdit((s) => s.confirmApply);
-  const dismissEdit = useEdit((s) => s.dismiss);
+  const rejected = useEdit((s) => s.rejected);
+  const dismissRejected = useEdit((s) => s.dismiss);
+  const changeMode = useSession((s) => s.changeMode);
 
   const saveConfirm = useSession((s) => s.saveConfirm);
   const save = useSession((s) => s.save);
@@ -36,26 +22,29 @@ export function Hosts() {
 
   return (
     <>
-      <ConfirmDialog
-        open={!!confirm}
-        title={t("issues.confirmTitle")}
-        confirmLabel={t("common.applyAnyway")}
-        onConfirm={() => void confirmApply()}
-        onCancel={dismissEdit}
+      <Modal
+        open={!!rejected}
+        title={rejected?.where === "save" ? t("mode.rejectedSaveTitle") : t("mode.rejectedTitle")}
+        onClose={dismissRejected}
+        footer={
+          <>
+            <Button variant="primary" onClick={dismissRejected}>{t("common.accept")}</Button>
+            <Button onClick={() => { dismissRejected(); void changeMode("hax"); }}>{t("mode.switchToHax")}</Button>
+          </>
+        }
       >
-        <p>{t("issues.confirmBody")}</p>
-        {confirm && <IssueList issues={confirm.issues} />}
-      </ConfirmDialog>
+        <p>{rejected?.where === "save" ? t("mode.rejectedSaveBody") : t("mode.rejectedBody")}</p>
+        {rejected && <FlagList flags={rejected.flags} showRef />}
+      </Modal>
 
       <ConfirmDialog
         open={!!saveConfirm}
-        title={saveConfirm?.reason === "roundtrip_diff" ? t("save.roundtripTitle") : t("save.issuesTitle")}
+        title={t("save.roundtripTitle")}
         confirmLabel={t("common.save")}
         onConfirm={() => void save(true)}
         onCancel={dismissSave}
       >
-        <p>{saveConfirm?.reason === "roundtrip_diff" ? t("save.roundtripBody") : t("save.issuesBody")}</p>
-        {saveConfirm && saveConfirm.issues.length > 0 && <IssueList issues={saveConfirm.issues} />}
+        <p>{t("save.roundtripBody")}</p>
       </ConfirmDialog>
 
       <ConfirmDialog

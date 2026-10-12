@@ -5,6 +5,8 @@ import { displayName, genderSymbol } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { BallIcon, Button, Chip, HpBar, ItemIcon, PokemonIcon, TypeChip } from "../../ui";
+import { FlagList } from "../legality/FlagList";
+import { LegalityBadge } from "../legality/LegalityBadge";
 import { useSemanticQuery } from "../queries";
 import styles from "./pc.module.css";
 
@@ -13,13 +15,15 @@ interface Props {
   pokemonRef: string | null;
   emptySlot: boolean;
   editable: boolean;
+  /** La comprobacion de legalidad es parcial (faltan datos del juego). */
+  partial?: boolean;
   onEdit: (ref: string) => void;
   onRelease: (ref: string) => void;
 }
 
 /** Datos del Pokemon seleccionado, estilo pantalla de resumen: sprite, tipos, nivel, objeto,
  *  naturaleza, habilidad, movimientos e IV/EV; acciones editar y liberar. */
-export function InfoPanel({ pokemonRef, emptySlot, editable, onEdit, onRelease }: Props) {
+export function InfoPanel({ pokemonRef, emptySlot, editable, partial, onEdit, onRelease }: Props) {
   const { t, dynOr } = useT();
   const catalog = useGame((s) => s.catalogIndex);
   const q = useSemanticQuery(["pokemon", pokemonRef], () => semantic.pokemon(pokemonRef!), !!pokemonRef);
@@ -92,6 +96,10 @@ export function InfoPanel({ pokemonRef, emptySlot, editable, onEdit, onRelease }
           );
         })}
       </ul>
+
+      <div className={styles.sectionLabel}>{t("legality.title")}</div>
+      <LegalityBadge flags={pk.flags} partial={partial} />
+      {pk.flags.some((f) => f.severity !== "info") && <FlagList flags={pk.flags.filter((f) => f.severity !== "info")} limit={3} />}
 
       <div className={styles.actions}>
         <Button variant="primary" size="sm" onClick={() => onEdit(pk.ref)}>

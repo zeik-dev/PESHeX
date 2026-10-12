@@ -48,7 +48,10 @@ module Commands
         raise DriverError.new('NoSessionOpen', 'No hay ningun archivo abierto. Usa "open" primero.')
       end
 
-      ctx.session.roundtrip_diff if entry.mutates && ctx.session # antes de tocar nada
+      if entry.mutates && ctx.session # antes de tocar nada
+        ctx.session.roundtrip_diff
+        ctx.session.ensure_legality_baseline!
+      end
 
       data = entry.handler.call(ctx, params) || {}
       if (entry.mutates || entry.bumps) && ctx.session && data.is_a?(Hash) && data[:applied] != false

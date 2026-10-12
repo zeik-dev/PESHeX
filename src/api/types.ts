@@ -64,6 +64,7 @@ export interface OpenResult {
   profile: Profile;
   /** Carpeta de juego encontrada junto al save (solo juegos portables/antiguos). */
   gameSuggestion?: string;
+  mode?: Mode;
 }
 
 export interface RoundtripResult {
@@ -172,6 +173,7 @@ export interface PokemonDetail extends PokemonSummary {
   evTotal: number;
   ivLayout: string | null;
   evLayout: string | null;
+  flags: Flag[];
   stats: { cached: StatMap; computed?: Record<StatId, number>; match?: boolean; trusted?: boolean };
   /** Grupo de experiencia y umbrales (solo con carpeta del juego vinculada). */
   growth: { rate: string; expAtLevel: number; expAtNext: number; minimumLevel: number } | null;
@@ -265,6 +267,32 @@ export interface UnclassifiedPage {
   groups: CoverageGroup[];
 }
 
+export type Mode = "hex" | "hax";
+export type FlagSeverity = "illegal" | "warning" | "info";
+
+/** Hallazgo de legalidad; el texto lo pone la UI con `legality.flag.<code>` + params. */
+export interface Flag {
+  code: string;
+  severity: FlagSeverity;
+  subject?: string;
+  params: Record<string, unknown>;
+  ref?: string;
+}
+
+export interface LegalityCoverage {
+  level: "full" | "partial" | "basic";
+  reasons: string[];
+  evaluated: string[];
+  skipped: { code: string; reason: string }[];
+}
+
+export interface LegalityReport {
+  mode: Mode;
+  coverage: LegalityCoverage;
+  summary: { illegal: number; warning: number; info: number; checked: number; refs: number };
+  flags: Record<string, Flag[]>;
+}
+
 export interface Issue {
   severity: "error" | "warning" | "info";
   code: string;
@@ -312,7 +340,10 @@ export interface ApplyResult {
   issues?: Issue[];
   pendingCount?: number;
   structural?: boolean;
-  needsConfirmation?: { code: string; issues: Issue[] };
+  /** HeX: la edicion introduciria ilegalidades y no se aplico. */
+  rejected?: { code: string; mode: Mode; flags: Flag[] };
+  /** Flags nuevas que introdujo la edicion (en HaX se avisa, no se bloquea). */
+  newFlags?: Flag[];
   revision?: number;
 }
 
@@ -349,6 +380,7 @@ export interface SaveResult {
   applied: boolean;
   reason?: string;
   needsConfirmation?: boolean;
+  rejected?: { code: string; mode: Mode; flags: Flag[] };
   message?: string;
   issues?: Issue[];
   bytesWritten?: number;

@@ -1,32 +1,40 @@
 import { create } from "zustand";
+import i18n from "../i18n";
 import { semantic } from "../api/semantic";
-import type { ApplyResult, EditOp, Issue } from "../api/types";
+import type { ApplyResult, EditOp, Flag } from "../api/types";
 import { toastError, useSession } from "./session";
+import { useSettings } from "./settings";
+import { useToasts } from "./toasts";
 
 interface EditState {
   busy: boolean;
-  confirm: { ops: EditOp[]; issues: Issue[] } | null;
-  /** Aplica operaciones. Si el driver detecta valores fuera de lo habitual,
-   *  abre el dialogo de confirmacion y resuelve con `null`. */
-  apply: (ops: EditOp[], opts?: { confirmed?: boolean }) => Promise<ApplyResult | null>;
-  confirmApply: () => Promise<void>;
+  /** HeX rechazo la edicion: flags que habria introducido (dialogo sin "aplicar igual"). */
+  rejected: { flags: Flag[]; where: "edit" | "save" } | null;
+  /** Aplica operaciones segun el modo actual. Resuelve con `null` si el driver las rechazo
+   *  (HeX) o fallo; en HaX avisa con un toast no modal si introdujeron flags. */
+  apply: (ops: EditOp[]) => Promise<ApplyResult | null>;
+  reject: (flags: Flag[], where?: "edit" | "save") => void;
   dismiss: () => void;
 }
 
-export const useEdit = create<EditState>((set, get) => ({
+export const useEdit = create<EditState>((set) => ({
   busy: false,
-  confirm: null,
+  rejected: null,
 
-  async apply(ops, opts = {}) {
+  async apply(ops) {
     set({ busy: true });
     try {
-      const r = await semantic.applyOps(ops, { confirmed: opts.confirmed });
-      if (r.needsConfirmation) {
-        set({ confirm: { ops, issues: r.needsConfirmation.issues } });
+      const r = await semantic.applyOps(ops, { mode: useSettings.getState().mode });
+      if (r.rejected) {
+        set({ rejected: { flags: r.rejected.flags, where: "edit" } });
         return null;
       }
       if (r.applied && typeof r.pendingCount === "number") {
         useSession.getState().setCounts(r.pendingCount, 0);
+      }
+      const bad = (r.newFlags ?? []).filter((f) => f.severity !== "info");
+      if (r.applied && bad.length > 0) {
+        useToasts.getState().push({ kind: "warning", text: i18n.t("mode.haxApplied", { count: bad.length }) });
       }
       return r;
     } catch (e) {
@@ -37,12 +45,6 @@ export const useEdit = create<EditState>((set, get) => ({
     }
   },
 
-  async confirmApply() {
-    const c = get().confirm;
-    if (!c) return;
-    set({ confirm: null });
-    await get().apply(c.ops, { confirmed: true });
-  },
-
-  dismiss: () => set({ confirm: null }),
+  reject: (flags, where = "edit") => set({ rejected: { flags, where } }),
+  dismiss: () => set({ rejected: null }),
 }));

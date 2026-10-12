@@ -40,6 +40,7 @@ module Sem
           if cal
             reasons << 'species_mismatch' if cal.dig(:species, :status) == 'mismatch'
             reasons << 'stats_untrusted' if cal.dig(:stats, :status) == 'mismatch'
+            reasons << 'exp_untrusted' if cal.dig(:exp, :status) == 'mismatch'
             reasons << 'moves_untrusted' if cal.dig(:moves, :status) == 'mismatch'
             reasons << 'abilities_untrusted' if cal.dig(:abilities, :status) == 'mismatch'
           end

@@ -396,3 +396,14 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+.dim {
+  opacity: 0.28;
+}
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}

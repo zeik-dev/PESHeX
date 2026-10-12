@@ -81,7 +81,7 @@ module GameFixture
     [state, state.resolved.scan.pokemon.map { |ref| Sem::PokeFacts.read(ref.node) }]
   end
 
-  def self.build(dir, from:, with_scripts: true, types_dat: true, names: {})
+  def self.build(dir, from:, with_scripts: true, types_dat: true, names: {}, learnsets: true)
     define_classes
     state, facts = facts_from(from)
     model = state.model
@@ -103,23 +103,36 @@ module GameFixture
                                  types: %i[NORMAL], base_stats: base_stats,
                                  growth_rate: growth_rate_for(members).to_sym,
                                  gender_ratio: gender_ratio_for(members).to_sym,
-                                 moves: moves.map { |m| [1, m.to_sym] }, tutor_moves: [], egg_moves: [],
+                                 moves: (learnsets ? moves.map { |m| [1, m.to_sym] } : []), tutor_moves: [], egg_moves: [],
                                  abilities: abilities.map(&:to_sym), hidden_abilities: %i[FIXTUREHIDDEN],
                                  evolutions: [], flags: [])
       end
     end
 
+    # PP base de cada movimiento: el menor multiplo de 5 que explica el PP guardado con sus PP Ups.
+    total_pp = Hash.new(5)
+    facts.each do |f|
+      f.moves.each do |m|
+        next unless m[:id] && m[:pp]
+
+        base = (m[:pp] * 5.0 / (5 + (m[:ppup] || 0))).ceil
+        total_pp[m[:id]] = [total_pp[m[:id]], ((base + 4) / 5) * 5].max
+      end
+    end
     move_ids = (facts.flat_map { |f| f.moves.map { |m| m[:id] } }.compact + [UNLEARNABLE_MOVE, 'TACKLE', 'SURF']).uniq
     moves = move_ids.to_h do |id|
       [id.to_sym, obj(::GameData::Move, id: id.to_sym, real_name: Sem::Ids.pretty(id), type: :NORMAL, category: 0,
-                      power: 40, accuracy: 100, total_pp: 25, flags: [])]
+                      power: 40, accuracy: 100, total_pp: total_pp.key?(id) ? total_pp[id] : 25, flags: [])]
     end
 
-    bag_ids = model.bag_view[:pockets].flat_map { |p| p[:slots].map { |s| s[:id] } }
-    item_ids = (bag_ids + facts.flat_map { |f| [f.item, f.ball] } + EXTRA_ITEMS).compact.map(&:to_s).uniq
+    # El bolsillo de cada objeto sale de donde esta en la mochila del save.
+    pocket_of = {}
+    model.bag_view[:pockets].each { |pk| pk[:slots].each { |s| pocket_of[s[:id].to_s] ||= pk[:index] } }
+    item_ids = (pocket_of.keys + facts.flat_map { |f| [f.item, f.ball] } + EXTRA_ITEMS).compact.map(&:to_s).uniq
     items = item_ids.to_h do |id|
+      pocket = pocket_of[id] || (id.end_with?('BALL') ? 3 : 1)
       [id.to_sym, obj(::GameData::Item, id: id.to_sym, real_name: Sem::Ids.pretty(id), real_name_plural: "#{Sem::Ids.pretty(id)}s",
-                      pocket: id.end_with?('BALL') ? 3 : 1, price: 100, field_use: 0, battle_use: 0, flags: [], move: nil)]
+                      pocket: pocket, price: 100, field_use: 0, battle_use: 0, flags: [], move: nil)]
     end
 
     ability_ids = (facts.map(&:ability).compact + %w[FIXTUREHIDDEN]).map(&:to_s).uniq

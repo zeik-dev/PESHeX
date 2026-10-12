@@ -119,7 +119,7 @@ export function GameFolderCard() {
               <div>
                 <strong>{t("game.calibration")}</strong>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-                  {(["species", "stats", "moves", "abilities"] as const).map((d) => {
+                  {(["species", "stats", "exp", "moves", "abilities"] as const).map((d) => {
                     const c = status.calibration![d];
                     return (
                       <Chip key={d} tone={TONE[c.status]}

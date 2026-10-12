@@ -4,12 +4,15 @@ import { initI18n, resolveLang, setLanguage, systemLocales, type Lang, type Lang
 
 export type ThemePref = "auto" | "light" | "dark";
 export type BallTheme = "classic" | "great" | "ultra" | "master";
+export type EditMode = "hex" | "hax";
 
 interface SettingsState {
   lang: LangPref;
   theme: ThemePref;
   ball: BallTheme;
   backup: boolean;
+  /** HeX = solo cambios legales segun el juego; HaX = cualquier cambio. Por defecto HeX. */
+  mode: EditMode;
   recent: string[];
   /** Carpeta del juego recordada por save (ruta del save -> raiz del juego). */
   gameFolders: Record<string, string>;
@@ -19,6 +22,7 @@ interface SettingsState {
   setTheme: (theme: ThemePref) => void;
   setBall: (ball: BallTheme) => void;
   setBackup: (backup: boolean) => void;
+  setMode: (mode: EditMode) => void;
   pushRecent: (path: string) => void;
   removeRecent: (path: string) => void;
   /** Registra la raiz de un juego vinculado (la asocia al save abierto). */
@@ -66,6 +70,7 @@ export const useSettings = create<SettingsState>()(
       theme: "auto",
       ball: "classic",
       backup: true,
+      mode: "hex",
       recent: [],
       gameFolders: {},
       recentGames: [],
@@ -73,6 +78,7 @@ export const useSettings = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setBall: (ball) => set({ ball }),
       setBackup: (backup) => set({ backup }),
+      setMode: (mode) => set({ mode }),
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),
       removeRecent: (path) => set((s) => ({ recent: s.recent.filter((p) => p !== path) })),

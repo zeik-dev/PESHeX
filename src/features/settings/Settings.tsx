@@ -7,6 +7,7 @@ import { useSettings, type BallTheme, type ThemePref } from "../../stores/settin
 import { Button, Card, Field, PageTitle, AppLogo, SelectField, Switch } from "../../ui";
 import type { LangPref } from "../../i18n";
 import { ProfileCard } from "../shared/ProfileCard";
+import { ModeSwitch } from "../../app/ModeSwitch";
 import { GameFolderCard } from "./GameFolderCard";
 import shared from "../shared/shared.module.css";
 
@@ -71,6 +72,14 @@ export function Settings() {
           <Switch checked={s.backup} onChange={s.setBackup} label={t("settings.backup")} />
           {t("settings.backup")}
         </label>
+      </Card>
+
+      <Card title={t("mode.title")}>
+        <div className={shared.stack}>
+          <ModeSwitch large />
+          <p><strong>{t("mode.hexTitle")}</strong> — {t("mode.hexBody")}</p>
+          <p><strong>{t("mode.haxTitle")}</strong> — {t("mode.haxBody")}</p>
+        </div>
       </Card>
 
       <Card title={t("settings.detection")}>

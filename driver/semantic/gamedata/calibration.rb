@@ -15,7 +15,7 @@ module Sem
   module GameData
     module Calibration
       MIN_SAMPLE = 3
-      THRESHOLDS = { species: 0.9, stats: 0.9, moves: 0.8, abilities: 0.8 }.freeze
+      THRESHOLDS = { species: 0.9, stats: 0.9, exp: 0.9, moves: 0.8, abilities: 0.8 }.freeze
 
       module_function
 
@@ -25,11 +25,12 @@ module Sem
         {
           species: verdict(:species, facts.size, known.size),
           stats: stats_check(store, known),
+          exp: exp_check(store, known),
           moves: moves_check(store, known),
           abilities: abilities_check(store, known)
         }
       rescue StandardError => e
-        { error: "#{e.class}: #{e.message}", species: unknown, stats: unknown, moves: unknown, abilities: unknown }
+        { error: "#{e.class}: #{e.message}", species: unknown, stats: unknown, exp: unknown, moves: unknown, abilities: unknown }
       end
 
       def unknown
@@ -56,6 +57,20 @@ module Sem
           matched += 1 if expected == f.stats
         end
         verdict(:stats, checked, matched)
+      end
+
+      # ¿La experiencia guardada corresponde al nivel segun el grupo de experiencia de la especie?
+      def exp_check(store, known)
+        checked = 0
+        matched = 0
+        known.each do |f|
+          next if f.level.nil? || f.exp.nil? || f.egg
+
+          checked += 1
+          rate = store.growth_rate(f.species, f.form)
+          matched += 1 if Tables.level_for_exp(rate, f.exp, store.limits[:maxLevel]) == f.level
+        end
+        verdict(:exp, checked, matched)
       end
 
       def moves_check(store, known)

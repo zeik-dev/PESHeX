@@ -328,3 +328,60 @@
   color: var(--danger);
   font-weight: 600;
 }
+
+/* ── Modo HeX / HaX ───────────────────────────────────────────────────── */
+.modeSwitch {
+  display: inline-flex;
+  border: 2px solid rgb(255 255 255 / 70%);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: rgb(0 0 0 / 18%);
+}
+.modeBtn {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.modeBtn:hover {
+  background: rgb(255 255 255 / 18%);
+}
+.modeOn {
+  background: #fff;
+  color: var(--pb-ink);
+}
+.modeHax {
+  background: #ffd84a;
+  color: #111;
+}
+.modeLarge {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+.modeLarge .modeBtn {
+  color: var(--text);
+  min-height: 38px;
+  padding: 0 24px;
+  font-size: 14px;
+}
+.modeLarge .modeOn {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+.modeLarge .modeHax {
+  background: #ffd84a;
+  color: #111;
+}
+.haxStrip {
+  background: repeating-linear-gradient(135deg, #ffd84a 0 14px, #f0c419 14px 28px);
+  color: #111;
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+  padding: 3px 12px;
+  border-bottom: 2px solid #111;
+}

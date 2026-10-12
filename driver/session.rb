@@ -9,7 +9,8 @@
 
 class Session
   attr_accessor :doc, :file_path, :output_path, :page_size,
-                :revision, :script_paths, :semantic, :game, :game_calibration
+                :revision, :script_paths, :semantic, :game, :game_calibration, :mode,
+                :legality_baseline
   attr_reader :journal
 
   def initialize(doc:, file_path:, output_path:, page_size:, script_paths: [])
@@ -29,6 +30,9 @@ class Session
     @semantic = nil
     @game = nil # Sem::GameData::Store de la carpeta vinculada (o nil)
     @game_calibration = nil
+    @mode = Sem::Legality::DEFAULT_MODE # 'hex' | 'hax'
+    @legality_baseline = nil
+    @baseline_taken = false
   end
 
   # Verifica (una sola vez) que el documento se reconstruye byte a byte. Debe
@@ -45,6 +49,24 @@ class Session
 
   def roundtrip_checked?
     @roundtrip_checked
+  end
+
+  # Flags de legalidad que el save ya traia, tomadas ANTES de la primera mutacion: en HeX solo lo
+  # que se anade despues cuenta como ilegalidad nueva (p. ej. al guardar). Si algo falla, no hay
+  # linea base y HeX solo comprueba cada edicion por separado.
+  def ensure_legality_baseline!
+    return if @baseline_taken
+
+    @baseline_taken = true
+    @legality_baseline = Sem::Legality::Engine.new(self).snapshot_all
+  rescue StandardError => e
+    @legality_baseline = nil
+    warn "legality baseline: #{e.class}: #{e.message}" if ENV['RXDATA_DRIVER_DEBUG']
+  end
+
+  def reset_legality_baseline!
+    @baseline_taken = false
+    @legality_baseline = nil
   end
 
   # Sube la revision tras cualquier mutacion; la UI usa `revision` como parte

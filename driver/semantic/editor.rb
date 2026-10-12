@@ -11,15 +11,6 @@
 # =============================================================================
 
 module Sem
-  class NeedsConfirmation < StandardError
-    attr_reader :issues
-
-    def initialize(issues)
-      super('needs confirmation')
-      @issues = issues
-    end
-  end
-
   class Editor
     include EditorPc
 
@@ -57,38 +48,49 @@ module Sem
 
     # ── API publica ───────────────────────────────────────────────────────────
 
-    def apply(ops, label: nil, confirmed: false)
+    # `mode` ('hex' | 'hax'; por defecto el de la sesion):
+    #   hex  rechaza (y revierte) toda edicion que INTRODUZCA ilegalidades segun el juego vinculado
+    #   hax  aplica siempre y devuelve las flags nuevas para avisar sin bloquear
+    def apply(ops, label: nil, mode: nil, **_ignored)
       ops = normalize_ops(ops)
       ensure_editable!
-      issues = nil
+      mode = normalize_mode(mode)
+      engine = Legality::Engine.new(@session)
+      guard = Legality::Guard.new(@session, engine)
+      before = guard.before_ops(ops)
+      new_flags = []
       tx = nil
       begin
         tx = @session.journal.transaction(label || default_label(ops)) do |b|
           ops.each { |op| apply_one(b, op) }
-          issues = Validator.validate_refs(@model, b.tx.refs)
-          raise NeedsConfirmation, issues if !confirmed && !Validator.blocking(issues).empty?
+          new_flags = guard.new_flags(before, b.tx.refs + ops.flat_map { |op| Legality::Guard.refs_of_op(op) })
+          raise Legality::IllegalEdit, new_flags if mode == 'hex' && new_flags.any? { |_ref, f| f.illegal? }
         end
-      rescue NeedsConfirmation => e
-        return { applied: false, needsConfirmation: { code: 'validation', issues: e.issues } }
+      rescue Legality::IllegalEdit => e
+        return { applied: false, rejected: { code: 'illegal', mode: mode, flags: flag_dtos(e.flags) } }
       end
       return { applied: false, reason: 'no_changes', issues: [] } unless tx
 
       after_change(tx)
-      { applied: true, undoId: tx.id, refs: tx.refs, issues: issues || [],
+      { applied: true, undoId: tx.id, refs: tx.refs, issues: [], newFlags: flag_dtos(new_flags),
         pendingCount: @session.journal.pending_count, structural: @session.journal.structural?(tx) }
     end
 
-    # Simula las ops (aplica, mide, revierte) y devuelve cambios + issues.
-    def preview(ops)
+    # Simula las ops (aplica, mide, revierte) y devuelve cambios + las flags que introducirian.
+    def preview(ops, mode: nil)
       ops = normalize_ops(ops)
-      issues = []
+      mode = normalize_mode(mode)
+      engine = Legality::Engine.new(@session)
+      guard = Legality::Guard.new(@session, engine)
+      before = guard.before_ops(ops)
+      flags = []
       changes = []
       @session.journal.preview(default_label(ops)) do |b|
         ops.each { |op| apply_one(b, op) }
-        issues = Validator.validate_refs(@model, b.tx.refs)
+        flags = guard.new_flags(before, b.tx.refs + ops.flat_map { |op| Legality::Guard.refs_of_op(op) })
         changes = b.tx.ops.map(&:describe)
       end
-      { changes: changes, issues: issues, blocking: !Validator.blocking(issues).empty? }
+      { changes: changes, newFlags: flag_dtos(flags), blocking: mode == 'hex' && flags.any? { |_ref, f| f.illegal? } }
     end
 
     def undo
@@ -110,6 +112,15 @@ module Sem
       after_change(tx)
       { applied: true, direction: dir.to_s, tx: @session.journal.tx_summary(tx),
         pendingCount: @session.journal.pending_count, redoCount: @session.journal.redo_stack.size }
+    end
+
+    def normalize_mode(mode)
+      m = (mode || @session.mode).to_s
+      Legality::MODES.include?(m) ? m : Legality::DEFAULT_MODE
+    end
+
+    def flag_dtos(pairs)
+      pairs.map { |ref, f| f.to_h(ref) }
     end
 
     def after_change(tx)

@@ -52,6 +52,15 @@ test("vincular la carpeta del juego: nombres reales, sprites y selectores con b√
   await expect(option).toBeVisible();
   await shot(page, "82-species-combobox-es-light");
   await option.click();
+  // Con el juego vinculado, HeX sabe que sus movimientos/habilidades no son de esa especie: lo rechaza.
+  const rejected = page.getByRole("dialog", { name: "Cambio no permitido en HeX" });
+  await expect(rejected).toBeVisible();
+  await expect(rejected.getByText(/no lo puede aprender esta especie/).first()).toBeVisible();
+  await shot(page, "83-species-hex-rejected-es-light");
+  await rejected.getByRole("button", { name: "Cambiar a HaX" }).click();
+  await species.click();
+  await species.fill("torrcat");
+  await page.getByRole("option", { name: /Gatito Fuego/ }).click();
   await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
 });
 

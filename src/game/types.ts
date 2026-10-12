@@ -14,6 +14,7 @@ export interface DomainInfo {
 export interface Calibration {
   species: CalDomain;
   stats: CalDomain;
+  exp: CalDomain;
   moves: CalDomain;
   abilities: CalDomain;
   error?: string;

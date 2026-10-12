@@ -3,9 +3,10 @@ import i18n from "../i18n";
 import { onRevision, openSave, closeSave, toApiError } from "../api/tauri";
 import { gameApi } from "../api/game";
 import { semantic } from "../api/semantic";
-import type { ApiError, Issue, OpenResult, Profile, RoundtripResult } from "../api/types";
+import type { ApiError, Mode, OpenResult, Profile, RoundtripResult } from "../api/types";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
+import { useEdit } from "./edit";
 import { useGame } from "./game";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
@@ -14,8 +15,7 @@ export type ViewId =
   | "overview" | "trainer" | "party" | "boxes" | "bag" | "unclassified" | "changes" | "advanced" | "settings";
 
 export interface SaveConfirm {
-  reason: "roundtrip_diff" | "validation";
-  issues: Issue[];
+  reason: "roundtrip_diff";
 }
 
 interface SessionState {
@@ -40,6 +40,8 @@ interface SessionState {
   close: (force?: boolean) => Promise<void>;
   dismissCloseConfirm: () => void;
   setView: (v: ViewId) => void;
+  /** Cambia HeX/HaX: se recuerda en ajustes y se avisa al driver si hay un archivo abierto. */
+  changeMode: (mode: Mode) => Promise<void>;
   setProfile: (p: Profile) => void;
   noteRevision: (n: number) => void;
   setCounts: (pending: number, redo?: number) => void;
@@ -88,6 +90,8 @@ export const useSession = create<SessionState>((set, get) => ({
         view: "overview",
       });
       useSettings.getState().pushRecent(path);
+      // El modo (HeX/HaX) se recuerda entre sesiones: el driver arranca en HeX.
+      if (useSettings.getState().mode !== (info.mode ?? "hex")) void semantic.setMode(useSettings.getState().mode).catch(() => undefined);
       // Carpeta del juego (nombres + sprites): en segundo plano, no bloquea el primer render.
       useGame.getState().reset();
       void useGame.getState().onSaveOpened(path, info.gameSuggestion);
@@ -121,6 +125,15 @@ export const useSession = create<SessionState>((set, get) => ({
 
   dismissCloseConfirm: () => set({ closeConfirm: false }),
   setView: (view) => set({ view }),
+  async changeMode(mode) {
+    useSettings.getState().setMode(mode);
+    if (!get().filePath) return;
+    try {
+      await semantic.setMode(mode);
+    } catch (e) {
+      toastError(e);
+    }
+  },
   setProfile: (profile) => set({ profile }),
   noteRevision: (n) => set((s) => (n > s.revision ? { revision: n } : s)),
   setCounts: (pendingCount, redoCount) =>
@@ -159,13 +172,10 @@ export const useSession = create<SessionState>((set, get) => ({
     set({ saving: true });
     try {
       const r = await semantic.save({ backup: useSettings.getState().backup, confirmed });
-      if (r.needsConfirmation) {
-        set({
-          saveConfirm: {
-            reason: r.reason === "roundtrip_diff" ? "roundtrip_diff" : "validation",
-            issues: r.issues ?? [],
-          },
-        });
+      if (r.rejected) {
+        useEdit.getState().reject(r.rejected.flags, "save");
+      } else if (r.needsConfirmation) {
+        set({ saveConfirm: { reason: "roundtrip_diff" } });
       } else if (r.applied) {
         set({ pendingCount: 0, redoCount: 0, saveConfirm: null });
         useToasts.getState().push({

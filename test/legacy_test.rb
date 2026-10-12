@@ -94,7 +94,7 @@ class LegacyTest < Minitest::Test
       orig = h.session.doc.to_bytes
       ok = h.call('apply_ops', ops: [
                     { op: 'set', ref: 'trainer', field: 'money', value: 9999 },
-                    { op: 'pokemon.patch', ref: 'party/0', patch: { level: 30, iv: { SPEED: 31 }, ev: { HP: 4 } } },
+                    { op: 'pokemon.patch', ref: 'party/0', patch: { level: 30, iv: { SPEED: 31 }, ev: { HP: 2 } } },
                     { op: 'bag.set', pocket: 1, id: 17, qty: 9 },
                     { op: 'bag.set', pocket: 1, id: 19, qty: 3 }
                   ])

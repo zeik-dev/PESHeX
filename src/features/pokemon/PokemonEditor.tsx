@@ -14,12 +14,14 @@ import {
   Banner, Button, Chip, ComboBox, Drawer, EmptyState, Field, NumberField, PokeballSpinner, PokemonIcon, SelectField, StatBar,
   Switch, Tabs, TextField,
 } from "../../ui";
+import { FlagList } from "../legality/FlagList";
+import { LegalityBadge } from "../legality/LegalityBadge";
 import { ExtrasList } from "../shared/ExtrasList";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
 import styles from "./pokemon.module.css";
 
-type Tab = "general" | "stats" | "moves" | "info";
+type Tab = "general" | "stats" | "moves" | "legality" | "info";
 
 /** Panel lateral con el editor del Pokemon seleccionado (equipo o PC). */
 export function PokemonEditorHost() {
@@ -76,12 +78,19 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
             { id: "general", label: t("pokemon.tabs.general") },
             { id: "stats", label: t("pokemon.tabs.stats") },
             { id: "moves", label: t("pokemon.tabs.moves"), badge: pk.moves.length },
+            { id: "legality", label: t("legality.tab"), badge: pk.flags.filter((f) => f.severity !== "info").length || undefined },
             { id: "info", label: t("pokemon.tabs.info") },
           ]}
         />
         {tab === "general" && <General pk={pk} editable={editable} />}
         {tab === "stats" && <Stats pk={pk} editable={editable} />}
         {tab === "moves" && <Moves pk={pk} editable={editable} />}
+        {tab === "legality" && (
+          <div className={shared.stack}>
+            <LegalityBadge flags={pk.flags} />
+            {pk.flags.length > 0 && <FlagList flags={pk.flags} />}
+          </div>
+        )}
         {tab === "info" && <Info pk={pk} editable={editable} />}
       </div>
     </div>

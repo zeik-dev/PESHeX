@@ -109,16 +109,22 @@ test("editar dinero, ver el cambio pendiente y deshacerlo", async ({ page }) => 
   await expect(page.getByLabel("Dinero")).toHaveValue("26350");
 });
 
-test("valor fuera de rango pide confirmacion", async ({ page }) => {
+test("HeX rechaza un valor ilegal y HaX lo permite", async ({ page }) => {
   await openSave(page);
   await page.getByRole("button", { name: "Entrenador", exact: true }).click();
   const money = page.getByLabel("Dinero");
   await money.fill("99999999");
   await money.press("Enter");
-  await expect(page.getByRole("dialog", { name: "Valores fuera de lo habitual" })).toBeVisible();
-  await shot(page, "31-confirm-es-light");
-  await page.getByRole("button", { name: "Aplicar de todos modos" }).click();
+  const dialog = page.getByRole("dialog", { name: "Cambio no permitido en HeX" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/fuera del rango permitido/)).toBeVisible();
+  await shot(page, "31-hex-rejected-es-light");
+  await dialog.getByRole("button", { name: "Cambiar a HaX" }).click();
+  // En HaX se puede (y no hay confirmacion: solo un aviso no modal).
+  await money.fill("99999999");
+  await money.press("Enter");
   await expect(page.getByLabel("Dinero")).toHaveValue("99999999");
+  await expect(page.getByText(/Cambio aplicado con 1 aviso de legalidad/)).toBeVisible();
 });
 
 test("editor de Pokémon: IV perfectos, movimientos y guardado real", async ({ page }) => {

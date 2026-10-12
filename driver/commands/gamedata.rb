@@ -34,6 +34,7 @@ module Sem
 
       session.game = nil
       session.game_calibration = nil
+      session.reset_legality_baseline!
       if path.nil? || path.to_s.strip.empty?
         Api.state!(session).attach_game(nil, nil)
         return

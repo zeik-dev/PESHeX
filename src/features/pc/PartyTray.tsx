@@ -13,6 +13,7 @@ interface Props {
   over: string | null;
   grabRef: string | null;
   flags: Record<string, "illegal" | "warning">;
+  isDim: (ref: string | null) => boolean;
   onSelect: (dropRef: string) => void;
   onOpen: (ref: string) => void;
   dragProps: (ref: string) => { onPointerDown: (e: React.PointerEvent) => void };
@@ -68,6 +69,7 @@ export function PartyTray(p: Props) {
               selected={p.selected === dropRef || (!!pk && p.selected === pk.ref)}
               grabbed={!!pk && p.grabRef === pk.ref}
               over={p.over === dropRef}
+              dim={p.isDim(pk?.ref ?? null)}
               tabbable={tabRef === dropRef}
               onSelect={p.onSelect}
               onOpen={p.onOpen}

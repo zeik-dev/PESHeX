@@ -16,6 +16,8 @@ export interface SlotCellProps {
   selected?: boolean;
   grabbed?: boolean;
   over?: boolean;
+  /** Atenuada (filtro "solo ilegales"). */
+  dim?: boolean;
   tabbable?: boolean;
   /** Variante grande del Equipo (con nombre, nivel y PS). */
   variant?: "grid" | "party";
@@ -49,7 +51,7 @@ function SlotCellImpl(p: SlotCellProps) {
       aria-label={label}
       aria-pressed={p.selected}
       className={cx(styles.cell, p.variant === "party" && styles.partyCell, pk ? styles.filled : styles.emptyCell,
-        p.selected && styles.selected, p.grabbed && styles.grabbed, p.over && styles.over)}
+        p.selected && styles.selected, p.grabbed && styles.grabbed, p.over && styles.over, p.dim && styles.dim)}
       style={p.variant === "party" ? p.style : { width: p.size, height: p.size, ...p.style }}
       onPointerDown={pk ? p.onPointerDown : undefined}
       onClick={() => {

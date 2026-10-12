@@ -6,6 +6,7 @@ import { advanced, type GetFieldResult, type SetFieldResult } from "../../api/ad
 import { toApiError } from "../../api/tauri";
 import { errorText } from "../../lib/errors";
 import { useT } from "../../lib/useT";
+import { useEdit } from "../../stores/edit";
 import { useSession } from "../../stores/session";
 import { Banner, Button, Card, Chip, PageTitle, PokeballSpinner, Tabs } from "../../ui";
 import { useSemanticQuery } from "../queries";
@@ -181,6 +182,7 @@ function FieldDetail({ index, onClose }: { index: number; onClose: () => void })
     setError(null);
     try {
       const r = await advanced.setField(index, raw, confirmed);
+      if (r.rejected) return useEdit.getState().reject(r.rejected.flags);
       if (r.needsConfirmation) return setConfirm({ message: r.message ?? "?", input: raw });
       if (r.needsTemplateChoice) return setTemplates({ cls: r.class ?? "", instances: r.instances ?? [] });
       setConfirm(null);

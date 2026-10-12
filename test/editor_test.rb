@@ -46,16 +46,19 @@ class EditorTest < Minitest::Test
     refute @h.session.dirty?
   end
 
-  def test_fuera_de_rango_pide_confirmacion_y_se_revierte
+  def test_hex_rechaza_un_valor_fuera_de_rango_y_hax_lo_aplica
     r = @h.call('apply_ops', ops(set_trainer('money', 99_999_999)))
     refute r['applied']
-    issue = r.dig('needsConfirmation', 'issues').first
-    assert_equal 'value_range', issue['code']
-    assert_equal 'money', issue['params']['field']
+    assert_equal 'illegal', r.dig('rejected', 'code')
+    assert_equal 'hex', r.dig('rejected', 'mode')
+    flag = r.dig('rejected', 'flags').first
+    assert_equal 'trainer_money', flag['code']
+    assert_equal 99_999_999, flag['params']['value']
     assert_equal @original, @h.session.doc.to_bytes, 'no debe quedar nada aplicado'
 
-    r2 = @h.call('apply_ops', ops(set_trainer('money', 99_999_999)).merge(confirmed: true))
+    r2 = @h.call('apply_ops', ops(set_trainer('money', 99_999_999)).merge(mode: 'hax'))
     assert r2['applied']
+    assert_equal ['trainer_money'], r2['newFlags'].map { |f| f['code'] }
     assert_equal 99_999_999, @h.call('get_trainer')['trainer']['money']
   end
 
@@ -82,18 +85,22 @@ class EditorTest < Minitest::Test
     assert_equal @original, @h.session.doc.to_bytes
   end
 
-  def test_iv_fuera_de_rango_requiere_confirmacion
+  def test_iv_fuera_de_rango_se_rechaza_en_hex
     r = @h.call('apply_ops', ops(op: 'pokemon.patch', ref: 'party/0', patch: { iv: { HP: 40 } }))
     refute r['applied']
-    codes = r.dig('needsConfirmation', 'issues').map { |i| i['params']['field'] }
-    assert_includes codes, 'iv.HP'
+    flag = r.dig('rejected', 'flags').find { |f| f['code'] == 'iv_range' }
+    assert_equal 'HP', flag['subject']
+    assert_equal 'party/0', flag['ref']
   end
 
-  def test_ev_total_excesivo_es_solo_advertencia
+  def test_ev_total_excesivo_es_ilegal_en_hex_y_pasa_en_hax
     patch = { ev: { HP: 252, ATTACK: 252, DEFENSE: 252 } }
     r = @h.call('apply_ops', ops(op: 'pokemon.patch', ref: 'party/0', patch: patch))
+    refute r['applied']
+    assert_equal ['ev_total'], r.dig('rejected', 'flags').map { |f| f['code'] }
+    r = @h.call('apply_ops', ops(op: 'pokemon.patch', ref: 'party/0', patch: patch).merge(mode: 'hax'))
     assert r['applied'], r.inspect
-    assert(r['issues'].any? { |i| i['code'] == 'ev_total_over' })
+    assert(r['newFlags'].any? { |f| f['code'] == 'ev_total' })
   end
 
   def test_movimientos_reemplazar_agregar_y_quitar
@@ -139,10 +146,12 @@ class EditorTest < Minitest::Test
     assert_equal @original, @h.session.doc.to_bytes
   end
 
-  def test_cantidad_sobre_el_maximo_por_ranura_pide_confirmacion
+  def test_cantidad_sobre_el_maximo_por_ranura_se_rechaza_en_hex
     r = @h.call('apply_ops', ops(op: 'bag.set', pocket: 1, id: 'MASTERBALL', qty: 5000))
     refute r['applied']
-    assert_equal 'qty_range', r.dig('needsConfirmation', 'issues').first['code']
+    flag = r.dig('rejected', 'flags').first
+    assert_equal 'bag_qty_range', flag['code']
+    assert_equal 'MASTERBALL', flag['subject']
   end
 
   def test_medallas
@@ -183,7 +192,7 @@ class EditorTest < Minitest::Test
       -> { ops(op: 'bag.set', pocket: rng.rand(1..8), id: "ITEM#{rng.rand(5)}", qty: rng.rand(0..50)) },
       -> { ops(op: 'trainer.badge', index: rng.rand(0..7), value: rng.rand(2).zero?) }
     ]
-    30.times { @h.call('apply_ops', candidatos.sample(random: rng).call.merge(confirmed: true)) }
+    30.times { @h.call('apply_ops', candidatos.sample(random: rng).call.merge(mode: 'hax')) }
     assert @h.session.dirty?
     @h.call('undo_all')
     refute @h.session.dirty?
@@ -215,16 +224,20 @@ class EditorTest < Minitest::Test
     end
   end
 
-  def test_guardar_con_errores_pendientes_pide_confirmacion
+  def test_guardar_ilegalidades_hechas_en_hax_solo_se_puede_en_hax
     with_save_copy('Partida_2.rxdata') do |path|
       h = Harness.new
       h.open(path)
-      h.call('apply_ops', ops(set_trainer('money', 99_999_999)).merge(confirmed: true))
+      h.call('apply_ops', ops(set_trainer('money', 99_999_999)).merge(mode: 'hax'))
+      h.call('set_mode', mode: 'hex')
       r = h.call('save')
       refute r['applied']
-      assert_equal 'validation', r['reason']
-      r2 = h.call('save', confirmed: true)
-      assert r2['applied']
+      assert_equal 'illegal', r.dig('rejected', 'code')
+      assert_equal ['trainer_money'], r.dig('rejected', 'flags').map { |f| f['code'] }
+      assert h.session.dirty?, 'no se guarda ni se pierde nada'
+
+      h.call('set_mode', mode: 'hax')
+      assert h.call('save')['applied']
     end
   end
 

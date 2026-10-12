@@ -56,6 +56,9 @@ export interface SetFieldResult {
   new?: ValueSummary;
   pendingCount?: number;
   structuralRebuild?: boolean;
+  /** HeX: la edicion introduciria ilegalidades y no se aplico. */
+  rejected?: { code: string; mode: string; flags: import("./types").Flag[] };
+  newFlags?: import("./types").Flag[];
 }
 
 export interface NilReportGroup {

@@ -23,6 +23,10 @@ interface Props {
   grabRef: string | null;
   editable: boolean;
   flags: Record<string, "illegal" | "warning">;
+  /** ¿Atenuar esta casilla? (filtro "solo ilegales") */
+  isDim: (ref: string | null) => boolean;
+  /** Ilegales por caja (para el selector). */
+  illegalPerBox: Record<number, number>;
   onBox: (index: number) => void;
   onRename: (name: string) => void;
   onSelect: (dropRef: string) => void;
@@ -95,7 +99,10 @@ export function BoxPanel(p: Props) {
               onCommit={(v) => { setRenaming(false); p.onRename(v ?? ""); }} />
           ) : (
             <SelectField value={p.index} ariaLabel={t("boxes.title")}
-              options={p.boxes.map((b) => ({ value: b.index, label: `${b.name || t("boxes.box", { n: b.index + 1 })} (${b.filled})` }))}
+              options={p.boxes.map((b) => ({
+                value: b.index,
+                label: `${b.name || t("boxes.box", { n: b.index + 1 })} (${b.filled}${p.illegalPerBox[b.index] ? ` · ✗${p.illegalPerBox[b.index]}` : ""})`,
+              }))}
               onChange={(v) => p.onBox(v)} />
           )}
         </div>
@@ -141,6 +148,7 @@ export function BoxPanel(p: Props) {
               selected={p.selected === dropRef || (!!pk && p.selected === pk.ref)}
               grabbed={!!pk && p.grabRef === pk.ref}
               over={p.over === dropRef}
+              dim={p.isDim(pk?.ref ?? null)}
               tabbable={tabRef === dropRef}
               style={{ position: "absolute", left: Math.round(geo.originX * s + col * stepX), top: Math.round(geo.originY * s + row * stepY), height: Math.round(stepY) }}
               onSelect={p.onSelect}

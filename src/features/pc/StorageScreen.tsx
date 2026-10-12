@@ -7,7 +7,8 @@ import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
 import { usePc } from "../../stores/pc";
 import { useSession } from "../../stores/session";
-import { Banner, Button, ConfirmDialog, EmptyState, PageTitle, PokeballSpinner, PokemonIcon } from "../../ui";
+import { Banner, Button, ConfirmDialog, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Switch } from "../../ui";
+import { useLegality } from "../legality/useLegality";
 import { useSemanticQuery } from "../queries";
 import { BoxPanel } from "./BoxPanel";
 import { InfoPanel } from "./InfoPanel";
@@ -25,12 +26,14 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
   const openEditor = useSession((s) => s.openEditor);
   const profile = useSession((s) => s.profile);
   const linked = useGame((s) => s.status.linked);
-  const { box, selected, setBox, select } = usePc();
+  const { box, selected, setBox, select, onlyIllegal, setOnlyIllegal } = usePc();
   const [announce, setAnnounce] = useState("");
   const [releasing, setReleasing] = useState<string | null>(null);
 
   const storageQ = useSemanticQuery("storage", semantic.storage);
   const partyQ = useSemanticQuery("party", semantic.party);
+  const legalityQ = useLegality();
+  const report = legalityQ.data;
   const storage = storageQ.data;
   const party = useMemo(() => partyQ.data ?? [], [partyQ.data]);
   const editable = profile?.editable ?? false;
@@ -99,6 +102,17 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
   if (mode === "pc" && !storage) return <EmptyState>{t("boxes.noStorage")}</EmptyState>;
 
   const flags: Record<string, "illegal" | "warning"> = {};
+  const illegalPerBox: Record<number, number> = {};
+  for (const [ref, list] of Object.entries(report?.flags ?? {})) {
+    const worst = list.some((f) => f.severity === "illegal") ? "illegal" : list.some((f) => f.severity === "warning") ? "warning" : null;
+    if (!worst) continue;
+    flags[ref] = worst;
+    if (worst === "illegal" && ref.startsWith("box/")) {
+      const b = Number(ref.split("/")[1]);
+      illegalPerBox[b] = (illegalPerBox[b] ?? 0) + 1;
+    }
+  }
+  const isDim = (ref: string | null) => onlyIllegal && (ref == null || flags[ref] !== "illegal");
   const emptySelected = !!selected && !selectedPk && /^(party|box)\//.test(selected);
   const infoRef = selectedPk ? selectedPk.ref : null;
   const releaseTarget = releasing ? all.get(releasing) : null;
@@ -117,6 +131,13 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
           {t("game.banner")}
         </Banner>
       )}
+      <div className={styles.filterBar}>
+        <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }} title={t("legality.onlyIllegalHint")}>
+          <Switch checked={onlyIllegal} onChange={setOnlyIllegal} label={t("legality.onlyIllegal")} />
+          {t("legality.onlyIllegal")}
+        </label>
+        {report && report.summary.illegal > 0 && <span className="muted">{t("legality.illegal", { count: report.summary.illegal })}</span>}
+      </div>
       {dnd.grab && <div role="status" className={styles.grabHint}>{t("pc.grabHint")}</div>}
       <div className={styles.layout} data-mode={mode}>
         <PartyTray
@@ -128,6 +149,7 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
           over={dnd.drag?.over ?? null}
           grabRef={dnd.grab ?? dnd.drag?.ref ?? null}
           flags={flags}
+          isDim={isDim}
           onSelect={select}
           onOpen={openEditor}
           dragProps={dnd.dragProps}
@@ -147,6 +169,8 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
             grabRef={dnd.grab ?? dnd.drag?.ref ?? null}
             editable={editable}
             flags={flags}
+            isDim={isDim}
+            illegalPerBox={illegalPerBox}
             onBox={setBox}
             onRename={(name) => void apply([{ op: "box.patch", index: boxIndex, name }])}
             onSelect={select}
@@ -156,7 +180,7 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
             wasDragged={dnd.wasDragged}
           />
         )}
-        <InfoPanel pokemonRef={infoRef} emptySlot={emptySelected} editable={editable} onEdit={openEditor} onRelease={setReleasing} />
+        <InfoPanel pokemonRef={infoRef} emptySlot={emptySelected} editable={editable} partial={report?.coverage.level !== "full"} onEdit={openEditor} onRelease={setReleasing} />
       </div>
 
       {dnd.drag && ghostPk && (

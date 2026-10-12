@@ -66,6 +66,9 @@ Commands.register('get_pokemon') do |ctx, params|
   dto = m.pokemon_detail(params['ref'].to_s)
   raise DriverError.new('PokemonNotFound', "no hay Pokemon en #{params['ref']}", { ref: params['ref'] }) unless dto
 
+  engine = Sem::Legality::Engine.new(ctx.session)
+  entity = engine.entity_for_ref(params['ref'].to_s)
+  dto[:flags] = entity ? engine.flags_for(entity).map { |f| f.to_h(params['ref'].to_s) } : []
   { pokemon: dto }
 end
 
@@ -111,11 +114,11 @@ end
 # ── Edicion ──────────────────────────────────────────────────────────────────
 
 Commands.register('apply_ops', mutates: true) do |ctx, params|
-  Sem::Editor.new(ctx.session).apply(params['ops'], label: params['label'], confirmed: !!params['confirmed'])
+  Sem::Editor.new(ctx.session).apply(params['ops'], label: params['label'], mode: params['mode'])
 end
 
 Commands.register('preview_ops') do |ctx, params|
-  Sem::Editor.new(ctx.session).preview(params['ops'])
+  Sem::Editor.new(ctx.session).preview(params['ops'], mode: params['mode'])
 end
 
 Commands.register('undo', mutates: true) { |ctx, _p| Sem::Editor.new(ctx.session).undo }

@@ -6,6 +6,7 @@ import { useSession, type ViewId } from "../stores/session";
 import { fileName } from "../lib/format";
 import { cx } from "../ui";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
+import { ModeSwitch } from "./ModeSwitch";
 import styles from "./app.module.css";
 
 const NAV: { id: ViewId; icon: ReactNode; needs?: string }[] = [
@@ -46,6 +47,7 @@ export function PokeHeader() {
           </span>
         )}
         <span className={styles.spacer} />
+        <ModeSwitch />
         <LangSwitch />
         <ThemeToggle />
         <button type="button" className={styles.hbtn} onClick={() => void close()}>

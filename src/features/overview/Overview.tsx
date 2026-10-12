@@ -7,6 +7,7 @@ import { useSession } from "../../stores/session";
 import { Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Sprite, Chip } from "../../ui";
 import { ProfileCard } from "../shared/ProfileCard";
 import shared from "../shared/shared.module.css";
+import { LegalityCard } from "../legality/LegalityCard";
 import { useSemanticQuery } from "../queries";
 import styles from "./overview.module.css";
 
@@ -123,6 +124,8 @@ export function Overview() {
           </div>
         )}
       </Card>
+
+      <LegalityCard />
 
       <div className={shared.grid2}>
         {profile && <ProfileCard profile={profile} compact />}
