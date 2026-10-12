@@ -1,0 +1,149 @@
+name: release-windows
+
+# Release de PESHeX para Windows: un .zip con todo lo necesario para ejecutarlo (sin instalador).
+#   * tag vX.Y.Z (o vX.Y.Z-sufijo)  -> compila, prueba y PUBLICA el Release en GitHub
+#   * tag ci-*                      -> solo compila y prueba (para ensayar la pipeline); no publica nada
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+      - "ci-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Compilar, probar y empaquetar (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Versión y tag
+        id: ver
+        shell: bash
+        run: |
+          tag_arg=()
+          [[ "$GITHUB_REF_TYPE" == "tag" ]] && tag_arg=(--tag "$GITHUB_REF_NAME")
+          node scripts/check-version.mjs "${tag_arg[@]}" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Dependencias
+        run: npm ci
+
+      - name: TypeScript y pruebas de la UI
+        run: |
+          npx tsc --noEmit
+          npm test
+          npm run test:release
+
+      - name: Ruby portátil (RubyInstaller, SHA256 fijado)
+        shell: pwsh
+        run: ./scripts/setup-ruby.ps1
+
+      - name: Pruebas del driver con el Ruby que se distribuye
+        shell: pwsh
+        run: |
+          $bin = Join-Path $PWD 'src-tauri\resources\ruby\bin'
+          $env:PATH = "$bin;$env:PATH"
+          ruby -v
+          ruby -Itest scripts/run_ruby_tests.rb
+
+      - name: Compilar PESHeX.exe
+        run: npx tauri build --no-bundle
+
+      - name: Firmar (solo si hay certificado en los secretos)
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: ./scripts/sign-windows.ps1 -File src-tauri/target/release/PESHeX.exe
+
+      - name: Empaquetar el zip
+        shell: pwsh
+        run: node scripts/package-release.mjs --exe src-tauri/target/release/PESHeX.exe --version "${{ steps.ver.outputs.version }}" --out release-out
+
+      - name: Prueba de humo del zip (ruta con espacios y ñ, PATH reducido)
+        shell: pwsh
+        run: ./scripts/smoke-release.ps1 -Zip "release-out/PESHeX-${{ steps.ver.outputs.version }}-windows-x64.zip" -Version "${{ steps.ver.outputs.version }}"
+
+      - name: Atestación de procedencia (solo repositorios públicos)
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release-out/*.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: peshex-windows-x64
+          path: |
+            release-out/*.zip
+            release-out/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publicar el Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: peshex-windows-x64
+          path: dist-release
+
+      - name: Verificar el tag y las huellas
+        shell: bash
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "tag no valido: $GITHUB_REF_NAME"; exit 1; }
+          cd dist-release
+          ls -la
+          sha256sum -c SHA256SUMS.txt
+          test "$(ls PESHeX-*-windows-x64.zip | wc -l)" = 1
+          test -f "PESHeX-${GITHUB_REF_NAME#v}-windows-x64.zip"
+
+      - name: Crear (o actualizar) el Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          flags=()
+          [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease)
+          files=(dist-release/PESHeX-*-windows-x64.zip dist-release/SHA256SUMS.txt)
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${files[@]}" \
+              --title "PESHeX ${GITHUB_REF_NAME#v}" \
+              --notes-file .github/release-notes.md \
+              --verify-tag "${flags[@]}"
+          fi

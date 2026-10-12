@@ -1,0 +1,69 @@
+PESHeX {{VERSION}} - Pokemon Essential HeX
+==========================================
+
+PESHeX es un editor visual de partidas guardadas (.rxdata) de Pokemon Essentials y
+fangames basados en el. Muestra el entrenador, el equipo, el PC como en los juegos, la
+mochila, IV/EV, movimientos... y tiene dos modos:
+
+  HeX  no deja introducir Pokemon ni valores ilegales para TU juego.
+  HaX  permite cualquier cambio (los avisos se muestran, pero nunca bloquean).
+
+Herramienta de fans, sin afiliacion con Nintendo, Game Freak ni The Pokemon Company.
+
+
+QUE NECESITAS
+-------------
+  * Windows 10 u 11 de 64 bits.
+  * Microsoft Edge WebView2 (viene con Windows 11 y con Windows 10 actualizado). Si falta,
+    PESHeX te avisa y te ofrece la descarga:
+    https://go.microsoft.com/fwlink/p/?LinkId=2124703
+  * Nada mas: Ruby viene incluido en la carpeta "ruby". No hay que instalar nada.
+
+
+COMO USARLO
+-----------
+  1. Extrae TODO el contenido del zip en una carpeta (por ejemplo, en Documentos). No lo
+     ejecutes desde dentro del zip: PESHeX necesita las carpetas "ruby" y "rxdata" al
+     lado de PESHeX.exe.
+  2. Abre PESHeX.exe.
+  3. Cierra tu juego, elige tu partida (Game.rxdata) y editala. Antes de guardar se crea
+     una copia de seguridad (.bak) y siempre puedes deshacer.
+  4. Recomendado: en Ajustes, vincula la carpeta de tu juego (la que tiene Game.ini, Data
+     y Graphics) para ver los nombres y sprites reales y para que HeX compruebe la
+     legalidad con las reglas de TU juego. Solo se lee: nunca se modifica.
+
+Las partidas de Essentials v19 en adelante suelen estar en %APPDATA%\<NombreDelJuego>\.
+
+
+SOBRE LOS AVISOS DE WINDOWS Y DEL ANTIVIRUS
+-------------------------------------------
+PESHeX no esta firmado digitalmente (la firma de codigo es de pago). Por eso Windows
+SmartScreen puede mostrar "Windows protegio su PC" la primera vez. No significa que haya
+un virus: significa que el programa es nuevo y poco descargado. Para abrirlo:
+
+  "Mas informacion"  ->  "Ejecutar de todas formas"
+
+Si descargaste el zip y Windows lo marco como descargado de Internet, haz clic derecho en
+el zip -> Propiedades -> "Desbloquear" ANTES de extraerlo (o en PowerShell:
+Unblock-File .\PESHeX-{{VERSION}}-windows-x64.zip).
+
+Puedes comprobar que el zip no ha sido alterado comparando su huella con SHA256SUMS.txt
+(publicado junto al zip en la pagina del release):
+  PowerShell:  Get-FileHash .\PESHeX-{{VERSION}}-windows-x64.zip -Algorithm SHA256
+Dentro de la carpeta, CONTENIDO.sha256 lista la huella de cada archivo.
+
+Si tu antivirus marca el programa como sospechoso, es un falso positivo (programa nuevo,
+sin firmar, que ejecuta un Ruby incluido). Puedes enviarlo a Microsoft para que lo
+revisen: https://www.microsoft.com/en-us/wdsi/filesubmission
+
+
+COPIAS DE SEGURIDAD, DESINSTALAR, LICENCIA
+------------------------------------------
+  * Al guardar, PESHeX crea una copia .bak junto a tu partida.
+  * No hay instalador: para quitar PESHeX borra su carpeta. Los ajustes (idioma, tema, modo,
+    carpetas de juego recordadas) se guardan dentro del propio programa (WebView2) y en
+    %LOCALAPPDATA%\com.zeik.peshex.
+  * PESHeX se distribuye bajo licencia MIT (archivo LICENSE). El logo y las marcas Pokemon /
+    Poke Ball no estan cubiertos por esa licencia. Avisos de terceros: THIRD-PARTY-NOTICES.txt.
+
+Codigo y novedades: https://github.com/zeik-dev/pbs-editor

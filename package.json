@@ -3,7 +3,10 @@
   "description": "PESHeX (Pokémon Essential HeX): editor visual de partidas de Pokémon Essentials",
   "license": "MIT",
   "author": "Randy A. Germosén (zeik-dev)",
-  "repository": { "type": "git", "url": "https://github.com/zeik-dev/pbs-editor.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeik-dev/pbs-editor.git"
+  },
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -14,8 +17,9 @@
     "tauri": "tauri",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:ruby": "ruby -Itest -e 'Dir[\"test/**/*_test.rb\"].sort.each { |f| require \"./#{f}\" }'",
-    "e2e": "playwright test"
+    "test:ruby": "ruby -Itest scripts/run_ruby_tests.rb",
+    "e2e": "playwright test",
+    "test:release": "node --test scripts/release.test.mjs"
   },
   "dependencies": {
     "@fontsource/press-start-2p": "^5.3.0",
