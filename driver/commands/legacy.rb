@@ -169,6 +169,9 @@ Commands.register('open', needs_session: false) do |ctx, params|
 
   data = { roots: doc.roots.size, wrapper: doc.wrapper.to_s, fileSize: File.size(path),
            indexState: 'idle', roundtripChecked: false }
+  # Carpeta del juego junto al save (solo juegos portables/antiguos). No se carga aqui:
+  # la UI llama a set_game_folder justo despues para que `open` siga siendo rapido.
+  data[:gameSuggestion] = Sem::GameData::Locator.find_from_save(path) if autodetect
   data.merge!(Sem::Api.open_payload(session)) if defined?(Sem::Api)
   data
 end

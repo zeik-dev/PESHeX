@@ -5,13 +5,15 @@
 #
 # `mutates: true` marca los comandos que modifican el documento: el bucle
 # principal sube `session.revision` despues de ejecutarlos con exito.
+# `bumps: true` sube la revision SIN tocar el documento (p. ej. vincular la
+# carpeta del juego cambia los nombres que muestran las vistas).
 # El handler recibe un `Context` (sesion actual + bandera de apagado) y los
 # parametros crudos de la peticion; devuelve un Hash que se fusiona en la
 # respuesta (o lanza DriverError).
 # =============================================================================
 
 module Commands
-  Entry = Struct.new(:name, :needs_session, :mutates, :handler)
+  Entry = Struct.new(:name, :needs_session, :mutates, :bumps, :handler)
 
   class Context
     attr_accessor :session, :shutdown
@@ -25,8 +27,8 @@ module Commands
   @entries = {}
 
   class << self
-    def register(name, needs_session: true, mutates: false, &handler)
-      @entries[name.to_s] = Entry.new(name.to_s, needs_session, mutates, handler)
+    def register(name, needs_session: true, mutates: false, bumps: false, &handler)
+      @entries[name.to_s] = Entry.new(name.to_s, needs_session, mutates, bumps, handler)
     end
 
     def fetch(name)
@@ -49,7 +51,9 @@ module Commands
       ctx.session.roundtrip_diff if entry.mutates && ctx.session # antes de tocar nada
 
       data = entry.handler.call(ctx, params) || {}
-      ctx.session.bump_revision! if entry.mutates && ctx.session && data.is_a?(Hash) && data[:applied] != false
+      if (entry.mutates || entry.bumps) && ctx.session && data.is_a?(Hash) && data[:applied] != false
+        ctx.session.bump_revision!
+      end
       data
     end
   end

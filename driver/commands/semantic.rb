@@ -30,7 +30,7 @@ Commands.register('set_profile_override', mutates: false) do |ctx, params|
     raise DriverError.new('UnknownProfile', "perfil desconocido: #{id}", { profileId: id })
   end
 
-  ctx.session.semantic = Sem::State.detect(ctx.session.doc, override: id)
+  Sem::Api.state!(ctx.session, redetect: true, override: id)
   { profile: ctx.session.semantic.resolved.summary }
 end
 

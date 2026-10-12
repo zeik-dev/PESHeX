@@ -9,7 +9,7 @@
 
 class Session
   attr_accessor :doc, :file_path, :output_path, :page_size,
-                :revision, :script_paths, :semantic
+                :revision, :script_paths, :semantic, :game, :game_calibration
   attr_reader :journal
 
   def initialize(doc:, file_path:, output_path:, page_size:, script_paths: [])
@@ -27,6 +27,8 @@ class Session
     @scripts = nil
     @script_report = nil
     @semantic = nil
+    @game = nil # Sem::GameData::Store de la carpeta vinculada (o nil)
+    @game_calibration = nil
   end
 
   # Verifica (una sola vez) que el documento se reconstruye byte a byte. Debe

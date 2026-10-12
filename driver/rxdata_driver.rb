@@ -19,6 +19,8 @@
 #   session.rb             estado de un archivo abierto (indice de campos perezoso)
 #   commands/registry.rb   registro de comandos
 #   commands/legacy.rb     comandos crudos originales (vista Avanzado)
+#   commands/semantic.rb   vistas y edicion semanticas
+#   commands/gamedata.rb   carpeta del juego: nombres, catalogo, calculo de stats
 #   semantic/*             capa semantica Pokemon (deteccion de base, vistas, edicion)
 # =============================================================================
 
@@ -30,6 +32,7 @@ require_relative 'commands/registry'
 require_relative 'semantic'
 require_relative 'commands/legacy'
 require_relative 'commands/semantic'
+require_relative 'commands/gamedata'
 
 C.disable!
 $stdin.set_encoding(Encoding::UTF_8, Encoding::UTF_8)

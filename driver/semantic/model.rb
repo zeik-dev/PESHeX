@@ -11,6 +11,8 @@ module Sem
     POCKET_KEYS = %w[items medicine pokeballs tmhm berries mail battle key].freeze
 
     attr_reader :resolved, :scan, :doc
+    # Datos del juego vinculado (Sem::GameData::Store) y su calibracion contra este save.
+    attr_accessor :game, :calibration
 
     def initialize(resolved)
       @resolved = resolved
@@ -24,7 +26,8 @@ module Sem
     end
 
     def limits
-      @resolved.profile.limits
+      base = @resolved.profile.limits
+      @game ? base.merge(@game.limit_overrides) : base
     end
 
     # ── Nombres ───────────────────────────────────────────────────────────────
@@ -32,7 +35,7 @@ module Sem
     def name_of(kind, id)
       return nil if id.nil?
 
-      @scan.names[kind][id.to_s] || Ids.pretty(id)
+      @game&.name_of(kind, id) || @scan.names[kind][id.to_s] || Ids.pretty(id)
     end
 
     def id_dto(kind, node)
@@ -302,12 +305,38 @@ module Sem
         ball: Ids.of(first_value(pk, %w[@poke_ball @ballused])),
         iv: StatMap.read(iv), ev: evs, evTotal: evs.values.compact.sum,
         ivLayout: StatMap.layout(iv)&.to_s, evLayout: StatMap.layout(ev)&.to_s,
-        stats: { cached: cached },
+        stats: stats_info(pk, cached), growth: growth_info(pk),
         moves: move_dtos(pk), owner: owner_dto(pk),
         personalId: Tree.int_value(first_value(pk, %w[@personalID @personal_id])),
         extras: extras_for(pk, Vanilla::POKEMON_DISPLAYED, Vanilla::POKEMON_OTHER, path),
         limits: limits
       )
+    end
+
+    # Stats guardados vs los que da la formula del motor con los datos del juego.
+    # `trusted` solo si la calibracion confirmo que la formula cuadra con este save.
+    def stats_info(pk, cached)
+      info = { cached: cached }
+      return info unless @game&.species?
+
+      f = PokeFacts.read(pk)
+      base = @game.base_stats(f.species, f.form)
+      return info if base.size < 6 || f.level.nil? || f.iv.values.any?(&:nil?) || f.ev.values.any?(&:nil?)
+
+      computed = GameData::Tables.calc_all(base, f.level, f.iv, f.ev, f.nature_for_stats || f.nature)
+      info.merge(computed: computed, match: computed == cached, trusted: @calibration&.dig(:stats, :status) == 'ok')
+    end
+
+    # Grupo de experiencia y umbrales del nivel actual (para validar nivel/exp y ajustarlos juntos).
+    def growth_info(pk)
+      return nil unless @game&.species?
+
+      f = PokeFacts.read(pk)
+      rate = @game.growth_rate(f.species, f.form)
+      return nil if f.level.nil?
+
+      { rate: rate, expAtLevel: GameData::Tables.exp_at(rate, f.level), expAtNext: GameData::Tables.exp_at(rate, f.level + 1),
+        minimumLevel: @game.minimum_level(f.species) }
     end
 
     # Otros lugares del save donde aparece el MISMO nodo Pokemon.

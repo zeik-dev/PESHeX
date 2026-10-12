@@ -23,7 +23,8 @@ module Sem
 
   VANILLA_LIMITS = {
     maxLevel: 100, maxMoney: 999_999, maxCoins: 99_999, maxBattlePoints: 9_999, maxSoot: 9_999,
-    partySize: 6, ivMax: 31, evStatMax: 252, evTotalMax: 510, bagPerSlot: 999, ppMax: 99, happinessMax: 255
+    partySize: 6, ivMax: 31, evStatMax: 252, evTotalMax: 510, bagPerSlot: 999, ppMax: 99, happinessMax: 255,
+    boxCount: 40, maxPlayerName: 10, maxNickname: 10, maxMoves: 4
   }.freeze
 
   # Claves/clases del motor que no son "contenido del jugador": se agrupan
