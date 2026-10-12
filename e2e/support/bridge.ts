@@ -60,8 +60,6 @@ export class DriverBridge {
       }
       case "plugin:dialog|open":
         return { value: this.dialogPath };
-      case "plugin:os|locale":
-        return { value: this.locale };
       case "plugin:event|listen":
         return { value: 1 };
       default:
