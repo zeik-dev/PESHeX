@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error type error without @types/node package
@@ -28,5 +29,12 @@ export default defineConfig(() => ({
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
+  },
+
+  // Tests unitarios (vitest). Los e2e viven en e2e/ y los corre Playwright.
+  test: {
+    environment: "jsdom",
+    include: ["src/**/*.test.{ts,tsx}"],
+    css: { modules: { classNameStrategy: "non-scoped" } },
   },
 }));

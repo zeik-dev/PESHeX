@@ -1,0 +1,16 @@
+.old {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.new {
+  color: var(--success);
+  font-family: var(--font-mono);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

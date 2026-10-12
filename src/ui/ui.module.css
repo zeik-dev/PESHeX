@@ -1,0 +1,526 @@
+/* Primitivas del design system Poké Ball. Todo color sale de theme/tokens.css. */
+
+/* ── Poké Ball ─────────────────────────────────────────────────────────── */
+.pokeball {
+  display: inline-block;
+  flex: none;
+}
+
+.spinnerWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+}
+
+.spinner {
+  animation: wobble 1.6s ease-in-out infinite;
+  transform-origin: 50% 70%;
+}
+
+@keyframes wobble {
+  0%,
+  45%,
+  100% {
+    transform: rotate(0);
+  }
+  10% {
+    transform: rotate(-22deg);
+  }
+  20% {
+    transform: rotate(18deg);
+  }
+  30% {
+    transform: rotate(-10deg);
+  }
+  38% {
+    transform: rotate(6deg);
+  }
+}
+
+/* ── Botones ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.12s, border-color 0.12s, transform 0.05s;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+}
+
+.sm {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.primary {
+  background: var(--pb-red-strong);
+  color: #fff;
+}
+.primary:hover:not(:disabled) {
+  background: var(--pb-red-dark);
+}
+
+.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--surface-3);
+}
+
+.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.iconOnly {
+  padding: 0;
+  width: 36px;
+}
+.iconOnly.sm {
+  width: 30px;
+}
+
+/* ── Tarjetas y secciones ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.pageTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chipGood {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: transparent;
+}
+.chipWarn {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: transparent;
+}
+.chipBad {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: transparent;
+}
+.chipInfo {
+  background: var(--info-soft);
+  color: var(--info);
+  border-color: transparent;
+}
+.chipAccent {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+/* ── Formularios ───────────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.input {
+  min-height: 36px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+.input:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+.input:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.inputWarn {
+  border-color: var(--warning);
+}
+.number {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--border);
+  background: var(--surface-3);
+  padding: 0;
+  flex: none;
+  transition: background-color 0.15s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.15s, background-color 0.15s;
+}
+.switch[aria-checked="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.switch[aria-checked="true"]::after {
+  transform: translateX(18px);
+  background: var(--accent);
+}
+.switch:disabled {
+  opacity: 0.5;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rowWrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ── Pestañas internas ─────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.tab:hover {
+  color: var(--text);
+}
+.tabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tabBadge {
+  font-size: 11px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  color: var(--text-muted);
+}
+
+/* ── Modales y panel lateral ───────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  background: rgb(10 10 12 / 55%);
+  animation: fade 0.12s ease-out;
+}
+.overlayCenter {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.overlayRight {
+  justify-content: flex-end;
+}
+.modal {
+  width: min(520px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+.drawer {
+  width: min(640px, 100%);
+  height: 100%;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text);
+  border-left: 6px solid var(--pb-ink);
+  box-shadow: var(--shadow-lg);
+  animation: slide 0.16s ease-out;
+}
+.modalHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 16px;
+}
+.modalBody {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modalFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+
+/* ── Avisos ────────────────────────────────────────────────────────────── */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+}
+.toast {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--pb-ink);
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+  border-left: 6px solid var(--success);
+}
+.toast_error {
+  border-left-color: var(--pb-red);
+}
+.toast_warning {
+  border-left-color: #f0b84d;
+}
+.toast_info {
+  border-left-color: #8db7f3;
+}
+.toastDetail {
+  font-size: 12px;
+  opacity: 0.8;
+  word-break: break-all;
+}
+
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  margin-bottom: 14px;
+}
+.bannerWarn {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: var(--warning);
+}
+.bannerBad {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.bannerInfo {
+  background: var(--info-soft);
+  color: var(--info);
+  border-color: var(--info);
+}
+.bannerBody {
+  flex: 1;
+  min-width: 0;
+}
+.bannerTitle {
+  font-weight: 700;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 16px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Sprite (marcador de posicion) ─────────────────────────────────────── */
+.sprite {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 800;
+  color: #fff;
+  flex: none;
+  user-select: none;
+  border: 3px solid var(--pb-ink);
+  box-shadow: inset 0 -6px 0 rgb(0 0 0 / 14%);
+}
+.spriteImg {
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+.spriteShiny::after {
+  content: "★";
+  position: absolute;
+  right: -4px;
+  top: -6px;
+  font-size: 14px;
+  color: #f2c200;
+  text-shadow: 0 0 2px #000;
+}
+
+/* ── Barras ────────────────────────────────────────────────────────────── */
+.bar {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+  min-width: 60px;
+}
+.barFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transition: width 0.2s;
+}
+.barOver {
+  background: var(--warning);
+}
+
+/* ── Medidor de cobertura ──────────────────────────────────────────────── */
+.coverage {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.coverageLegend {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+/* El contenedor del dialogo recibe el foco al abrir (para el teclado), pero no
+   necesita el anillo de foco: los controles de dentro si lo muestran. */
+.modal:focus,
+.drawer:focus {
+  outline: none;
+}

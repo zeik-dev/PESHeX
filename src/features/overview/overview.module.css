@@ -1,0 +1,78 @@
+.trainer {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.trainerName {
+  font-size: 22px;
+  font-weight: 800;
+}
+.badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.badgeOn,
+.badgeOff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  border: 3px solid var(--pb-ink);
+}
+.badgeOn {
+  background: #f2c200;
+  color: #222224;
+}
+.badgeOff {
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border-style: dashed;
+  border-color: var(--border);
+}
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.stat {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.statValue {
+  font-size: 24px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.partyStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.partyMini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  min-width: 0;
+}
+.partyMini:hover {
+  border-color: var(--accent);
+}
+.miniName {
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

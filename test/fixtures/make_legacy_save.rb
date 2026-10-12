@@ -27,6 +27,7 @@ module LegacyFixture
   end
 
   def self.obj(name, **ivars)
+    define_classes
     o = Object.const_get(name).allocate
     ivars.each { |k, v| o.instance_variable_set("@#{k}", v) }
     o

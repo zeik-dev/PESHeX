@@ -1,0 +1,59 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.search {
+  min-height: 36px;
+  min-width: 240px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.item:last-child {
+  border-bottom: 0;
+}
+.itemIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 2px solid var(--pb-ink);
+  flex: none;
+}
+.itemName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.addRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}

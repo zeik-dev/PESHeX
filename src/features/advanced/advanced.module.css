@@ -1,0 +1,137 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.filters > input:first-child {
+  flex: 1;
+  min-width: 220px;
+}
+.meta {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.scroll {
+  position: relative;
+  height: min(60vh, 560px);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+.row:hover {
+  background: var(--surface-2);
+}
+.selected {
+  background: var(--accent-soft);
+}
+.path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.value {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.k_nil {
+  color: var(--text-muted);
+}
+.k_num {
+  color: var(--info);
+}
+.k_str {
+  color: var(--success);
+}
+.k_sym {
+  color: var(--accent);
+}
+.k_obj {
+  color: var(--info);
+}
+.c_alta {
+  color: var(--success);
+}
+.c_media {
+  color: var(--warning);
+}
+.c_baja {
+  color: var(--danger);
+}
+.pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+.detail {
+  position: sticky;
+  top: 0;
+}
+.detailPath {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  word-break: break-all;
+  margin-bottom: 6px;
+}
+.box {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  margin: 10px 0;
+  font-size: 13px;
+}
+.evidence {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+}
+.summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.nilTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.nilTable th,
+.nilTable td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.slotKey {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}

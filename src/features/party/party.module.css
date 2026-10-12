@@ -1,0 +1,47 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 14px;
+}
+.card {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+.card:hover {
+  border-color: var(--accent);
+}
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.name {
+  font-size: 16px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gender {
+  color: var(--accent);
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.hp {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
