@@ -21,6 +21,8 @@ module Sem
   end
 
   class Editor
+    include EditorPc
+
     TRAINER_TYPES = {
       'name' => :str, 'id' => :int, 'trainer_type' => :id, 'gender' => :int, 'language' => :int,
       'money' => :int, 'coins' => :int, 'battle_points' => :int, 'soot' => :int
@@ -135,7 +137,8 @@ module Sem
     def default_label(ops)
       first = ops.first
       key = ops.size == 1 ? "op.#{first['op']}" : 'op.multiple'
-      { key: key, params: { ref: first['ref'], field: first['field'] || first['ivar'], count: ops.size } }
+      { key: key, params: { ref: first['ref'] || first['from'] || first['index'], to: first['to'],
+                            field: first['field'] || first['ivar'], count: ops.size } }
     end
 
     def apply_one(builder, op)
@@ -145,6 +148,9 @@ module Sem
       when 'bag.set' then op_bag_set(builder, op)
       when 'trainer.badge' then op_badge(builder, op)
       when 'extra.set' then op_extra_set(builder, op)
+      when 'pokemon.move' then op_pokemon_move(builder, op)
+      when 'pokemon.remove' then op_pokemon_remove(builder, op)
+      when 'box.patch' then op_box_patch(builder, op)
       else raise DriverError.new('UnknownOp', "operacion desconocida: #{op['op'].inspect}", { op: op['op'] })
       end
     end

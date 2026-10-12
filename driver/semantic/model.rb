@@ -242,7 +242,8 @@ module Sem
         egg: egg?(pk),
         hp: Tree.int_value(first_value(pk, %w[@hp])), totalHp: Tree.int_value(first_value(pk, %w[@totalhp])),
         item: id_dto(:item, first_value(pk, %w[@item])),
-        status: Ids.of(first_value(pk, %w[@status]))
+        status: Ids.of(first_value(pk, %w[@status])),
+        ball: Ids.of(first_value(pk, %w[@poke_ball @ballused]))
       }
     end
 

@@ -5,3 +5,4 @@ export { Sprite, StatBar, HpBar, PageTitle, Card, CoverageMeter, bucketColor } f
 export { cx } from "./cx";
 export { GameImage, PokemonIcon, ItemIcon, BallIcon, HeldItemMark } from "./GameImage";
 export { ComboBox, type ComboOption } from "./combobox";
+export { TypeChip } from "./TypeChip";

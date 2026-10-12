@@ -140,6 +140,7 @@ export interface PokemonSummary {
   totalHp: number | null;
   item: IdRef | null;
   status: string | number | null;
+  ball: string | number | null;
 }
 
 export type StatId = "HP" | "ATTACK" | "DEFENSE" | "SPECIAL_ATTACK" | "SPECIAL_DEFENSE" | "SPEED";
@@ -277,7 +278,10 @@ export type EditOp =
   | { op: "pokemon.patch"; ref: string; patch: PokemonPatch }
   | { op: "bag.set"; ref: string; qty: number }
   | { op: "bag.set"; pocket: number; id: string | number; qty: number }
-  | { op: "extra.set"; ref: string; ivar: string; value: string | number | boolean | null };
+  | { op: "extra.set"; ref: string; ivar: string; value: string | number | boolean | null }
+  | { op: "pokemon.move"; from: string; to: string }
+  | { op: "pokemon.remove"; ref: string }
+  | { op: "box.patch"; index: number; name?: string; background?: number };
 
 export interface PokemonPatch {
   species?: string | number;

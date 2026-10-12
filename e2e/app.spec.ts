@@ -124,7 +124,8 @@ test("valor fuera de rango pide confirmacion", async ({ page }) => {
 test("editor de Pokémon: IV perfectos, movimientos y guardado real", async ({ page }) => {
   await openSave(page);
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
-  await page.getByRole("button", { name: "Trump" }).click();
+  await page.getByRole("button", { name: /^Trump/ }).click();
+  await page.getByRole("button", { name: "Editar", exact: true }).click();
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByText("Gumshoos").first()).toBeVisible();
   await shot(page, "40-pokemon-general-es-light");

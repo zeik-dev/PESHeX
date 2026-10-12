@@ -213,6 +213,22 @@
     "total": "{{count}} Pokémon en total",
     "noStorage": "No se encontró el PC en este archivo."
   },
+  "pc": {
+    "info": "Datos del Pokémon",
+    "emptyHint": "Casilla vacía. Arrastra un Pokémon hasta aquí para moverlo.",
+    "selectHint": "Selecciona un Pokémon para ver sus datos. Arrástralo a otra casilla para moverlo o intercambiarlo.",
+    "keyboardHelp": "Teclado: flechas para moverte, Espacio para agarrar y soltar, Intro para editar, Re Pág / Av Pág para cambiar de caja.",
+    "edit": "Editar",
+    "release": "Liberar",
+    "releaseTitle": "Liberar a {{name}}",
+    "releaseBody": "El Pokémon se quitará de la partida. Puedes deshacerlo con «Deshacer» antes de guardar.",
+    "ball": "Ball",
+    "renameBox": "Renombrar caja",
+    "boxName": "Nombre de la caja",
+    "grabbed": "{{name}} agarrado. Muévete con las flechas y pulsa Espacio para soltarlo; Esc cancela.",
+    "grabHint": "Pokémon agarrado: muévete con las flechas y pulsa Espacio sobre la casilla de destino (Esc cancela).",
+    "moved": "{{name}} movido a {{to}}."
+  },
   "pokemon": {
     "tabs": {
       "general": "General",
@@ -397,7 +413,9 @@
       "op": {
         "set": "Editar entrenador: {{field}}",
         "pokemon": {
-          "patch": "Editar Pokémon {{ref}}"
+          "patch": "Editar Pokémon {{ref}}",
+          "move": "Mover Pokémon ({{ref}} → {{to}})",
+          "remove": "Liberar Pokémon {{ref}}"
         },
         "bag": {
           "set": "Editar la mochila"
@@ -409,7 +427,10 @@
           "set": "Editar {{field}}"
         },
         "multiple": "{{count}} cambios a la vez",
-        "raw": "Edición avanzada: {{path}}"
+        "raw": "Edición avanzada: {{path}}",
+        "box": {
+          "patch": "Editar la caja"
+        }
       }
     }
   },
@@ -584,7 +605,8 @@
       "abilities_untrusted": "Las habilidades de la partida no coinciden con las de sus especies: no se comprueban."
     },
     "gameTitle": "Título del juego",
-    "encryptedTitle": "Juego empaquetado"
+    "encryptedTitle": "Juego empaquetado",
+    "bannerTitle": "Sin carpeta del juego"
   },
   "errors": {
     "title": "Algo salió mal",
@@ -621,7 +643,9 @@
     "Io": "Error de disco: {{message}}",
     "AssetScope": "No se pudo dar acceso a los gráficos del juego: {{message}}",
     "AppDataDir": "No se pudo encontrar la carpeta de datos de la aplicación.",
-    "Internal": "Error interno: {{message}}"
+    "Internal": "Error interno: {{message}}",
+    "PartyFull": "El equipo está lleno (máximo {{max}}).",
+    "PartyTooSmall": "El equipo no puede quedar vacío."
   },
   "save": {
     "done": "Partida guardada.",

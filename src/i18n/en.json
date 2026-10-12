@@ -211,6 +211,22 @@
     "total": "{{count}} Pokémon in total",
     "noStorage": "The PC was not found in this file."
   },
+  "pc": {
+    "info": "Pokémon details",
+    "emptyHint": "Empty slot. Drag a Pokémon here to move it.",
+    "selectHint": "Select a Pokémon to see its details. Drag it onto another slot to move or swap it.",
+    "keyboardHelp": "Keyboard: arrow keys to move, Space to grab and drop, Enter to edit, Page Up / Page Down to change box.",
+    "edit": "Edit",
+    "release": "Release",
+    "releaseTitle": "Release {{name}}",
+    "releaseBody": "The Pokémon will be removed from the save. You can undo it with “Undo” before saving.",
+    "ball": "Ball",
+    "renameBox": "Rename box",
+    "boxName": "Box name",
+    "grabbed": "{{name}} grabbed. Move with the arrow keys and press Space to drop it; Esc cancels.",
+    "grabHint": "Pokémon grabbed: move with the arrow keys and press Space on the target slot (Esc cancels).",
+    "moved": "{{name}} moved to {{to}}."
+  },
   "pokemon": {
     "tabs": {
       "general": "General",
@@ -394,7 +410,9 @@
       "op": {
         "set": "Edit trainer: {{field}}",
         "pokemon": {
-          "patch": "Edit Pokémon {{ref}}"
+          "patch": "Edit Pokémon {{ref}}",
+          "move": "Move Pokémon ({{ref}} → {{to}})",
+          "remove": "Release Pokémon {{ref}}"
         },
         "bag": {
           "set": "Edit the bag"
@@ -406,7 +424,10 @@
           "set": "Edit {{field}}"
         },
         "multiple": "{{count}} changes at once",
-        "raw": "Advanced edit: {{path}}"
+        "raw": "Advanced edit: {{path}}",
+        "box": {
+          "patch": "Edit the box"
+        }
       }
     }
   },
@@ -581,7 +602,8 @@
       "abilities_untrusted": "The save's abilities do not match their species': they are not checked."
     },
     "gameTitle": "Game title",
-    "encryptedTitle": "Packed game"
+    "encryptedTitle": "Packed game",
+    "bannerTitle": "No game folder"
   },
   "errors": {
     "title": "Something went wrong",
@@ -618,7 +640,9 @@
     "Io": "Disk error: {{message}}",
     "AssetScope": "Could not grant access to the game's graphics: {{message}}",
     "AppDataDir": "Could not find the application's data folder.",
-    "Internal": "Internal error: {{message}}"
+    "Internal": "Internal error: {{message}}",
+    "PartyFull": "The party is full (maximum {{max}}).",
+    "PartyTooSmall": "The party cannot be left empty."
   },
   "save": {
     "done": "Save written.",

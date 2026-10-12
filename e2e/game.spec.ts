@@ -37,12 +37,13 @@ test("vincular la carpeta del juego: nombres reales, sprites y selectores con b�
 
   // Nombres del juego + sprites reales en el equipo.
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
-  await expect(page.getByText("Gatito Fuego").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Gatito Fuego/ })).toBeVisible();
   await expect.poll(() => loadedGameImages(page)).toBeGreaterThanOrEqual(6);
   await shot(page, "81-party-sprites-es-light");
 
   // Selector de especie con busqueda difusa (sin acentos, tolera erratas).
-  await page.getByRole("button", { name: "Trump" }).click();
+  await page.getByRole("button", { name: /^Trump/ }).click();
+  await page.getByRole("button", { name: "Editar", exact: true }).click();
   const drawer = page.getByRole("dialog");
   const species = drawer.getByRole("combobox", { name: "Especie" });
   await species.click();
@@ -75,7 +76,7 @@ test("la carpeta del juego se recuerda para ese save", async ({ page }) => {
   await page.getByRole("button", { name: "Cerrar archivo" }).click();
   await page.getByRole("button", { name: "Abrir partida…" }).click();
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
-  await expect(page.getByText("Gatito Fuego").first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: /Gatito Fuego/ })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Ajustes", exact: true }).click();
   await expect(page.getByText(/Recordada de la última vez/)).toBeVisible();
 });
@@ -98,5 +99,6 @@ test("desvincular vuelve a los nombres embebidos y marcadores", async ({ page })
   await page.getByRole("button", { name: "Desvincular" }).click();
   await expect(page.getByRole("button", { name: "Elegir carpeta…" })).toBeVisible();
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
-  await expect(page.getByText("Gatito Fuego")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Grillita/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Gatito Fuego/ })).toHaveCount(0);
 });

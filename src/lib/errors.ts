@@ -19,7 +19,7 @@ export function errorText(t: TFunction, err: ApiError): string {
     "UnknownRef", "PokemonNotFound", "RoleNotFound", "NoMoveTemplate", "NotEditable", "UnknownOp",
     "SaveError", "EncodingError", "RubyMissing", "DriverMissing", "SpawnFailed", "Fatal", "InternalError",
     "GameFolderInvalid", "NotAGameFolder", "PendingChanges", "GameFolderRequired", "SpeciesNotFound", "NoGameFolder",
-    "InvalidPath", "FileTooLarge", "AssetMapCorrupt", "Io", "AssetScope", "AppDataDir", "Internal",
+    "InvalidPath", "FileTooLarge", "AssetMapCorrupt", "Io", "AssetScope", "AppDataDir", "Internal", "PartyFull", "PartyTooSmall",
   ];
   if (known.includes(err.kind)) return dict(err.kind);
   return dict("default");
