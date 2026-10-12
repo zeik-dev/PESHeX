@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import i18n from "../i18n";
 import { onRevision, openSave, closeSave, toApiError } from "../api/tauri";
+import { gameApi } from "../api/game";
 import { semantic } from "../api/semantic";
 import type { ApiError, Issue, OpenResult, Profile, RoundtripResult } from "../api/types";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
+import { useGame } from "./game";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
 
@@ -86,6 +88,9 @@ export const useSession = create<SessionState>((set, get) => ({
         view: "overview",
       });
       useSettings.getState().pushRecent(path);
+      // Carpeta del juego (nombres + sprites): en segundo plano, no bloquea el primer render.
+      useGame.getState().reset();
+      void useGame.getState().onSaveOpened(path, info.gameSuggestion);
       // La verificacion del roundtrip cuesta ~1 s en saves grandes: va en segundo plano.
       void semantic
         .verifyRoundtrip()
@@ -108,6 +113,8 @@ export const useSession = create<SessionState>((set, get) => ({
     try {
       await closeSave();
     } finally {
+      useGame.getState().reset();
+      void gameApi.forget().catch(() => undefined);
       set({ ...initial });
     }
   },

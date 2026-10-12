@@ -2,14 +2,19 @@ import { Backpack, Plus, Star, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { semantic } from "../../api/semantic";
 import type { BagPocket } from "../../api/types";
+import { useItemOptions } from "../../game/useCatalog";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
 import { useSession } from "../../stores/session";
-import { Button, Card, Chip, EmptyState, Field, NumberField, PageTitle, PokeballSpinner, Tabs } from "../../ui";
+import { Button, Card, Chip, ComboBox, EmptyState, Field, ItemIcon, NumberField, PageTitle, PokeballSpinner, Tabs } from "../../ui";
 import { ExtrasList } from "../shared/ExtrasList";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
 import styles from "./bag.module.css";
+
+function bag_isPocketLayout(bag: { layout: string } | null | undefined): boolean {
+  return !!bag && bag.layout !== "flat";
+}
 
 export function Bag() {
   const { t, dynOr } = useT();
@@ -20,6 +25,8 @@ export function Bag() {
   const [search, setSearch] = useState("");
   const [newId, setNewId] = useState("");
   const [newQty, setNewQty] = useState(1);
+  // Con catalogo, el selector ofrece los objetos del bolsillo (los del motor van de 1 a 8).
+  const itemOptions = useItemOptions(bag_isPocketLayout(q.data) ? pocketIdx : null);
 
   const bag = q.data;
   useEffect(() => {
@@ -81,7 +88,10 @@ export function Bag() {
           <ul className={styles.list}>
             {slots.map((s) => (
               <li key={s.ref} className={styles.item}>
-                <span className={styles.itemIcon} aria-hidden="true">{s.name.trim()[0]?.toUpperCase() ?? "?"}</span>
+                <span className={styles.itemIcon} aria-hidden="true">
+                  <ItemIcon item={{ id: s.id }} size={28} />
+                  <span className={styles.itemLetter}>{s.name.trim()[0]?.toUpperCase() ?? "?"}</span>
+                </span>
                 <div className={styles.itemName}>
                   <strong>{s.name}</strong>
                   <span className="muted mono" style={{ fontSize: 11 }}>{String(s.id)}</span>
@@ -104,11 +114,16 @@ export function Bag() {
         <Card title={t("bag.addTitle")}>
           <div className={styles.addRow}>
             <Field label={t("bag.itemId")}>
-              {(id) => (
-                <input id={id} className={styles.search + " mono"} value={newId} placeholder={t("bag.itemIdPlaceholder")}
-                  disabled={!editable} onChange={(e) => setNewId(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && void add()} />
-              )}
+              {(id) =>
+                itemOptions ? (
+                  <ComboBox id={id} value={newId} options={itemOptions} allowCustom mono placeholder={t("bag.itemIdPlaceholder")}
+                    disabled={!editable} onChange={(v) => setNewId(v ?? "")} />
+                ) : (
+                  <input id={id} className={styles.search + " mono"} value={newId} placeholder={t("bag.itemIdPlaceholder")}
+                    disabled={!editable} onChange={(e) => setNewId(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === "Enter" && void add()} />
+                )
+              }
             </Field>
             <Field label={t("bag.qty")}>
               {(id) => <NumberField id={id} value={newQty} min={1} max={max} width={100} disabled={!editable} onCommit={setNewQty} />}

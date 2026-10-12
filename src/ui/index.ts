@@ -3,3 +3,5 @@ export { Button, Chip, Field, NumberField, TextField, SelectField, Switch, Tabs 
 export { Modal, Drawer, ConfirmDialog, Banner, EmptyState, Toasts } from "./overlay";
 export { Sprite, StatBar, HpBar, PageTitle, Card, CoverageMeter, bucketColor } from "./visual";
 export { cx } from "./cx";
+export { GameImage, PokemonIcon, ItemIcon, BallIcon, HeldItemMark } from "./GameImage";
+export { ComboBox, type ComboOption } from "./combobox";

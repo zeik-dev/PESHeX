@@ -62,6 +62,8 @@ export interface OpenResult {
   roundtripChecked: boolean;
   revision: number;
   profile: Profile;
+  /** Carpeta de juego encontrada junto al save (solo juegos portables/antiguos). */
+  gameSuggestion?: string;
 }
 
 export interface RoundtripResult {
@@ -82,6 +84,10 @@ export interface Limits {
   bagPerSlot: number;
   ppMax: number;
   happinessMax: number;
+  boxCount: number;
+  maxPlayerName: number;
+  maxNickname: number;
+  maxMoves: number;
 }
 
 export interface IdRef {
@@ -165,7 +171,9 @@ export interface PokemonDetail extends PokemonSummary {
   evTotal: number;
   ivLayout: string | null;
   evLayout: string | null;
-  stats: { cached: StatMap };
+  stats: { cached: StatMap; computed?: Record<StatId, number>; match?: boolean; trusted?: boolean };
+  /** Grupo de experiencia y umbrales (solo con carpeta del juego vinculada). */
+  growth: { rate: string; expAtLevel: number; expAtNext: number; minimumLevel: number } | null;
   moves: MoveDto[];
   owner: { name: string | null; id: number | null; gender: number | null } | null;
   personalId: number | null;
@@ -218,6 +226,8 @@ export interface BoxDto {
   slots: (PokemonSummary | null)[];
   filled: number;
   fieldPath: string;
+  /** Indice del fondo de la caja (@background), si el save lo guarda. */
+  background?: number | null;
 }
 
 export interface Storage {

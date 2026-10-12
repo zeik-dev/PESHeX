@@ -4,7 +4,7 @@ import { useT } from "../../lib/useT";
 import { displayName, genderSymbol } from "../../lib/pokemon";
 import { formatDateTime, formatDuration, formatMoney, formatNumber } from "../../lib/format";
 import { useSession } from "../../stores/session";
-import { Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, Sprite, Chip } from "../../ui";
+import { Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Sprite, Chip } from "../../ui";
 import { ProfileCard } from "../shared/ProfileCard";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
@@ -113,7 +113,7 @@ export function Overview() {
           <div className={styles.partyStrip}>
             {ov.party.map((p) => (
               <button key={p.ref} type="button" className={styles.partyMini} onClick={() => openEditor(p.ref)}>
-                <Sprite name={displayName(p)} id={p.species?.id} size={52} shiny={p.shiny} egg={p.egg} />
+                <PokemonIcon name={displayName(p)} species={p.species?.id ?? 0} form={p.form} gender={p.gender} shiny={p.shiny} egg={p.egg} size={52} />
                 <span className={styles.miniName}>{p.egg ? t("party.egg") : displayName(p)}</span>
                 <span className="muted" style={{ fontSize: 12 }}>
                   {p.level != null ? t("party.level", { level: p.level }) : ""} {genderSymbol(p.gender)}

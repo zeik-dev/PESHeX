@@ -33,7 +33,7 @@ module Sem
 
       def items_list(store)
         store.table(:items).values.map do |i|
-          { id: i.id, name: i.name, pocket: i.pocket, machine: i.machine?, move: i.move }
+          { id: i.id, name: i.name, pocket: i.pocket, machine: i.machine?, move: i.move, fieldUse: i.field_use }
         end
       end
 

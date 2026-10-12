@@ -4,7 +4,7 @@ import { useT } from "../../lib/useT";
 import { displayName, genderSymbol } from "../../lib/pokemon";
 import type { PokemonSummary } from "../../api/types";
 import { useSession } from "../../stores/session";
-import { Chip, EmptyState, HpBar, PageTitle, PokeballSpinner, Sprite } from "../../ui";
+import { Chip, EmptyState, HpBar, PageTitle, PokeballSpinner, PokemonIcon } from "../../ui";
 import { useSemanticQuery } from "../queries";
 import styles from "./party.module.css";
 
@@ -12,7 +12,7 @@ export function PokemonCard({ p, onOpen }: { p: PokemonSummary; onOpen: (ref: st
   const { t, dynOr } = useT();
   return (
     <button type="button" className={styles.card} onClick={() => onOpen(p.ref)} aria-label={displayName(p)}>
-      <Sprite name={displayName(p)} id={p.species?.id} size={64} shiny={p.shiny} egg={p.egg} />
+      <PokemonIcon name={displayName(p)} species={p.species?.id ?? 0} form={p.form} gender={p.gender} shiny={p.shiny} egg={p.egg} size={64} />
       <div className={styles.body}>
         <div className={styles.name}>
           {p.egg ? t("party.egg") : displayName(p)} <span className={styles.gender}>{genderSymbol(p.gender)}</span>

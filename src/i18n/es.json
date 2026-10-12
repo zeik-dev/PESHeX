@@ -464,7 +464,6 @@
     "detectionBody": "Si la base detectada no es la correcta, elige otro perfil.",
     "noFile": "Abre una partida para ver la detección.",
     "gameFolder": "Carpeta del juego",
-    "gameFolderSoon": "Próximamente: nombres reales y sprites de tu fangame.",
     "about": "Acerca de"
   },
   "issues": {
@@ -486,6 +485,106 @@
     },
     "confirmTitle": "Valores fuera de lo habitual",
     "confirmBody": "Estos valores superan los límites normales de Essentials. Algunas bases personalizadas los permiten, pero otras podrían fallar. ¿Quieres aplicarlos igualmente?"
+  },
+  "game": {
+    "title": "Carpeta del juego",
+    "intro": "Vincula la carpeta de tu fangame (la que contiene Game.ini, Data y Graphics) para ver los nombres reales, los sprites del juego, selectores con búsqueda y comprobar la legalidad en el modo HeX. Solo se lee: PESHeX nunca modifica esa carpeta.",
+    "choose": "Elegir carpeta…",
+    "change": "Cambiar carpeta…",
+    "unlink": "Desvincular",
+    "linking": "Leyendo los datos del juego…",
+    "dialogTitle": "Selecciona la carpeta del juego",
+    "pendingBlock": "Guarda o descarta los cambios pendientes antes de cambiar la carpeta del juego.",
+    "banner": "Vincula la carpeta de tu juego para ver los nombres reales y los sprites.",
+    "bannerAction": "Vincular ahora",
+    "source": {
+      "auto": "Detectada junto al archivo",
+      "manual": "Elegida por ti",
+      "remembered": "Recordada de la última vez"
+    },
+    "folder": "Carpeta",
+    "version": "Versión de los datos",
+    "noGraphics": "La carpeta no tiene Graphics: se mostrarán marcadores en lugar de sprites.",
+    "encrypted": "El juego está empaquetado (Game.rgssad): sus datos y gráficos no se pueden leer. Usa la carpeta de desarrollo del juego.",
+    "domain": {
+      "species": "Especies",
+      "moves": "Movimientos",
+      "items": "Objetos",
+      "abilities": "Habilidades",
+      "types": "Tipos"
+    },
+    "domainSource": {
+      "dat": "Data/*.dat",
+      "pbs": "PBS (texto)",
+      "none": "sin datos"
+    },
+    "dataState": {
+      "ready": "Datos completos",
+      "partial": "Datos parciales",
+      "error": "No se pudieron leer los datos"
+    },
+    "assets": "Gráficos",
+    "assetsFound": "{{count}} imágenes indexadas",
+    "assetsTruncated": "(límite alcanzado: no se indexaron todas)",
+    "layout": {
+      "modern": "Estructura moderna (Graphics/Pokemon/Icons)",
+      "legacy": "Estructura antigua (Graphics/Icons/icon001)",
+      "unknown": "Estructura no reconocida"
+    },
+    "iconsResolved": "Iconos de especies encontrados: {{found}} de {{total}}",
+    "limits": "Límites leídos de los scripts",
+    "limitsNone": "No se encontraron constantes en los scripts: se usan los valores de Essentials.",
+    "limitName": {
+      "maxLevel": "Nivel máximo",
+      "partySize": "Tamaño del equipo",
+      "boxCount": "Cajas del PC",
+      "maxMoney": "Dinero máximo",
+      "maxCoins": "Fichas máximas",
+      "maxBattlePoints": "Puntos de combate máximos",
+      "maxSoot": "Hollín máximo",
+      "maxPlayerName": "Largo del nombre del jugador",
+      "bagPerSlot": "Máximo por casilla de mochila",
+      "ivMax": "IV máximo",
+      "evStatMax": "EV máximo por estadística",
+      "evTotalMax": "EV total máximo",
+      "maxNickname": "Largo del apodo",
+      "maxMoves": "Movimientos por Pokémon"
+    },
+    "calibration": "Comprobación contra esta partida",
+    "calDomain": {
+      "species": "Especies",
+      "stats": "Fórmula de estadísticas",
+      "moves": "Movimientos aprendibles",
+      "abilities": "Habilidades"
+    },
+    "calStatus": {
+      "ok": "Coincide",
+      "mismatch": "No coincide",
+      "unknown": "Pocos datos"
+    },
+    "level": {
+      "full": "Legalidad completa",
+      "partial": "Legalidad parcial",
+      "basic": "Legalidad básica"
+    },
+    "levelHelp": {
+      "full": "Las reglas de HeX pueden comprobar especies, movimientos, habilidades, objetos y estadísticas.",
+      "partial": "Algunas reglas no son fiables para este juego y se omiten (ver motivos).",
+      "basic": "Solo se comprueban reglas básicas (rangos, duplicados, tamaños). Vincula la carpeta correcta del juego para más."
+    },
+    "reason": {
+      "no_game_folder": "No hay carpeta de juego vinculada.",
+      "no_species_data": "No se pudieron leer las especies del juego.",
+      "no_move_data": "No se pudieron leer los movimientos del juego.",
+      "no_item_data": "No se pudieron leer los objetos del juego.",
+      "no_ability_data": "No se pudieron leer las habilidades del juego.",
+      "species_mismatch": "Las especies de esta partida no están en la carpeta vinculada: ¿es la carpeta de otro juego?",
+      "stats_untrusted": "La fórmula de estadísticas de este juego difiere de la de Essentials: no se comprueban.",
+      "moves_untrusted": "Los movimientos de la partida no coinciden con lo que aprenden las especies (¿randomizer?): no se comprueban.",
+      "abilities_untrusted": "Las habilidades de la partida no coinciden con las de sus especies: no se comprueban."
+    },
+    "gameTitle": "Título del juego",
+    "encryptedTitle": "Juego empaquetado"
   },
   "errors": {
     "title": "Algo salió mal",
@@ -509,7 +608,20 @@
     "SpawnFailed": "No se pudo iniciar el motor de edición: {{message}}",
     "Fatal": "El motor de edición dejó de responder: {{message}}",
     "InternalError": "Error interno: {{message}}",
-    "default": "{{message}}"
+    "default": "{{message}}",
+    "GameFolderInvalid": "No se pudo abrir la carpeta del juego: {{message}}",
+    "NotAGameFolder": "Esa carpeta no parece un juego de Pokémon Essentials (busca la que tiene Game.ini, Data y Graphics).",
+    "PendingChanges": "Guarda o descarta los cambios pendientes antes de hacer esto.",
+    "GameFolderRequired": "Esta acción necesita la carpeta del juego vinculada.",
+    "SpeciesNotFound": "La especie «{{id}}» no está en los datos del juego.",
+    "NoGameFolder": "No hay una carpeta de juego vinculada.",
+    "InvalidPath": "Ruta no permitida.",
+    "FileTooLarge": "La imagen es demasiado grande.",
+    "AssetMapCorrupt": "El mapa manual de gráficos está dañado: {{message}}",
+    "Io": "Error de disco: {{message}}",
+    "AssetScope": "No se pudo dar acceso a los gráficos del juego: {{message}}",
+    "AppDataDir": "No se pudo encontrar la carpeta de datos de la aplicación.",
+    "Internal": "Error interno: {{message}}"
   },
   "save": {
     "done": "Partida guardada.",

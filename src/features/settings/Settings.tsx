@@ -7,6 +7,7 @@ import { useSettings, type BallTheme, type ThemePref } from "../../stores/settin
 import { Button, Card, Field, PageTitle, AppLogo, SelectField, Switch } from "../../ui";
 import type { LangPref } from "../../i18n";
 import { ProfileCard } from "../shared/ProfileCard";
+import { GameFolderCard } from "./GameFolderCard";
 import shared from "../shared/shared.module.css";
 
 const PROFILE_IDS = ["essentials_savedata", "essentials_legacy", "generic"] as const;
@@ -94,9 +95,7 @@ export function Settings() {
         )}
       </Card>
 
-      <Card title={t("settings.gameFolder")}>
-        <span className="muted">{t("settings.gameFolderSoon")}</span>
-      </Card>
+      <GameFolderCard />
 
       <Card title={t("settings.about")}>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>

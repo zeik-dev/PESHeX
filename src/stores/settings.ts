@@ -11,12 +11,19 @@ interface SettingsState {
   ball: BallTheme;
   backup: boolean;
   recent: string[];
+  /** Carpeta del juego recordada por save (ruta del save -> raiz del juego). */
+  gameFolders: Record<string, string>;
+  /** Juegos vinculados antes (el mas reciente primero). */
+  recentGames: string[];
   setLang: (lang: LangPref) => void;
   setTheme: (theme: ThemePref) => void;
   setBall: (ball: BallTheme) => void;
   setBackup: (backup: boolean) => void;
   pushRecent: (path: string) => void;
   removeRecent: (path: string) => void;
+  /** Registra la raiz de un juego vinculado (la asocia al save abierto). */
+  rememberGame: (root: string, savePath?: string | null) => void;
+  forgetGameFor: (savePath: string) => void;
 }
 
 // localStorage puede faltar o lanzar (ventana privada, datos bloqueados):
@@ -60,6 +67,8 @@ export const useSettings = create<SettingsState>()(
       ball: "classic",
       backup: true,
       recent: [],
+      gameFolders: {},
+      recentGames: [],
       setLang: (lang) => set({ lang }),
       setTheme: (theme) => set({ theme }),
       setBall: (ball) => set({ ball }),
@@ -67,6 +76,16 @@ export const useSettings = create<SettingsState>()(
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),
       removeRecent: (path) => set((s) => ({ recent: s.recent.filter((p) => p !== path) })),
+      rememberGame: (root, savePath) =>
+        set((s) => ({
+          recentGames: [root, ...s.recentGames.filter((g) => g !== root)].slice(0, 8),
+          gameFolders: savePath ? { ...s.gameFolders, [savePath]: root } : s.gameFolders,
+        })),
+      forgetGameFor: (savePath) =>
+        set((s) => {
+          const { [savePath]: _gone, ...rest } = s.gameFolders;
+          return { gameFolders: rest };
+        }),
     }),
     { name: STORE_KEY, storage: createJSONStorage(() => safeStorage), version: 1 },
   ),

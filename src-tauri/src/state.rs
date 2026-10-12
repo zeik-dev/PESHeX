@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+use std::sync::Mutex as StdMutex;
+
 use rxdriver::DriverSession;
 use tokio::sync::Mutex;
 
@@ -8,4 +11,7 @@ use tokio::sync::Mutex;
 #[derive(Default)]
 pub struct AppState {
     pub driver: Mutex<Option<DriverSession>>,
+    /// Raiz de la carpeta del juego vinculada (la fija `scan_game_folder`);
+    /// `read_game_file` solo lee dentro de ella.
+    pub game_root: StdMutex<Option<PathBuf>>,
 }

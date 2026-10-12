@@ -1,14 +1,17 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { gameApi } from "../../api/game";
 import { semantic } from "../../api/semantic";
 import type { PokemonDetail, PokemonPatch, StatId } from "../../api/types";
 import { STAT_IDS } from "../../api/types";
+import { speciesFormId, useAbilityOptions, useItemOptions, useMoveOptions, useSpeciesOptions } from "../../game/useCatalog";
 import { displayName, genderSymbol, NATURE_IDS, STATUS_IDS } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
+import { useGame } from "../../stores/game";
 import { useSession } from "../../stores/session";
 import {
-  Banner, Button, Chip, Drawer, EmptyState, Field, NumberField, PokeballSpinner, SelectField, Sprite, StatBar,
+  Banner, Button, Chip, ComboBox, Drawer, EmptyState, Field, NumberField, PokeballSpinner, PokemonIcon, SelectField, StatBar,
   Switch, Tabs, TextField,
 } from "../../ui";
 import { ExtrasList } from "../shared/ExtrasList";
@@ -44,7 +47,7 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
   return (
     <div>
       <div className={styles.head}>
-        <Sprite name={displayName(pk)} id={pk.species?.id} size={84} shiny={pk.shiny} egg={pk.egg} />
+        <PokemonIcon name={displayName(pk)} species={pk.species?.id ?? 0} form={pk.form} gender={pk.gender} shiny={pk.shiny} egg={pk.egg} size={84} />
         <div style={{ minWidth: 0 }}>
           <div className={styles.title}>
             {displayName(pk)} <span style={{ color: "var(--accent)" }}>{genderSymbol(pk.gender)}</span>
@@ -94,6 +97,17 @@ function General({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
   const { t, dynOr } = useT();
   const patch = usePatch(pk.ref);
   const speciesEditable = editable && typeof pk.species?.id === "string";
+  const linked = useGame((s) => s.status.linked);
+  const speciesOptions = useSpeciesOptions();
+  const itemOptions = useItemOptions();
+  const speciesQ = useSemanticQuery(
+    ["species", pk.species?.id, pk.form],
+    () => gameApi.species(String(pk.species?.id), pk.form ?? 0),
+    linked && typeof pk.species?.id === "string",
+  );
+  const abilityOptions = useAbilityOptions(
+    speciesQ.data ? [...speciesQ.data.abilities, ...speciesQ.data.hiddenAbilities] : undefined,
+  );
   const natureOptions = NATURE_IDS.map((n) => ({ value: n as string, label: dynOr("nature", n, n) }));
   const statusOptions = STATUS_IDS.map((s) => ({ value: s as string, label: dynOr("status", s, s) }));
 
@@ -107,10 +121,19 @@ function General({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
           )}
         </Field>
         <Field label={t("pokemon.species")}>
-          {(id) => (
-            <TextField id={id} mono value={pk.species ? String(pk.species.id) : ""} disabled={!speciesEditable}
-              onCommit={(v) => v && patch({ species: v })} />
-          )}
+          {(id) =>
+            speciesOptions ? (
+              <ComboBox id={id} value={speciesFormId(pk.species?.id, pk.form)} options={speciesOptions} disabled={!speciesEditable}
+                allowCustom onChange={(v) => {
+                  if (!v) return;
+                  const o = useGame.getState().catalog?.species.find((x) => x.id === v);
+                  patch(o ? { species: o.species, form: o.form } : { species: v });
+                }} />
+            ) : (
+              <TextField id={id} mono value={pk.species ? String(pk.species.id) : ""} disabled={!speciesEditable}
+                onCommit={(v) => v && patch({ species: v })} />
+            )
+          }
         </Field>
         <Field label={t("pokemon.level")} hint={t("pokemon.levelNote")}>
           {(id) => (
@@ -135,16 +158,26 @@ function General({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
           )}
         </Field>
         <Field label={t("pokemon.ability")}>
-          {(id) => (
-            <TextField id={id} mono value={pk.ability ? String(pk.ability.id) : ""} disabled={!editable || typeof pk.ability?.id === "number"}
-              onCommit={(v) => v && patch({ ability: v })} />
-          )}
+          {(id) =>
+            abilityOptions ? (
+              <ComboBox id={id} value={pk.ability ? String(pk.ability.id) : ""} options={abilityOptions} allowCustom
+                disabled={!editable || typeof pk.ability?.id === "number"} onChange={(v) => v && patch({ ability: v })} />
+            ) : (
+              <TextField id={id} mono value={pk.ability ? String(pk.ability.id) : ""} disabled={!editable || typeof pk.ability?.id === "number"}
+                onCommit={(v) => v && patch({ ability: v })} />
+            )
+          }
         </Field>
         <Field label={t("pokemon.item")}>
-          {(id) => (
-            <TextField id={id} mono nullable value={pk.item ? String(pk.item.id) : ""} placeholder={t("pokemon.itemPlaceholder")} disabled={!editable}
-              onCommit={(v) => patch({ item: v })} />
-          )}
+          {(id) =>
+            itemOptions ? (
+              <ComboBox id={id} value={pk.item ? String(pk.item.id) : ""} options={itemOptions} allowCustom nullable
+                placeholder={t("pokemon.itemPlaceholder")} disabled={!editable} onChange={(v) => patch({ item: v })} />
+            ) : (
+              <TextField id={id} mono nullable value={pk.item ? String(pk.item.id) : ""} placeholder={t("pokemon.itemPlaceholder")} disabled={!editable}
+                onCommit={(v) => patch({ item: v })} />
+            )
+          }
         </Field>
         <Field label={t("pokemon.happiness")}>
           {(id) => (
@@ -232,7 +265,8 @@ function Moves({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
   const { t } = useT();
   const patch = usePatch(pk.ref);
   const [newId, setNewId] = useState("");
-  const canAdd = editable && pk.moves.length < 4;
+  const moveOptions = useMoveOptions();
+  const canAdd = editable && pk.moves.length < pk.limits.maxMoves;
 
   return (
     <div>
@@ -240,10 +274,15 @@ function Moves({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
       {pk.moves.map((m) => (
         <div key={m.slot} className={styles.moveRow}>
           <Field label={t("pokemon.moves.slot", { n: m.slot + 1 })} hint={m.name && m.name !== String(m.id) ? m.name : undefined}>
-            {(id) => (
-              <TextField id={id} mono value={m.id == null ? "" : String(m.id)} disabled={!editable || typeof m.id === "number"}
-                onCommit={(v) => v && patch({ moves: [{ slot: m.slot, id: v }] })} />
-            )}
+            {(id) =>
+              moveOptions ? (
+                <ComboBox id={id} value={m.id == null ? "" : String(m.id)} options={moveOptions} allowCustom
+                  disabled={!editable || typeof m.id === "number"} onChange={(v) => v && patch({ moves: [{ slot: m.slot, id: v }] })} />
+              ) : (
+                <TextField id={id} mono value={m.id == null ? "" : String(m.id)} disabled={!editable || typeof m.id === "number"}
+                  onCommit={(v) => v && patch({ moves: [{ slot: m.slot, id: v }] })} />
+              )
+            }
           </Field>
           <Field label={t("pokemon.moves.pp")}>
             {(id) => <NumberField id={id} value={m.pp} min={0} max={pk.limits.ppMax} disabled={!editable || m.pp == null}
@@ -262,10 +301,14 @@ function Moves({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
       {canAdd && (
         <div className={styles.moveRow} style={{ gridTemplateColumns: "1fr auto", borderBottom: 0 }}>
           <Field label={t("pokemon.moves.id")}>
-            {(id) => (
-              <input id={id} className="mono" style={{ minHeight: 36, padding: "0 12px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--surface)", color: "var(--text)", width: "100%" }}
-                value={newId} placeholder="TACKLE" onChange={(e) => setNewId(e.target.value.toUpperCase())} />
-            )}
+            {(id) =>
+              moveOptions ? (
+                <ComboBox id={id} value={newId} options={moveOptions} allowCustom placeholder="TACKLE" onChange={(v) => setNewId(v ?? "")} />
+              ) : (
+                <input id={id} className="mono" style={{ minHeight: 36, padding: "0 12px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--surface)", color: "var(--text)", width: "100%" }}
+                  value={newId} placeholder="TACKLE" onChange={(e) => setNewId(e.target.value.toUpperCase())} />
+              )
+            }
           </Field>
           <Button variant="primary" disabled={!newId.trim()} onClick={() => { patch({ moves: [{ slot: pk.moves.length, id: newId.trim() }] }); setNewId(""); }}>
             <Plus size={16} /> {t("pokemon.moves.add")}

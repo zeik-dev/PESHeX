@@ -57,3 +57,12 @@
   align-items: flex-end;
   flex-wrap: wrap;
 }
+
+/* Con el icono del juego, la inicial y el circulo sobran. */
+.itemIcon:has(img) {
+  background: transparent;
+  border-color: transparent;
+}
+.itemIcon:has(img) .itemLetter {
+  display: none;
+}

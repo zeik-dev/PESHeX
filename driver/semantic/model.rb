@@ -195,7 +195,8 @@ module Sem
       boxes = box_arrays.each_with_index.map do |(box, _ivar, arr), bi|
         slots = arr ? arr.items.each_with_index.map { |pk, si| pk && pokemon_summary(pk, "box/#{bi}/#{si}") } : []
         { index: bi, name: Tree.text(Tree.ivar(box, '@name')), slots: slots,
-          filled: slots.count { |s| !s.nil? }, fieldPath: box_path(bi) }
+          filled: slots.count { |s| !s.nil? }, fieldPath: box_path(bi),
+          background: Tree.int_value(Tree.ivar(box, '@background')) }
       end
       { ref: 'storage', fieldPath: b.path, currentBox: current, boxes: boxes,
         total: boxes.sum { |x| x[:filled] },

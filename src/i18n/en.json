@@ -461,7 +461,6 @@
     "detectionBody": "If the detected base is wrong, pick another profile.",
     "noFile": "Open a save to see the detection.",
     "gameFolder": "Game folder",
-    "gameFolderSoon": "Coming soon: real names and sprites from your fangame.",
     "about": "About"
   },
   "issues": {
@@ -483,6 +482,106 @@
     },
     "confirmTitle": "Unusual values",
     "confirmBody": "These values exceed Essentials' normal limits. Some custom bases allow them, but others might crash. Do you want to apply them anyway?"
+  },
+  "game": {
+    "title": "Game folder",
+    "intro": "Link your fangame's folder (the one with Game.ini, Data and Graphics) to see real names, the game's own sprites, searchable pickers, and to check legality in HeX mode. It is read-only: PESHeX never modifies that folder.",
+    "choose": "Choose folder…",
+    "change": "Change folder…",
+    "unlink": "Unlink",
+    "linking": "Reading the game's data…",
+    "dialogTitle": "Select the game folder",
+    "pendingBlock": "Save or discard pending changes before changing the game folder.",
+    "banner": "Link your game's folder to see real names and sprites.",
+    "bannerAction": "Link now",
+    "source": {
+      "auto": "Found next to the file",
+      "manual": "Chosen by you",
+      "remembered": "Remembered from last time"
+    },
+    "folder": "Folder",
+    "version": "Data version",
+    "noGraphics": "The folder has no Graphics: placeholders will be shown instead of sprites.",
+    "encrypted": "The game is packed (Game.rgssad): its data and graphics cannot be read. Use the game's development folder.",
+    "domain": {
+      "species": "Species",
+      "moves": "Moves",
+      "items": "Items",
+      "abilities": "Abilities",
+      "types": "Types"
+    },
+    "domainSource": {
+      "dat": "Data/*.dat",
+      "pbs": "PBS (text)",
+      "none": "no data"
+    },
+    "dataState": {
+      "ready": "Complete data",
+      "partial": "Partial data",
+      "error": "Could not read the data"
+    },
+    "assets": "Graphics",
+    "assetsFound": "{{count}} images indexed",
+    "assetsTruncated": "(limit reached: not all were indexed)",
+    "layout": {
+      "modern": "Modern layout (Graphics/Pokemon/Icons)",
+      "legacy": "Legacy layout (Graphics/Icons/icon001)",
+      "unknown": "Unrecognized layout"
+    },
+    "iconsResolved": "Species icons found: {{found}} of {{total}}",
+    "limits": "Limits read from the scripts",
+    "limitsNone": "No constants found in the scripts: Essentials defaults are used.",
+    "limitName": {
+      "maxLevel": "Maximum level",
+      "partySize": "Party size",
+      "boxCount": "PC boxes",
+      "maxMoney": "Maximum money",
+      "maxCoins": "Maximum coins",
+      "maxBattlePoints": "Maximum battle points",
+      "maxSoot": "Maximum soot",
+      "maxPlayerName": "Player name length",
+      "bagPerSlot": "Maximum per bag slot",
+      "ivMax": "Maximum IV",
+      "evStatMax": "Maximum EV per stat",
+      "evTotalMax": "Maximum total EV",
+      "maxNickname": "Nickname length",
+      "maxMoves": "Moves per Pokémon"
+    },
+    "calibration": "Check against this save",
+    "calDomain": {
+      "species": "Species",
+      "stats": "Stat formula",
+      "moves": "Learnable moves",
+      "abilities": "Abilities"
+    },
+    "calStatus": {
+      "ok": "Matches",
+      "mismatch": "Does not match",
+      "unknown": "Too little data"
+    },
+    "level": {
+      "full": "Full legality",
+      "partial": "Partial legality",
+      "basic": "Basic legality"
+    },
+    "levelHelp": {
+      "full": "HeX rules can check species, moves, abilities, items and stats.",
+      "partial": "Some rules are not reliable for this game and are skipped (see reasons).",
+      "basic": "Only basic rules are checked (ranges, duplicates, sizes). Link the right game folder for more."
+    },
+    "reason": {
+      "no_game_folder": "No game folder is linked.",
+      "no_species_data": "The game's species could not be read.",
+      "no_move_data": "The game's moves could not be read.",
+      "no_item_data": "The game's items could not be read.",
+      "no_ability_data": "The game's abilities could not be read.",
+      "species_mismatch": "This save's species are not in the linked folder: is it another game's folder?",
+      "stats_untrusted": "This game's stat formula differs from Essentials': it is not checked.",
+      "moves_untrusted": "The save's moves do not match what the species can learn (randomizer?): they are not checked.",
+      "abilities_untrusted": "The save's abilities do not match their species': they are not checked."
+    },
+    "gameTitle": "Game title",
+    "encryptedTitle": "Packed game"
   },
   "errors": {
     "title": "Something went wrong",
@@ -506,7 +605,20 @@
     "SpawnFailed": "The editing engine could not be started: {{message}}",
     "Fatal": "The editing engine stopped responding: {{message}}",
     "InternalError": "Internal error: {{message}}",
-    "default": "{{message}}"
+    "default": "{{message}}",
+    "GameFolderInvalid": "Could not open the game folder: {{message}}",
+    "NotAGameFolder": "That folder does not look like a Pokémon Essentials game (look for the one with Game.ini, Data and Graphics).",
+    "PendingChanges": "Save or discard the pending changes before doing this.",
+    "GameFolderRequired": "This action needs the game folder to be linked.",
+    "SpeciesNotFound": "Species “{{id}}” is not in the game's data.",
+    "NoGameFolder": "No game folder is linked.",
+    "InvalidPath": "Path not allowed.",
+    "FileTooLarge": "The image is too large.",
+    "AssetMapCorrupt": "The manual graphics map is damaged: {{message}}",
+    "Io": "Disk error: {{message}}",
+    "AssetScope": "Could not grant access to the game's graphics: {{message}}",
+    "AppDataDir": "Could not find the application's data folder.",
+    "Internal": "Internal error: {{message}}"
   },
   "save": {
     "done": "Save written.",
