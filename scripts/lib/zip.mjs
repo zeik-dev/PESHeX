@@ -39,6 +39,10 @@ const u32 = (n) => {
   return b;
 };
 
+// Con "version made by" = Unix (0x03xx), el unzip de Linux/macOS toma los permisos de los atributos
+// externos (16 bits altos): a cero deja archivos ilegibles. Windows los ignora. 0o100644 = archivo rw-r--r--.
+const UNIX_FILE_ATTRS = (0o100644 << 16) >>> 0;
+
 /**
  * @param {{ name: string, data: Buffer }[]} entries  `name` con '/' como separador, sin '/' inicial
  * @param {{ mtime?: Date }} [opts]
@@ -72,7 +76,7 @@ export function createZip(entries, opts = {}) {
     central.push(Buffer.concat([
       u32(0x02014b50), u16(0x031e), u16(20), u16(flags), u16(method), u16(time), u16(date),
       u32(crc), u32(body.length), u32(e.data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0),
-      u32(0), u32(offset), name,
+      u32(UNIX_FILE_ATTRS), u32(offset), name,
     ]));
     offset += header.length + body.length;
   }
