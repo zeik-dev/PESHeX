@@ -1,14 +1,19 @@
 name: release-windows
 
 # Release de PESHeX para Windows: un .zip con todo lo necesario para ejecutarlo (sin instalador).
-#   * tag vX.Y.Z (o vX.Y.Z-sufijo)  -> compila, prueba y PUBLICA el Release en GitHub
-#   * tag ci-*                      -> solo compila y prueba (para ensayar la pipeline); no publica nada
+#
+#   * push de un tag vX.Y.Z (o vX.Y.Z-sufijo)       -> compila, prueba, empaqueta y PUBLICA el Release
+#   * push a `development` con "release: X.Y.Z" como primera linea del mensaje del commit
+#                                                    -> igual; el Release crea el tag vX.Y.Z sobre ese commit
+#   * push a `development` con "[winbuild]" en el mensaje
+#                                                    -> compila, prueba y empaqueta, pero NO publica (ensayo)
+#   * workflow_dispatch                              -> igual que el ensayo (solo si este archivo esta en la rama por defecto)
 on:
   push:
+    branches: [development]
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
       - "v[0-9]+.[0-9]+.[0-9]+-*"
-      - "ci-*"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +26,12 @@ concurrency:
 jobs:
   build:
     name: Compilar, probar y empaquetar (Windows)
+    # Un build de Windows tarda y cuesta minutos: en `development` solo se hace si se pide.
+    if: >-
+      github.event_name != 'push' ||
+      startsWith(github.ref, 'refs/tags/') ||
+      startsWith(github.event.head_commit.message, 'release:') ||
+      contains(github.event.head_commit.message, '[winbuild]')
     runs-on: windows-latest
     timeout-minutes: 75
     permissions:
@@ -108,7 +119,9 @@ jobs:
   release:
     name: Publicar el Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release:'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -120,30 +133,50 @@ jobs:
           name: peshex-windows-x64
           path: dist-release
 
-      - name: Verificar el tag y las huellas
+      - name: Verificar la versión, el tag y las huellas
         shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "tag no valido: $GITHUB_REF_NAME"; exit 1; }
+          set -euo pipefail
+          tag="v${VERSION}"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "version no valida: $VERSION"; exit 1; }
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            [[ "$GITHUB_REF_NAME" == "$tag" ]] || { echo "el tag $GITHUB_REF_NAME no coincide con la version $VERSION"; exit 1; }
+          else
+            first_line="${HEAD_MESSAGE%%$'\n'*}"
+            [[ "$first_line" == "release: $VERSION" || "$first_line" == "release: v$VERSION" ]] || {
+              echo "el mensaje del commit ('$first_line') no pide el release de la version $VERSION"; exit 1; }
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
           cd dist-release
           ls -la
           sha256sum -c SHA256SUMS.txt
           test "$(ls PESHeX-*-windows-x64.zip | wc -l)" = 1
-          test -f "PESHeX-${GITHUB_REF_NAME#v}-windows-x64.zip"
+          test -f "PESHeX-${VERSION}-windows-x64.zip"
 
       - name: Crear (o actualizar) el Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
+          set -euo pipefail
           flags=()
           [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease)
           files=(dist-release/PESHeX-*-windows-x64.zip dist-release/SHA256SUMS.txt)
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Re-ejecucion del mismo commit: se reponen los archivos. Si el tag apunta a OTRO commit, se aborta.
+            tagged="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${TAG}" --jq .sha)"
+            [[ "$tagged" == "$GITHUB_SHA" ]] || { echo "ya existe $TAG en otro commit ($tagged): sube la version"; exit 1; }
+            gh release upload "$TAG" "${files[@]}" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "${files[@]}" \
-              --title "PESHeX ${GITHUB_REF_NAME#v}" \
+            gh release create "$TAG" "${files[@]}" \
+              --target "$GITHUB_SHA" \
+              --title "PESHeX ${VERSION}" \
               --notes-file .github/release-notes.md \
-              --verify-tag "${flags[@]}"
+              "${flags[@]}"
           fi
+          gh release view "$TAG" --json url,assets --jq '.url, (.assets[] | "  \(.name) \(.size) bytes")'
