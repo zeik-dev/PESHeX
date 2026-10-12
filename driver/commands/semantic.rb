@@ -107,3 +107,36 @@ Commands.register('locate_field') do |ctx, params|
   idx ||= fields.index { |f| f.path.start_with?(path) } unless path.empty?
   { found: !idx.nil?, index: idx, path: path }
 end
+
+# ── Edicion ──────────────────────────────────────────────────────────────────
+
+Commands.register('apply_ops', mutates: true) do |ctx, params|
+  Sem::Editor.new(ctx.session).apply(params['ops'], label: params['label'], confirmed: !!params['confirmed'])
+end
+
+Commands.register('preview_ops') do |ctx, params|
+  Sem::Editor.new(ctx.session).preview(params['ops'])
+end
+
+Commands.register('undo', mutates: true) { |ctx, _p| Sem::Editor.new(ctx.session).undo }
+Commands.register('redo', mutates: true) { |ctx, _p| Sem::Editor.new(ctx.session).redo }
+
+Commands.register('undo_all', mutates: true) do |ctx, _p|
+  editor = Sem::Editor.new(ctx.session)
+  count = 0
+  count += 1 while editor.undo[:applied]
+  { applied: count.positive?, undone: count, pendingCount: ctx.session.journal.pending_count,
+    redoCount: ctx.session.journal.redo_stack.size }
+end
+
+Commands.register('list_history') do |ctx, _p|
+  ctx.session.journal.history.merge(pendingCount: ctx.session.journal.pending_count)
+end
+
+# Issues de consistencia de las entidades indicadas (o de todo el equipo + bolsa + entrenador).
+Commands.register('validate') do |ctx, params|
+  model = Sem::Api.model(ctx)
+  refs = Array(params['refs'])
+  issues = refs.empty? ? Sem::Validator.validate_all(model) : Sem::Validator.validate_refs(model, refs)
+  { issues: issues }
+end

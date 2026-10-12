@@ -177,6 +177,7 @@ module Sem
       case @kind
       when :pair then @holder[@idx][1]
       when :item then @holder[@idx]
+      when :data then @holder.data
       end
     end
 
@@ -184,7 +185,13 @@ module Sem
       case @kind
       when :pair then @holder[@idx][1] = v
       when :item then @holder[@idx] = v
+      when :data then @holder.data = v
       end
+    end
+
+    # Slot equivalente a un Field del Collector (modo Avanzado).
+    def self.from_field(f)
+      new(f.holder, f.kind, f.idx, f.path, f.owner)
     end
 
     # Equivalente `Field` de edit_rxdata.rb (para reusar record_change/apply_*).

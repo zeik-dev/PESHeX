@@ -8,8 +8,9 @@
 # =============================================================================
 
 class Session
-  attr_accessor :doc, :file_path, :output_path, :page_size, :changed,
+  attr_accessor :doc, :file_path, :output_path, :page_size,
                 :revision, :script_paths, :semantic
+  attr_reader :journal
 
   def initialize(doc:, file_path:, output_path:, page_size:, script_paths: [])
     @doc = doc
@@ -19,7 +20,7 @@ class Session
     @roundtrip_diff = nil
     @roundtrip_checked = false
     @script_paths = script_paths
-    @changed = {}
+    @journal = Sem::Journal.new
     @revision = 0
     @collector = nil
     @oracle = nil
@@ -48,6 +49,11 @@ class Session
   # de la clave de cache de sus consultas.
   def bump_revision!
     @revision += 1
+  end
+
+  # ¿Hay cambios sin guardar?
+  def dirty?
+    @journal.dirty?
   end
 
   def index_ready?

@@ -89,28 +89,30 @@ end
 
 # ── Edicion de hojas ────────────────────────────────────────────────────────
 
-def record_change(session, f, old_val, new_val)
-  if session.changed.key?(f.path)
-    session.changed[f.path][:new] = new_val
-    session.changed.delete(f.path) if UI.same_value?(session.changed[f.path][:old], new_val)
-  else
-    session.changed[f.path] = { old: old_val, new: new_val }
-  end
+# Toda edicion cruda pasa por el Journal (como una Op reversible), asi el
+# deshacer, el panel de cambios y el guardado funcionan igual que en las
+# vistas semanticas.
+def raw_label(f)
+  { key: 'op.raw', params: { path: f.path } }
 end
 
 def apply_leaf(session, f, old_val, new_val)
-  f.set(new_val)
-  record_change(session, f, old_val, new_val)
+  session.journal.transaction(raw_label(f)) do |b|
+    b.apply(Sem::SetSlot.new(Sem::Slot.from_field(f), new_val))
+  end
+  session.semantic&.invalidate_coverage!
   { applied: true, old: value_summary(old_val), new: value_summary(new_val),
-    pendingCount: session.changed.size, structuralRebuild: false }
+    pendingCount: session.journal.pending_count, structuralRebuild: false }
 end
 
 def apply_structural(session, f, old_val, new_val)
-  f.set(new_val)
-  record_change(session, f, old_val, new_val)
+  session.journal.transaction(raw_label(f)) do |b|
+    b.apply(Sem::SetSlot.new(Sem::Slot.from_field(f), new_val, structural: true))
+  end
   session.rebuild_collector!
+  session.semantic&.invalidate_coverage!
   { applied: true, old: value_summary(old_val), new: value_summary(new_val),
-    pendingCount: session.changed.size, structuralRebuild: true,
+    pendingCount: session.journal.pending_count, structuralRebuild: true,
     newFieldCount: session.collector.fields.size }
 end
 
@@ -221,7 +223,7 @@ Commands.register('list_fields') do |ctx, params|
   rows = page_pairs.map { |f, idx| field_row(f, idx, session.oracle) }
 
   { total: total, totalPages: total_pages, page: page, pageSize: page_size,
-    pendingCount: session.changed.size, fields: rows }
+    pendingCount: session.journal.pending_count, fields: rows }
 end
 
 Commands.register('get_field') do |ctx, params|
@@ -325,11 +327,14 @@ Commands.register('set_field', mutates: true) do |ctx, params|
   apply_leaf(session, f, old, new_val)
 end
 
+# Cambios pendientes: una entrada por Op, de la transaccion mas reciente a la mas antigua.
 Commands.register('list_changes') do |ctx, _p|
-  changes = ctx.session.changed.map do |path, h|
-    { path: path, old: value_summary(h[:old]), new: value_summary(h[:new]) }
+  txs = ctx.session.journal.undo_stack.reverse
+  changes = txs.flat_map do |tx|
+    tx.ops.map { |op| op.describe.merge(txId: tx.id, label: tx.label) }
   end
-  { count: changes.size, changes: changes }
+  { count: txs.size, opCount: changes.size, changes: changes,
+    redoCount: ctx.session.journal.redo_stack.size }
 end
 
 Commands.register('nil_report') do |ctx, _p|
@@ -351,11 +356,20 @@ Commands.register('save') do |ctx, params|
   backup = params.key?('backup') ? !!params['backup'] : true
   confirmed = !!params['confirmed']
 
-  next { applied: false, reason: 'no_changes' } if session.changed.empty?
+  next { applied: false, reason: 'no_changes' } unless session.dirty?
 
   if session.roundtrip_diff && !confirmed
     next { applied: false, needsConfirmation: true, reason: 'roundtrip_diff',
            message: 'Este archivo no se reconstruye identico byte a byte.' }
+  end
+
+  # Validacion previa de las entidades editadas (limites blandos).
+  if session.semantic
+    issues = Sem::Validator.validate_refs(session.semantic.model, session.journal.touched_refs)
+    blocking = Sem::Validator.blocking(issues)
+    unless blocking.empty? || confirmed
+      next { applied: false, needsConfirmation: true, reason: 'validation', issues: issues }
+    end
   end
 
   begin
@@ -364,7 +378,7 @@ Commands.register('save') do |ctx, params|
     raise DriverError.new('SaveError', e.message)
   end
 
-  changes_applied = session.changed.size
-  session.changed.clear
+  changes_applied = session.journal.pending_count
+  session.journal.clear!
   { applied: true, bytesWritten: bytes_size, backupPath: bak_path, changesApplied: changes_applied }
 end
