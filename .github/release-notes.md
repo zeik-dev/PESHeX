@@ -6,6 +6,8 @@ Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fan
 - **PC como en los juegos**: cajas 6×5 con los sprites de *tu* juego (Graphics), equipo, panel de datos y arrastrar y soltar (ratón o teclado).
 - **Modos HeX y HaX**: HeX no deja introducir Pokémon ni valores ilegales para tu juego; HaX permite cualquier cambio.
 - **Carpeta del juego**: nombres reales, selectores con búsqueda, límites leídos de los scripts y legalidad según tus datos.
+- **Pokédex, mundo y copias**: marca vistas/capturadas, edita interruptores y variables con sus nombres, compara y restaura copias `.bak`.
+- **Búsqueda global (`Ctrl+K`)**, atajos (`Ctrl+S`, `Ctrl+Z`, `Ctrl+Y`), acciones rápidas (curar, IV al máximo, EV, recalcular estadísticas) y **clonar / importar / exportar** Pokémon (texto de Pokémon Showdown y JSON).
 - Detección automática de la base de Essentials (v16–v21 y bases personalizadas), español e inglés, y todo reversible (deshacer/rehacer, copia `.bak`).
 
 ### Cómo usarlo

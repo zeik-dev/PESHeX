@@ -300,3 +300,44 @@ test("iconos sin resolver: aceptar una sugerencia por parecido y asignar otro a 
   await card.getByRole("button", { name: "Quitar asignación" }).first().click();
   await expect(card.getByText("1 asignación manual")).toBeVisible();
 });
+
+const KEY_LIKE =
+  /\b(nav|header|common|pokemon|party|boxes|bag|trainer|overview|settings|game|legality|mode|quick|transfer|palette|shortcuts|pokedex|world|backups|diff|assets|changes|errors|save|profile|pc)\.[A-Za-z_]+(\.[A-Za-z_]+)*\b/;
+
+for (const lang of ["es", "en"] as const) {
+  test(`ninguna vista deja claves de traducción sin resolver (${lang})`, async ({ page }) => {
+    env = await setup(page);
+    await serveGameAssets(page);
+    await openSave(page, env, lang, lang === "es" ? "Furikita" : "Furikita");
+    const game = buildFakeGame(ROOT, path.join(env.workDir, "Mi Juego"), env.savePath, { TORRACAT: "Gatito Fuego" }, {
+      iconAliases: { TORRACAT: "misc_icon_07" },
+      fronts: true,
+    });
+    env.bridge.dialogDir = game.root;
+    const navBar = page.getByRole("navigation", { name: "Principal" });
+    await navBar.getByRole("button").last().click(); // Ajustes / Settings
+    await page.getByRole("button", { name: lang === "es" ? "Elegir carpeta…" : "Choose folder…" }).click();
+    await expect(page.getByText(lang === "es" ? "Datos completos" : "Complete data")).toBeVisible({ timeout: 30_000 });
+
+    const count = await navBar.getByRole("button").count();
+    for (let i = 0; i < count; i++) {
+      await navBar.getByRole("button").nth(i).click();
+      await page.waitForTimeout(350);
+      const text = await page.evaluate(() => document.body.innerText);
+      expect(text.match(KEY_LIKE)?.[0] ?? null, `vista ${i}`).toBeNull();
+    }
+
+    // diálogos y paleta
+    await page.keyboard.press("Control+k");
+    await page.getByRole("dialog").getByRole("combobox").fill("a");
+    await page.waitForTimeout(400);
+    expect((await page.evaluate(() => document.body.innerText)).match(KEY_LIKE)?.[0] ?? null, "paleta").toBeNull();
+    await page.keyboard.press("Escape");
+
+    await navBar.getByRole("button").nth(3).click(); // PC
+    await page.getByRole("button", { name: lang === "es" ? "Importar" : "Import", exact: true }).click();
+    await page.getByRole("dialog").getByRole("textbox").first().fill("Gatito Fuego\n- Tackle\n- Zzz");
+    await page.waitForTimeout(300);
+    expect((await page.evaluate(() => document.body.innerText)).match(KEY_LIKE)?.[0] ?? null, "importar").toBeNull();
+  });
+}

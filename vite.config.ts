@@ -9,6 +9,9 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   plugins: [react()],
 
+  // Version que se muestra en Ajustes (npm la expone al lanzar los scripts; "dev" si no).
+  define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? "dev") },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

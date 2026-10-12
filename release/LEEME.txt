@@ -8,6 +8,11 @@ mochila, IV/EV, movimientos... y tiene dos modos:
   HeX  no deja introducir Pokemon ni valores ilegales para TU juego.
   HaX  permite cualquier cambio (los avisos se muestran, pero nunca bloquean).
 
+Ademas: Pokedex, interruptores y variables del juego, copias de seguridad con comparacion y
+restauracion, busqueda global (Ctrl+K), atajos (Ctrl+S / Ctrl+Z / Ctrl+Y), acciones rapidas
+(curar, IV al maximo, EV, recalcular estadisticas) e importar / exportar Pokemon (texto de
+Pokemon Showdown o JSON).
+
 Herramienta de fans, sin afiliacion con Nintendo, Game Freak ni The Pokemon Company.
 
 

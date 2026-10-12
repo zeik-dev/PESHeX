@@ -129,7 +129,7 @@ export function Settings() {
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <AppLogo size={48} />
           <div>
-            <strong>{t("app.name")}</strong> — {t("app.tagline")}
+            <strong>{t("app.name")}</strong> <span className="muted mono">{t("settings.version", { version: __APP_VERSION__ })}</span> — {t("app.tagline")}
             <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("app.disclaimer")}</p>
           </div>
         </div>

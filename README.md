@@ -12,6 +12,39 @@ una Poké Ball.
 > Herramienta de fans, sin afiliación con Nintendo, Game Freak ni The Pokémon
 > Company. Pokémon y Poké Ball son marcas de sus respectivos propietarios.
 
+## Descargar y usar (Windows)
+
+1. Entra en [Releases](https://github.com/zeik-dev/pbs-editor/releases) y baja
+   **`PESHeX-<versión>-windows-x64.zip`** (junto a `SHA256SUMS.txt`).
+2. Extrae **todo** el contenido en una carpeta y abre `PESHeX.exe`. No hay que
+   instalar nada: Ruby viene incluido (`ruby/`) y el motor de edición también
+   (`rxdata/`).
+3. Abre tu partida (`Game.rxdata`; en Essentials v19+ suele estar en
+   `%APPDATA%\<NombreDelJuego>\`) y, en **Ajustes**, vincula la carpeta de tu
+   juego para ver los nombres y los gráficos reales y para que HeX compruebe la
+   legalidad con *tus* reglas.
+
+Requiere Windows 10/11 de 64 bits y Microsoft Edge WebView2 (viene con Windows 11
+y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
+
+> **Windows SmartScreen / antivirus.** El ejecutable **no está firmado** (la
+> firma de código es de pago), así que Windows puede mostrar «Windows protegió
+> tu PC» la primera vez (*Más información → Ejecutar de todas formas*) y algún
+> antivirus puede dar un falso positivo. Comprueba el zip con `SHA256SUMS.txt`
+> (`Get-FileHash`). `LEEME.txt`, dentro del zip, lo explica paso a paso.
+
+<p align="center">
+  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos" width="48%" />
+  <img src="docs/screenshots/pokedex.png" alt="Pokédex" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/palette.png" alt="Búsqueda global y comandos (Ctrl+K)" width="48%" />
+  <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
+</p>
+
+<sub>Capturas con una carpeta de juego **sintética** de pruebas (círculos de colores en
+lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu juego.</sub>
+
 ## Qué hace
 
 | Pestaña | Contenido |
@@ -154,21 +187,35 @@ ruby driver/rxdata_driver.rb <<'EOF'
 EOF
 ```
 
+### Publicar un release
+
+El flujo `.github/workflows/release-windows.yml` compila `PESHeX.exe` en Windows,
+pasa los tests con el Ruby portátil que se distribuye, arma el zip
+(`scripts/package-release.mjs`, determinista), lo prueba (`scripts/smoke-release.ps1`:
+ruta con espacios y `ñ`, `PATH` reducido, hashes, VersionInfo y un arranque real) y
+publica el Release con `SHA256SUMS.txt`.
+
+- Un push a `development` cuyo mensaje empiece por `release: X.Y.Z` (la versión debe
+  coincidir con `package.json`, `src-tauri/Cargo.toml` y `src-tauri/tauri.conf.json`)
+  publica el Release `vX.Y.Z`; un tag `vX.Y.Z` empujado a mano hace lo mismo.
+- `[winbuild]` en el mensaje del commit hace un ensayo sin publicar.
+- Firma opcional: define los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`.
+
 ## Hoja de ruta
 
 - **Hecho en la 1.0.0:** detección de bases v16–v21, interfaz estilo PC con los
   gráficos del propio juego, carpeta del juego (nombres, límites, calibración),
   modos HeX/HaX, Pokédex, mundo, copias y comparación, búsqueda global, atajos,
   acciones rápidas e importar/exportar Pokémon.
-- **Pendiente / ideas:** panel para asignar a mano gráficos que no se
-  resuelven solos (el mapa `assetmap.json` ya se respeta si existe), firma de
-  código del ejecutable, perfiles afinados con más saves reales de otras bases
-  y tema alternativo basado en el logo.
+- **Pendiente / ideas:** firma de código del ejecutable (el flujo ya la admite
+  con los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`), perfiles
+  afinados con más saves reales de otras bases (Reborn, Rejuvenation, v16–v18…)
+  y un tema alternativo basado en el logo.
 
 ## Licencias y recursos
 
 - Logo e ícono de la app: `branding/PESHeX.png` (arte del autor; no cubierto por la licencia MIT, ver `LICENSE`). La Poké Ball del indicador de carga es un SVG propio.
 - Fuente de títulos: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) (SIL OFL 1.1, vía `@fontsource`).
 - Iconos de interfaz: [Lucide](https://lucide.dev) (ISC).
-- No se empaquetan sprites ni artwork oficiales: los gráficos se leerán de la
+- No se empaquetan sprites ni artwork oficiales: los gráficos se leen de la
   carpeta del juego del propio usuario.

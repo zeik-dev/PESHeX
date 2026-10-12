@@ -597,7 +597,8 @@
     "detectionBody": "If the detected base is wrong, pick another profile.",
     "noFile": "Open a save to see the detection.",
     "gameFolder": "Game folder",
-    "about": "About"
+    "about": "About",
+    "version": "v{{version}}"
   },
   "game": {
     "title": "Game folder",

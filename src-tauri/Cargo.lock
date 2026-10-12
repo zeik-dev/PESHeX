@@ -2434,7 +2434,7 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "peshex"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "rxdriver",
  "serde",
@@ -2871,7 +2871,7 @@ checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "rxdriver"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "serde",
  "serde_json",

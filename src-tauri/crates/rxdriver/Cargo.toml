@@ -1,6 +1,6 @@
 [package]
 name = "rxdriver"
-version = "0.1.0"
+version = "1.0.0"
 description = "Sesion con el proceso Ruby rxdata_driver.rb (protocolo JSON por linea). Sin dependencia de Tauri."
 edition = "2021"
 

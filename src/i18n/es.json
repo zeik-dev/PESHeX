@@ -600,7 +600,8 @@
     "detectionBody": "Si la base detectada no es la correcta, elige otro perfil.",
     "noFile": "Abre una partida para ver la detección.",
     "gameFolder": "Carpeta del juego",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "version": "v{{version}}"
   },
   "game": {
     "title": "Carpeta del juego",

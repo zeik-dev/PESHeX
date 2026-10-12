@@ -26,6 +26,13 @@ rescue LoadError => e
   abort "FALLO: falta la biblioteca estandar '#{lib}' en este Ruby (#{e.message})"
 end
 
+# Se trabaja sobre una COPIA en una ruta con espacios y 'n' con tilde: guardar y restaurar tocan el disco
+# (renombrados, copias .bak) y en Windows es donde mas se nota si algo falla. Nunca se modifica el original.
+work = File.join(Dir.mktmpdir('peshex-smoke'), "Carpeta con espacios \u00F1")
+FileUtils.mkdir_p(work)
+save_path = File.join(work, "Partida \u00F1.rxdata")
+FileUtils.cp(opts[:save], save_path)
+
 stdin, stdout, stderr, wait = Open3.popen3(RbConfig.ruby, '-E', 'UTF-8', opts[:driver])
 err_reader = Thread.new { stderr.read }
 $id = 0
@@ -46,8 +53,8 @@ puts "Ruby #{RUBY_VERSION} (#{RUBY_PLATFORM}) en #{RbConfig.ruby}"
 r = call(stdin, stdout, 'ping')
 check(r['ok'] && r['pong'], 'ping')
 
-r = call(stdin, stdout, 'open', path: File.expand_path(opts[:save]), autodetect: false)
-check(r['ok'], "open #{File.basename(opts[:save])} (#{r.dig('error', 'message')})")
+r = call(stdin, stdout, 'open', path: save_path, autodetect: false)
+check(r['ok'], "open #{File.basename(save_path)} (#{r.dig('error', 'message')})")
 check(r.dig('profile', 'id') == 'essentials_savedata', "perfil detectado: #{r.dig('profile', 'id')}")
 check(r['mode'] == 'hex', 'modo por defecto HeX')
 
@@ -64,6 +71,21 @@ check(r['ok'] && r['applied'], 'edicion aplicada en HaX')
 r = call(stdin, stdout, 'undo')
 check(r['ok'] && r['applied'], 'deshacer')
 
+# Guardar de verdad, comprobar la copia .bak, restaurarla y reabrir: el estado original vuelve.
+original_money = call(stdin, stdout, 'get_trainer').dig('trainer', 'money')
+r = call(stdin, stdout, 'apply_ops', ops: [{ op: 'set', ref: 'trainer', field: 'money', value: 4321 }], mode: 'hax')
+check(r['ok'] && r['applied'], 'edicion aplicada antes de guardar')
+r = call(stdin, stdout, 'save', backup: true, confirmed: true)
+check(r['ok'] && r['applied'] && r['backupPath'] && File.exist?(r['backupPath']), "guardado en disco con copia de seguridad (#{r.dig('error', 'message')})")
+backups = call(stdin, stdout, 'list_backups')['backups']
+check(backups.is_a?(Array) && backups.size == 1, 'la copia aparece en list_backups')
+r = call(stdin, stdout, 'restore_backup', file: backups.first['file'])
+check(r['ok'] && r['restored'] == backups.first['file'], "copia restaurada (#{r.dig('error', 'message')})")
+call(stdin, stdout, 'close')
+r = call(stdin, stdout, 'open', path: save_path, autodetect: false)
+check(r['ok'], 'reabrir tras restaurar')
+check(call(stdin, stdout, 'get_trainer').dig('trainer', 'money') == original_money, "dinero original tras restaurar (#{original_money})")
+
 r = call(stdin, stdout, 'get_catalog')
 check(!r['ok'] && r.dig('error', 'type') == 'GameFolderRequired', 'sin carpeta de juego, get_catalog da un error claro')
 
@@ -71,4 +93,5 @@ call(stdin, stdout, 'shutdown')
 stdin.close
 status = wait.value
 abort "FALLO: el driver termino con #{status.exitstatus}\n#{err_reader.value}" unless status.success?
+FileUtils.rm_rf(File.dirname(work))
 puts "SMOKE OK (Ruby #{RUBY_VERSION})"
