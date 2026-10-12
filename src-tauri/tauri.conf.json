@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pbs-editor",
+  "productName": "PBS Editor",
   "version": "0.1.0",
   "identifier": "com.zeik.pbseditor",
   "build": {
@@ -12,13 +12,16 @@
   "app": {
     "windows": [
       {
-        "title": "pbs-editor",
-        "width": 800,
-        "height": 600
+        "title": "PBS Editor",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 900,
+        "minHeight": 600
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src ipc: http://ipc.localhost ws://localhost:1420 http://localhost:1420"
     }
   },
   "bundle": {

@@ -1,0 +1,13 @@
+[package]
+name = "rxdriver"
+version = "0.1.0"
+description = "Sesion con el proceso Ruby rxdata_driver.rb (protocolo JSON por linea). Sin dependencia de Tauri."
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["process", "io-util", "sync", "time", "rt", "macros"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["process", "io-util", "sync", "time", "rt", "macros", "rt-multi-thread"] }

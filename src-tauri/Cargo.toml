@@ -1,11 +1,14 @@
 [package]
 name = "pbs-editor"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "PBS Editor: editor visual de partidas de Pokémon Essentials"
+authors = ["zeik-dev"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = [".", "crates/rxdriver"]
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
@@ -21,6 +24,8 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
+tauri-plugin-os = "2"
+rxdriver = { path = "crates/rxdriver" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["process", "io-util", "sync", "time", "rt", "macros"] }

@@ -1,5 +1,4 @@
 mod commands;
-mod driver_process;
 mod state;
 
 use tauri::Manager;
@@ -9,18 +8,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_os::init())
         .manage(state::AppState::default())
         .invoke_handler(tauri::generate_handler![
             commands::check_file,
             commands::open_save,
             commands::close_save,
-            commands::list_fields,
-            commands::get_field,
-            commands::list_templates,
-            commands::set_field,
-            commands::list_changes,
-            commands::nil_report,
-            commands::save,
+            commands::driver_call,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
