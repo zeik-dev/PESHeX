@@ -4,7 +4,7 @@ import { semantic } from "../../api/semantic";
 import { useT } from "../../lib/useT";
 import { useSession, toastError } from "../../stores/session";
 import { useSettings, type BallTheme, type ThemePref } from "../../stores/settings";
-import { Button, Card, Field, PageTitle, PokeballIcon, SelectField, Switch } from "../../ui";
+import { Button, Card, Field, PageTitle, AppLogo, SelectField, Switch } from "../../ui";
 import type { LangPref } from "../../i18n";
 import { ProfileCard } from "../shared/ProfileCard";
 import shared from "../shared/shared.module.css";
@@ -100,7 +100,7 @@ export function Settings() {
 
       <Card title={t("settings.about")}>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <PokeballIcon size={48} />
+          <AppLogo size={48} />
           <div>
             <strong>{t("app.name")}</strong> — {t("app.tagline")}
             <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("app.disclaimer")}</p>

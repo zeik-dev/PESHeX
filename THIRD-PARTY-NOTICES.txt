@@ -1,0 +1,27 @@
+PESHeX - avisos de componentes de terceros
+==========================================
+
+PESHeX se distribuye bajo licencia MIT (ver LICENSE). Incluye o usa los
+siguientes componentes, cada uno bajo su propia licencia:
+
+- Ruby (RubyInstaller, https://rubyinstaller.org/) - licencia Ruby / BSD-2-Clause.
+  El zip de Windows incluye un Ruby portatil sin modificar en la carpeta ruby\.
+- Tauri 2 (https://tauri.app/) - MIT o Apache-2.0.
+- WebView2 de Microsoft - se usa el runtime instalado en Windows; no se incluye.
+- React, React DOM, TanStack Query/Virtual, zustand, i18next, react-i18next - MIT.
+- Lucide (iconos de interfaz, https://lucide.dev) - ISC.
+- Press Start 2P (fuente, https://fonts.google.com/specimen/Press+Start+2P,
+  via @fontsource) - SIL Open Font License 1.1.
+- Crates de Rust (serde, tokio, etc.) - MIT / Apache-2.0; la lista completa
+  esta en src-tauri/Cargo.lock.
+
+Marcas y contenido de terceros
+------------------------------
+Pokemon, Poke Ball y los nombres de especies/objetos son marcas y propiedad de
+Nintendo, Game Freak y The Pokemon Company. PESHeX es una herramienta de fans
+sin afiliacion con ellos. PESHeX NO incluye sprites, datos ni artwork oficiales:
+los graficos y datos se leen unicamente de la carpeta del juego del propio
+usuario, en su equipo.
+
+El logo (branding/PESHeX.png) es arte del autor inspirado en una Premier Ball;
+no esta cubierto por la licencia MIT.

@@ -19,7 +19,7 @@ test.beforeAll(() => {
 
 test.beforeEach(async ({ page }) => {
   // Cada test trabaja sobre una copia: nunca se toca test_saves/.
-  workDir = fs.mkdtempSync(path.join(os.tmpdir(), "pbs-e2e-"));
+  workDir = fs.mkdtempSync(path.join(os.tmpdir(), "peshex-e2e-"));
   savePath = path.join(workDir, "Partida_2.rxdata");
   fs.copyFileSync(path.join(ROOT, "test_saves", "Partida_2.rxdata"), savePath);
 

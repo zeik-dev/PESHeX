@@ -38,3 +38,7 @@ src-tauri/resources/rxdata/
 e2e/screenshots/
 test-results/
 playwright-report/
+
+# Salida del empaquetado del release (scripts/package-release.mjs)
+release-out/
+*.zip

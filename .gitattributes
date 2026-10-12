@@ -1,0 +1,12 @@
+# Normaliza saltos de linea (el runner de Windows usa autocrlf) y evita que
+# git toque los binarios: los .rxdata deben conservarse byte a byte.
+* text=auto eol=lf
+*.rxdata binary
+*.rxdata2 binary
+*.dat binary
+*.png binary
+*.ico binary
+*.icns binary
+*.zip binary
+*.7z binary
+LEEME.txt text eol=crlf

@@ -24,6 +24,22 @@ export function PokeballIcon({ size = 24, className, title }: { size?: number; c
   );
 }
 
+/** Logo de PESHeX (branding/PESHeX.png, recortado a public/logo-256.png). Es pixel
+ *  art: se escala sin suavizado. Decorativo salvo que se pase `title`. */
+export function AppLogo({ size = 32, className, title }: { size?: number; className?: string; title?: string }) {
+  return (
+    <img
+      className={cx(styles.logo, className)}
+      src="/logo-256.png"
+      width={size}
+      height={size}
+      alt={title ?? ""}
+      aria-hidden={title ? undefined : true}
+      draggable={false}
+    />
+  );
+}
+
 /** Indicador de carga: una Poké Ball que se sacude (estatica con reduced-motion). */
 export function PokeballSpinner({ label, size = 40 }: { label?: string; size?: number }) {
   const { t } = useTranslation();

@@ -2,7 +2,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { FolderOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PokeballIcon, PokeballSpinner, Button, cx } from "../ui";
+import { AppLogo, PokeballSpinner, Button, cx } from "../ui";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
 import { useSession } from "../stores/session";
@@ -67,9 +67,9 @@ export function OpenScreen() {
       <div className={styles.openCenter}>
         <div className={styles.openCard}>
           <div className={styles.openBall}>
-            <PokeballIcon size={96} title="Poké Ball" />
+            <AppLogo size={96} title={t("app.fullName")} />
           </div>
-          <div className={styles.openTitle}>PBS EDITOR</div>
+          <div className={styles.openTitle}>{t("app.name")}</div>
           <h1 style={{ fontSize: 20 }}>{t("open.title")}</h1>
           <p className="muted">{t("open.subtitle")}</p>
 

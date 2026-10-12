@@ -52,7 +52,7 @@ if (-not $SevenZipPath) {
     exit 1
 }
 
-$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("pbs-editor-ruby-setup-" + [guid]::NewGuid())
+$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("peshex-ruby-setup-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $TempDir | Out-Null
 
 try {

@@ -21,10 +21,17 @@ interface SettingsState {
 
 // localStorage puede faltar o lanzar (ventana privada, datos bloqueados):
 // la app debe funcionar igual, solo que sin recordar las preferencias.
+const STORE_KEY = "peshex-settings";
+// La app se llamaba "PBS Editor": se lee la clave antigua una sola vez para no
+// perder idioma, tema y recientes de quien actualiza.
+const LEGACY_STORE_KEY = "pbs-editor-settings";
+
 const safeStorage = {
   getItem: (name: string) => {
     try {
-      return localStorage.getItem(name);
+      const value = localStorage.getItem(name);
+      if (value === null && name === STORE_KEY) return localStorage.getItem(LEGACY_STORE_KEY);
+      return value;
     } catch {
       return null;
     }
@@ -61,7 +68,7 @@ export const useSettings = create<SettingsState>()(
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),
       removeRecent: (path) => set((s) => ({ recent: s.recent.filter((p) => p !== path) })),
     }),
-    { name: "pbs-editor-settings", storage: createJSONStorage(() => safeStorage), version: 1 },
+    { name: STORE_KEY, storage: createJSONStorage(() => safeStorage), version: 1 },
   ),
 );
 

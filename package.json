@@ -1,5 +1,9 @@
 {
-  "name": "pbs-editor",
+  "name": "peshex",
+  "description": "PESHeX (Pokémon Essential HeX): editor visual de partidas de Pokémon Essentials",
+  "license": "MIT",
+  "author": "Randy A. Germosén (zeik-dev)",
+  "repository": { "type": "git", "url": "https://github.com/zeik-dev/pbs-editor.git" },
   "private": true,
   "version": "0.1.0",
   "type": "module",

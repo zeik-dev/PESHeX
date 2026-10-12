@@ -524,3 +524,10 @@
 .drawer:focus {
   outline: none;
 }
+
+.logo {
+  display: block;
+  image-rendering: pixelated;
+  object-fit: contain;
+  user-select: none;
+}

@@ -69,7 +69,7 @@ end
 module SaveFixtures
   # Copia un save de test_saves/ a un directorio temporal y cede la ruta.
   def with_save_copy(name)
-    Dir.mktmpdir('pbs_editor_test') do |dir|
+    Dir.mktmpdir('peshex_test') do |dir|
       dest = File.join(dir, name)
       FileUtils.cp(File.join(SAVES_DIR, name), dest)
       yield dest

@@ -1,7 +1,7 @@
 import { Backpack, History, LayoutDashboard, Monitor, ScanSearch, Settings, User, Users, Wrench, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { PokeballIcon } from "../ui";
+import { AppLogo } from "../ui";
 import { useSession, type ViewId } from "../stores/session";
 import { fileName } from "../lib/format";
 import { cx } from "../ui";
@@ -39,7 +39,7 @@ export function PokeHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.top}>
-        <span className={styles.brand}>PBS EDITOR</span>
+        <span className={styles.brand}>{t("app.name")}</span>
         {filePath && (
           <span className={styles.fileChip} title={filePath}>
             {fileName(filePath)}
@@ -61,7 +61,7 @@ export function PokeHeader() {
           aria-label={dirty ? t("header.save") : t("header.nothingToSave")}
           title={dirty ? t("header.saveHint") : t("header.nothingToSave")}
         >
-          <PokeballIcon size={30} />
+          <AppLogo size={32} />
           {dirty && (
             <span className={styles.centerBadge} aria-label={t("header.pending", { count: pending })}>
               {pending}

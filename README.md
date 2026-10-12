@@ -1,4 +1,6 @@
-# PBS Editor
+<p align="center"><img src="branding/PESHeX.png" alt="PESHeX" width="160" /></p>
+
+# PESHeX — Pokémon Essential HeX
 
 Editor **visual** de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y
 fangames basados en él. Detecta automáticamente qué base de Essentials usa la
@@ -137,7 +139,7 @@ EOF
 
 ## Licencias y recursos
 
-- Iconografía de la Poké Ball y del logo: dibujo propio (SVG, `public/pokeball.svg`).
+- Logo e ícono de la app: `branding/PESHeX.png` (arte del autor; no cubierto por la licencia MIT, ver `LICENSE`). La Poké Ball del indicador de carga es un SVG propio.
 - Fuente de títulos: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) (SIL OFL 1.1, vía `@fontsource`).
 - Iconos de interfaz: [Lucide](https://lucide.dev) (ISC).
 - No se empaquetan sprites ni artwork oficiales: los gráficos se leerán de la

@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "PBS Editor",
+    "name": "PESHeX",
+    "fullName": "Pokémon Essential HeX",
     "tagline": "Visual save editor for Pokémon Essentials",
     "disclaimer": "Fan-made tool, not affiliated with Nintendo, Game Freak or The Pokémon Company. Pokémon and Poké Ball are trademarks of their respective owners."
   },

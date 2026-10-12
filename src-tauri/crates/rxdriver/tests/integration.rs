@@ -31,7 +31,7 @@ async fn spawn_test_session() -> DriverSession {
 /// mutar nunca los archivos versionados en el repo.
 fn copy_fixture(name: &str) -> PathBuf {
     let src = repo_root().join("test_saves").join(name);
-    let dest = std::env::temp_dir().join(format!("pbs_editor_test_{}_{name}", std::process::id()));
+    let dest = std::env::temp_dir().join(format!("peshex_test_{}_{name}", std::process::id()));
     std::fs::copy(&src, &dest).expect("no se pudo copiar el fixture de prueba");
     dest
 }
