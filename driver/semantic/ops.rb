@@ -134,4 +134,55 @@ module Sem
         new: value_summary(@pair[1]) }
     end
   end
+
+  # Agrega un par clave/valor a un RxHash (p. ej. una especie vista en el Pokedex).
+  class HashPut < Op
+    def initialize(hash_node, key_node, value, path)
+      @hash = hash_node
+      @pair = [key_node, value]
+      @path = path
+    end
+
+    def structural?
+      true
+    end
+
+    def apply!
+      @hash.pairs << @pair
+    end
+
+    def revert!
+      @hash.pairs.delete_if { |pr| pr.equal?(@pair) }
+    end
+
+    def describe
+      { op: 'hash_put', path: "#{@path}#{Path.key(@pair[0])}", old: { kind: 'nil', display: '—' }, new: value_summary(@pair[1]) }
+    end
+  end
+
+  # Quita un par de un RxHash (conserva el par para poder restaurarlo en su posicion).
+  class HashDelete < Op
+    def initialize(hash_node, index, path)
+      @hash = hash_node
+      @index = index
+      @pair = hash_node.pairs[index]
+      @path = path
+    end
+
+    def structural?
+      true
+    end
+
+    def apply!
+      @hash.pairs.delete_at(@index)
+    end
+
+    def revert!
+      @hash.pairs.insert(@index, @pair)
+    end
+
+    def describe
+      { op: 'hash_delete', path: "#{@path}#{Path.key(@pair[0])}", old: value_summary(@pair[1]), new: { kind: 'nil', display: '—' } }
+    end
+  end
 end

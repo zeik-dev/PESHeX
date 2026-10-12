@@ -36,6 +36,7 @@ module Sem
         when 'set' then ['trainer']
         when 'bag.set' then ['bag']
         when 'trainer.badge', 'box.patch' then []
+        when 'pokedex.set', 'pokedex.bulk' then ['pokedex']
         else [op['ref'], op['from'], op['to']].compact.map(&:to_s)
         end
       end

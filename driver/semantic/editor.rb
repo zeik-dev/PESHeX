@@ -13,6 +13,7 @@
 module Sem
   class Editor
     include EditorPc
+    include EditorExtras
 
     TRAINER_TYPES = {
       'name' => :str, 'id' => :int, 'trainer_type' => :id, 'gender' => :int, 'language' => :int,
@@ -162,6 +163,15 @@ module Sem
       when 'pokemon.move' then op_pokemon_move(builder, op)
       when 'pokemon.remove' then op_pokemon_remove(builder, op)
       when 'box.patch' then op_box_patch(builder, op)
+      when 'pokedex.set' then op_pokedex_set(builder, op)
+      when 'pokedex.bulk' then op_pokedex_bulk(builder, op)
+      when 'world.switch' then op_world_set(builder, op, 'switches')
+      when 'world.variable' then op_world_set(builder, op, 'variables')
+      when 'pokemon.heal' then op_pokemon_heal(builder, op)
+      when 'pokemon.recalc' then op_pokemon_recalc(builder, op)
+      when 'pokemon.level' then op_pokemon_level(builder, op)
+      when 'pokemon.add' then op_pokemon_add(builder, op)
+      when 'pokemon.clone' then op_pokemon_clone(builder, op)
       else raise DriverError.new('UnknownOp', "operacion desconocida: #{op['op'].inspect}", { op: op['op'] })
       end
     end
@@ -278,9 +288,12 @@ module Sem
       found = @model.resolve_pokemon(ref)
       raise DriverError.new('PokemonNotFound', "no hay Pokemon en #{ref}", { ref: ref }) unless found
 
-      pk = found[:node]
-      path = found[:path]
-      patch = op['patch'] || {}
+      apply_patch(builder, found[:node], found[:path], op['patch'] || {})
+      builder.touch(ref)
+    end
+
+    # Aplica un parche a un nodo Pokemon (tambien a uno recien clonado que aun no esta en el save).
+    def apply_patch(builder, pk, path, patch)
       patch.each do |key, value|
         case key
         when 'iv' then patch_stats(builder, pk, path, '@iv', value, 'iv')
@@ -293,7 +306,6 @@ module Sem
           patch_scalar(builder, pk, path, key, spec, value)
         end
       end
-      builder.touch(ref)
     end
 
     def patch_scalar(builder, pk, path, key, spec, value)

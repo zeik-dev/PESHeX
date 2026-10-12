@@ -34,6 +34,7 @@ require_relative 'commands/legacy'
 require_relative 'commands/semantic'
 require_relative 'commands/gamedata'
 require_relative 'commands/legality'
+require_relative 'commands/extras'
 
 C.disable!
 $stdin.set_encoding(Encoding::UTF_8, Encoding::UTF_8)

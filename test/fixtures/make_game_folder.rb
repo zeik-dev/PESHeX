@@ -119,6 +119,18 @@ module GameFixture
         total_pp[m[:id]] = [total_pp[m[:id]], ((base + 4) / 5) * 5].max
       end
     end
+    # Todo lo que el Pokedex del save menciona existe en el juego (con datos minimos).
+    tmp = Session.new(doc: state.resolved.doc, file_path: from, output_path: from, page_size: 1)
+    dex = Sem::Extras.new(tmp).pokedex
+    (dex[:ids] || []).grep(String).each do |id|
+      next if species.key?(id.to_sym)
+
+      species[id.to_sym] = obj(::GameData::Species, id: id.to_sym, species: id.to_sym, form: 0, real_name: Sem::Ids.pretty(id),
+                               types: %i[NORMAL], base_stats: STATS.to_h { |s| [s.to_sym, 50] }, growth_rate: :Medium,
+                               gender_ratio: :Female50Percent, moves: [], tutor_moves: [], egg_moves: [], abilities: [],
+                               hidden_abilities: [], evolutions: [], flags: [])
+    end
+
     move_ids = (facts.flat_map { |f| f.moves.map { |m| m[:id] } }.compact + [UNLEARNABLE_MOVE, 'TACKLE', 'SURF']).uniq
     moves = move_ids.to_h do |id|
       [id.to_sym, obj(::GameData::Move, id: id.to_sym, real_name: Sem::Ids.pretty(id), type: :NORMAL, category: 0,

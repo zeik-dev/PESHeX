@@ -27,6 +27,7 @@ module Sem
         case kind
         when 'trainer' then Entity.new(:trainer, :trainer, nil, 'trainer')
         when 'bag' then Entity.new(:bag, :bag, nil, 'bag')
+        when 'pokedex' then Entity.new(:pokedex, :pokedex, nil, 'pokedex')
         when 'party' then Entity.new(:party, :party, nil, 'party') if ref.to_s == 'party'
         end || pokemon_entity(ref)
       end
@@ -44,6 +45,7 @@ module Sem
         when :trainer then TrainerRules.flags(@ctx)
         when :bag then BagRules.flags(@ctx).reject { |f| !@ctx.can?(:items) && BAG_ITEM_RULES.include?(f.code) }
         when :party then PartyRules.flags(@ctx)
+        when :pokedex then DexRules.flags(@ctx, @session)
         else []
         end
       end
@@ -68,7 +70,10 @@ module Sem
           end
         end
         evaluated += %w[trainer_money trainer_coins trainer_battle_points trainer_soot trainer_name_empty bag_qty_range
-                        bag_duplicate_item party_size party_empty egg_only_party]
+                        bag_duplicate_item party_size party_empty egg_only_party dex_owned_not_seen]
+        if @ctx.can?(:species) then evaluated << 'dex_species_unknown'
+        else skipped << { code: 'dex_species_unknown', reason: @ctx.reason_for(:species) }
+        end
         if @ctx.can?(:player_name_limit) then evaluated << 'trainer_name'
         else skipped << { code: 'trainer_name', reason: @ctx.reason_for(:player_name_limit) }
         end
@@ -87,6 +92,7 @@ module Sem
         list << ['trainer', Entity.new(:trainer, :trainer, nil, 'trainer')] if @model.binding(:trainer)
         list << ['bag', Entity.new(:bag, :bag, nil, 'bag')] if @model.binding(:bag)
         list << ['party', Entity.new(:party, :party, nil, 'party')] if @model.party_binding
+        list << ['pokedex', Entity.new(:pokedex, :pokedex, nil, 'pokedex')] if @model.binding(:pokedex)
         list
       end
 

@@ -87,5 +87,24 @@ module Sem
         out
       end
     end
+
+    module DexRules
+      module_function
+
+      # Especies del Pokedex que el juego no conoce (ilegal) y capturadas sin haberlas visto (aviso).
+      def flags(ctx, session)
+        dex = Extras.new(session).pokedex
+        return [] unless dex[:available] && dex[:layout] == 'hash'
+
+        out = []
+        if ctx.can?(:species)
+          (dex[:seen] | dex[:owned]).each do |id|
+            out << Legality.flag('dex_species_unknown', 'illegal', id) unless ctx.game.base_species(id)
+          end
+        end
+        (dex[:owned] - dex[:seen]).each { |id| out << Legality.flag('dex_owned_not_seen', 'warning', id) }
+        out
+      end
+    end
   end
 end
