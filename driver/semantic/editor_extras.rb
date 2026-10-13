@@ -6,6 +6,9 @@
 
 module Sem
   module EditorExtras
+    # Numero de especie maximo que se acepta en un Pokedex en forma de array (evita agrandarlo sin medida).
+    MAX_DEX_INDEX = 20_000
+
     STAT_IVARS = { 'HP' => %w[@totalhp], 'ATTACK' => %w[@attack], 'DEFENSE' => %w[@defense],
                    'SPECIAL_ATTACK' => %w[@spatk], 'SPECIAL_DEFENSE' => %w[@spdef], 'SPEED' => %w[@speed] }.freeze
 
@@ -22,8 +25,9 @@ module Sem
       want_seen = op.key?('seen') ? !!op['seen'] : nil
       want_seen = true if want_owned == true
       want_owned = false if want_seen == false
-      set_dex_flag(builder, b, '@seen', id, want_seen) unless want_seen.nil?
-      set_dex_flag(builder, b, '@owned', id, want_owned) unless want_owned.nil?
+      iv = Dex.ivars(b.node)
+      set_dex_flag(builder, b, iv[:seen], id, want_seen) unless want_seen.nil?
+      set_dex_flag(builder, b, iv[:owned], id, want_owned) unless want_owned.nil?
       builder.touch('pokedex')
     end
 
@@ -54,6 +58,8 @@ module Sem
     end
 
     def set_dex_flag(builder, b, ivar, id, value)
+      raise DriverError.new('FieldMissing', 'el Pokedex no tiene el registro de vistos/capturados', { field: 'seen/owned' }) if ivar.nil?
+
       node = Tree.ivar(b.node, ivar)
       path = b.path + Path.attr(ivar)
       raise DriverError.new('FieldMissing', "el Pokedex no tiene #{ivar}", { field: ivar }) if node.nil?
@@ -69,8 +75,13 @@ module Sem
         end
       elsif Tree.array?(node)
         i = id.to_i
-        raise DriverError.new('FieldMissing', "especie fuera del Pokedex: #{id}", { field: id }) unless id =~ /\A\d+\z/ && i < node.items.size
+        unless id =~ /\A\d+\z/ && i <= MAX_DEX_INDEX
+          raise DriverError.new('FieldMissing', "especie fuera del Pokedex: #{id}", { field: id })
+        end
+        return if !value && i >= node.items.size # nada que quitar
 
+        # Las bases antiguas agrandan el array al ver especies nuevas: se rellena con nil hasta el indice.
+        builder.apply(ArrayInsert.new(node, node.items.size, nil, path)) while node.items.size <= i
         set_slot(builder, Slot.of_item(node, i, path), value)
       end
     end

@@ -26,7 +26,7 @@ module Sem
       if Tree.hash?(v)
         v.pairs.filter_map { |k, val| Tree.key_name(k) if val == true || (val.is_a?(Integer) && val.positive?) }
       elsif Tree.array?(v)
-        v.items.each_with_index.filter_map { |val, i| i if val == true }
+        v.items.each_with_index.filter_map { |val, i| i.to_s if val == true } # numero de especie, como texto (igual que las claves del hash)
       else
         []
       end
@@ -44,9 +44,10 @@ module Sem
       return { available: false } unless b
 
       node = b.node
-      seen_node = Tree.ivar(node, '@seen')
-      seen = dex_ids(node, '@seen')
-      owned = dex_ids(node, '@owned')
+      iv = Dex.ivars(node)
+      seen_node = iv[:seen] && Tree.ivar(node, iv[:seen])
+      seen = iv[:seen] ? dex_ids(node, iv[:seen]) : []
+      owned = iv[:owned] ? dex_ids(node, iv[:owned]) : []
       caught = counts_map(node, '@caught_counts')
       defeated = counts_map(node, '@defeated_counts')
       ids = (seen + owned + caught.keys + defeated.keys).uniq

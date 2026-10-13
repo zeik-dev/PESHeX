@@ -1,5 +1,6 @@
 require 'test_helper'
 require_relative 'fixtures/make_game_folder'
+require_relative 'fixtures/make_legacy_save'
 
 # Pokedex, mundo, estadisticas, busqueda, copias, comparacion, exportar/importar/clonar y acciones rapidas.
 class ExtrasTest < Minitest::Test
@@ -42,6 +43,59 @@ class ExtrasTest < Minitest::Test
     assert_includes d['seen'], 'CHARMANDER'
     assert_operator d['ids'].size, :>=, 122
     assert_kind_of Hash, d['caught']
+  end
+
+  # ── Pokedex en el trainer (bases v16-v18, Infinite Fusion...) ───────────────
+
+  def open_legacy_dex(kind)
+    Dir.mktmpdir('peshex_dex') do |dir|
+      path = File.join(dir, 'Game.rxdata')
+      File.binwrite(path, LegacyFixture.build(dex: kind))
+      h = Harness.new
+      r = h.open(path)
+      yield h, r
+    end
+  end
+
+  def test_pokedex_guardado_en_el_trainer_se_detecta_y_se_lee
+    [true, :alt].each do |kind|
+      open_legacy_dex(kind) do |h, r|
+        assert_includes r['profile']['roles'].keys, 'pokedex', "dex=#{kind}"
+        d = h.call('get_pokedex')
+        assert d['available']
+        assert_equal 'array', d['layout']
+        assert_equal %w[4 25 129], d['seen']
+        assert_equal %w[25], d['owned']
+        assert_equal({ 'seen' => 3, 'owned' => 1 }, h.call('get_overview')['pokedex'])
+      end
+    end
+  end
+
+  def test_editar_el_pokedex_del_trainer_agranda_el_array_y_es_reversible
+    open_legacy_dex(true) do |h, _r|
+      before = h.session.doc.to_bytes
+      # capturada 129: el array de capturados mide 26, la base lo agranda
+      assert h.call('apply_ops', ops: [{ op: 'pokedex.set', id: '129', owned: true }], mode: 'hax')['applied']
+      assert_includes h.call('get_pokedex')['owned'], '129'
+      assert h.call('apply_ops', ops: [{ op: 'pokedex.set', id: '4', seen: false }], mode: 'hax')['applied']
+      refute_includes h.call('get_pokedex')['seen'], '4'
+      err = assert_raises(DriverError) { h.call('apply_ops', ops: [{ op: 'pokedex.set', id: '999999', seen: true }], mode: 'hax') }
+      assert_equal 'FieldMissing', err.error_type
+      h.call('undo_all')
+      assert_equal before, h.session.doc.to_bytes
+      refute h.session.dirty?
+    end
+  end
+
+  def test_sin_pokedex_en_ninguna_parte_no_hay_rol_y_get_pokedex_lo_dice
+    Dir.mktmpdir('peshex_nodex') do |dir|
+      path = File.join(dir, 'Game.rxdata')
+      File.binwrite(path, LegacyFixture.build)
+      h = Harness.new
+      r = h.open(path)
+      refute_includes r['profile']['roles'].keys, 'pokedex'
+      refute h.call('get_pokedex')['available']
+    end
   end
 
   def test_pokedex_marcar_visto_y_capturado_es_reversible

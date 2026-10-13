@@ -56,7 +56,7 @@ check(r['ok'] && r['pong'], 'ping')
 r = call(stdin, stdout, 'open', path: save_path, autodetect: false)
 check(r['ok'], "open #{File.basename(save_path)} (#{r.dig('error', 'message')})")
 check(r.dig('profile', 'id') == 'essentials_savedata', "perfil detectado: #{r.dig('profile', 'id')}")
-check(r['mode'] == 'hex', 'modo por defecto HeX')
+check(r['mode'] == 'hax', 'modo por defecto HaX')
 
 r = call(stdin, stdout, 'get_overview')
 check(r['ok'] && r.dig('trainer', 'name'), "entrenador: #{r.dig('trainer', 'name')}")

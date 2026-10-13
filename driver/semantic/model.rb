@@ -138,13 +138,14 @@ module Sem
       d = binding(:pokedex)&.node
       return nil unless d
 
+      iv = Dex.ivars(d)
       count = lambda do |name|
-        v = Tree.ivar(d, name)
+        v = name && Tree.ivar(d, name)
         if Tree.hash?(v) then v.pairs.count { |_, x| x == true }
         elsif Tree.array?(v) then v.items.count { |x| x == true }
         end
       end
-      { seen: count.call('@seen'), owned: count.call('@owned') }
+      { seen: count.call(iv[:seen]), owned: count.call(iv[:owned]) }
     end
 
     # ── Equipo y PC ───────────────────────────────────────────────────────────

@@ -155,7 +155,7 @@ module Sem
       end
 
       @pokedexes << Candidate.new(:pokedex, obj, nil, obj, entry, cls, 0, []) if
-        cls.match?(/pokedex/i) && names.include?('@seen') && names.include?('@owned')
+        cls.match?(/dex/i) && Dex.pair_names?(names)
       @stats << Candidate.new(:stats, obj, nil, obj, entry, cls, 0, []) if
         names.include?('@play_time') || cls.match?(/Stats\z/)
     end

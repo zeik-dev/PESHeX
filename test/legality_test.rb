@@ -23,7 +23,7 @@ class LegalityTest < Minitest::Test
 
   def setup
     @h = Harness.new
-    @h.open(save_path('Partida_2.rxdata'))
+    @h.open(save_path('Partida_2.rxdata'), mode: 'hex') # estas pruebas son del modo HeX (el modo por defecto es HaX)
     @original = @h.session.doc.to_bytes
   end
 

@@ -202,6 +202,12 @@ module Sem
                                            class_name: dex.class_name, via: :discovered, score: 1.0)
         end
       end
+      # Bases v16-v18 y fangames (Infinite Fusion...): @seen/@owned viven directamente en el trainer.
+      if !bindings[:pokedex] && bindings[:trainer] && Dex.pair?(bindings[:trainer].node)
+        t = bindings[:trainer]
+        bindings[:pokedex] = Binding.new(role: :pokedex, node: t.node, path: t.path, class_name: t.class_name,
+                                         via: :discovered, score: 0.8)
+      end
       [bindings, ambiguities]
     end
 

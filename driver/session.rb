@@ -30,7 +30,7 @@ class Session
     @semantic = nil
     @game = nil # Sem::GameData::Store de la carpeta vinculada (o nil)
     @game_calibration = nil
-    @mode = Sem::Legality::DEFAULT_MODE # 'hex' | 'hax'
+    @mode = Sem::Legality::DEFAULT_MODE # 'hax' | 'hex'
     @legality_baseline = nil
     @baseline_taken = false
   end

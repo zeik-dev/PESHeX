@@ -67,11 +67,22 @@ module LegacyFixture
     obj('PokemonStorage', boxes: boxes, currentBox: 0, boxmode: -1)
   end
 
-  def self.build(bag_ivar: '@pockets', empty_bag: false, extra_root: nil)
+  # Pokedex como lo guardan las bases v16-v18 / Infinite Fusion: arrays por numero de especie dentro del trainer.
+  # `:alt` usa otros nombres de ivar. El de capturados es mas corto a proposito (la base lo agranda al capturar).
+  def self.dex_ivars(kind)
+    seen = Array.new(152, false)
+    [4, 25, 129].each { |n| seen[n] = true }
+    owned = Array.new(26, false)
+    owned[25] = true
+    kind == :alt ? { seen_species: seen, caught: owned } : { seen: seen, owned: owned }
+  end
+
+  def self.build(bag_ivar: '@pockets', empty_bag: false, extra_root: nil, dex: nil)
     define_classes
     trainer = obj('PokeBattle_Trainer', name: 'Red', id: 12_345, trainertype: 0, money: 3000,
                                         badges: [true, true, true] + [false] * 5,
-                                        party: [pokemon(25, 12, 'Sparky'), pokemon(4, 15)])
+                                        party: [pokemon(25, 12, 'Sparky'), pokemon(4, 15)],
+                                        **(dex ? dex_ivars(dex) : {}))
     roots = [
       trainer, 123_456, obj('Game_System'), obj('PokemonSystem'), 7, obj('Game_Switches', data: [nil, true]),
       obj('Game_Variables', data: [nil, 0, 5]), obj('Game_SelfSwitches', data: {}), obj('Game_Screen'),
