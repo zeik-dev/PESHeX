@@ -34,16 +34,27 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
 > (`Get-FileHash`). `LEEME.txt`, dentro del zip, lo explica paso a paso.
 
 <p align="center">
-  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos" width="48%" />
-  <img src="docs/screenshots/pokedex.png" alt="Pokédex" width="48%" />
+  <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites, calibración y legalidad" width="96%" />
 </p>
 <p align="center">
+  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos, con Quick Actions y preset de EV sugerido" width="48%" />
+  <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres de tu juego" width="48%" />
+  <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
   <img src="docs/screenshots/palette.png" alt="Búsqueda global y comandos (Ctrl+K)" width="48%" />
+</p>
+<p align="center">
   <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
 </p>
 
-<sub>Capturas con una carpeta de juego **sintética** de pruebas (círculos de colores en
-lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu juego.</sub>
+<sub>Capturas con una carpeta de juego **sintética** de pruebas, ya vinculada y analizada
+(círculos de colores en lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu
+juego. Se regeneran con `npm run docs:shots`.</sub>
 
 ## Qué hace
 
@@ -53,7 +64,7 @@ lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu juego.</
 | **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
 | **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**: caja de 6×5 con el fondo y los iconos de *tu* juego, bandeja de equipo y panel de datos. Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo; editor lateral con **IV/EV**, movimientos, objeto, naturaleza, habilidad… |
 | **Mochila** | Bolsillos, búsqueda, cantidades, añadir/quitar objetos, favoritos |
-| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista |
+| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista (siempre visible; si tu base no lo guarda como esperamos, explica qué buscó) |
 | **Mundo** | Interruptores y variables (con sus nombres), estadísticas y Salón de la Fama |
 | **Todo detectado** | Lista completa de lo que contiene la partida y cómo se clasificó (*clasificado · personalizado · mundo y motor · sin clasificar*). Nada se pierde |
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
@@ -62,25 +73,29 @@ lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu juego.</
 | **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, carpeta del juego, modo HeX/HaX y detección de la base |
 
 Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y`,
-**acciones rápidas** (curar, IV al máximo, EV preestablecidos, recalcular
-estadísticas, subir de nivel con su experiencia) y **clonar / importar /
+**acciones rápidas** (curar, IV al máximo, recalcular estadísticas, subir de nivel
+con su experiencia y siete presets de EV —físico, especial, Bulky Physical, Bulky
+Special, Tank Defense, Tank Sp. Defense— con el sugerido según los stats más altos
+del Pokémon) y **clonar / importar /
 exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
 
-### Modos HeX y HaX
+### Modos HaX y HeX
 
-- **HeX** (por defecto) no deja introducir Pokémon ni valores **ilegales para
-  tu juego**: especie inexistente, movimientos que no puede aprender,
-  habilidad no permitida, nivel o experiencia fuera de rango, IV/EV imposibles,
-  PP de más, objetos o bolsillos erróneos… Lo que la partida ya traía se marca
-  pero no impide editar otras cosas.
-- **HaX** permite cualquier cambio; los problemas se muestran como avisos y
-  nunca se bloquea nada.
+- **HaX** (por defecto) permite cualquier cambio; los problemas de legalidad se
+  muestran como avisos y nunca se bloquea nada.
+- **HeX** se activa a mano (con un aviso previo) y no deja introducir Pokémon ni
+  valores **ilegales para tu juego**: especie inexistente, movimientos que no
+  puede aprender, habilidad no permitida, nivel o experiencia fuera de rango,
+  IV/EV imposibles, PP de más, objetos o bolsillos erróneos… Lo que la partida
+  ya traía se marca pero no impide editar otras cosas.
 
-Las reglas se calculan con los datos de **tu** juego (ver abajo). Si una regla
-no se puede comprobar de forma fiable (por ejemplo, en juegos con *randomizer*
-los movimientos aprendibles no coinciden con los datos), se **omite** y la app
-lo avisa como «legalidad parcial». Sin carpeta de juego solo se aplican las
-reglas básicas.
+**HeX depende de la carpeta del juego**: hay que vincularla antes para que PESHeX
+lea qué movimientos puede aprender cada Pokémon, sus habilidades, objetos y
+estadísticas y pueda comprobar si algo es legal. Sin ella solo se aplican reglas
+básicas (rangos, duplicados, tamaños) y la app lo avisa como «legalidad parcial».
+**HeX puede equivocarse en algunos fangames** (bases con *randomizer*, mecánicas o
+datos propios): rechazar cambios que sí son válidos u omitir reglas que no puede
+comprobar. Si te estorba, vuelve a HaX en cualquier momento.
 
 ### Carpeta del juego
 
@@ -198,6 +213,8 @@ publica el Release con `SHA256SUMS.txt`.
 - Un push a `development` cuyo mensaje empiece por `release: X.Y.Z` (la versión debe
   coincidir con `package.json`, `src-tauri/Cargo.toml` y `src-tauri/tauri.conf.json`)
   publica el Release `vX.Y.Z`; un tag `vX.Y.Z` empujado a mano hace lo mismo.
+- `[replace-release]` (junto a `release: X.Y.Z`) borra el Release y el tag de esa versión
+  si ya existen y los recrea sobre ese commit (útil tras reescribir el historial).
 - `[winbuild]` en el mensaje del commit hace un ensayo sin publicar.
 - Firma opcional: define los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`.
 
