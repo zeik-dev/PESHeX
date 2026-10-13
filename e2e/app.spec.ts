@@ -226,6 +226,16 @@ test("la pestaña Pokédex sale siempre: con datos en el entrenador (base antigu
   await expect(page.getByText(/No se encontró un Pokédex que se pueda editar/)).toBeVisible();
 });
 
+test("el save real de otro fangame (Game.rxdata) muestra la pestaña Pokédex con sus datos", async ({ page }) => {
+  const real = path.join(workDir, "Game.rxdata");
+  fs.copyFileSync(path.join(ROOT, "test_saves", "Game.rxdata"), real);
+  bridge.dialogPath = real;
+  await openSave(page, "es", "Kizuga");
+  await page.getByRole("button", { name: "Pokédex", exact: true }).click();
+  await expect(page.getByText("384 vistos · 122 capturados")).toBeVisible();
+  await shot(page, "74-real-fangame-pokedex-es-light");
+});
+
 test("un archivo de forma desconocida queda en solo lectura hasta confirmar", async ({ page }) => {
   const unknown = path.join(workDir, "Rare.rxdata");
   execFileSync("ruby", ["-e", "File.binwrite(ARGV[0], Marshal.dump({ 'cosa' => [1, 2, 3], 'otra' => 'x' }))", unknown]);

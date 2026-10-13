@@ -87,6 +87,31 @@ class ExtrasTest < Minitest::Test
     end
   end
 
+  # Save real de otro fangame (v16-v18 / Infinite Fusion, test_saves/Game.rxdata): el Pokedex vive en el
+  # entrenador y la 1.0.0 publicada no lo encontraba, asi que la pestana "Pokedex" no salia.
+  def test_el_save_real_de_otro_fangame_tiene_pokedex_en_el_trainer
+    path = save_path('Game.rxdata')
+    skip 'falta test_saves/Game.rxdata' unless File.exist?(path)
+    h = Harness.new
+    r = h.open(path)
+    assert_equal 'essentials_legacy', r['profile']['id']
+    assert_includes r['profile']['roles'].keys, 'pokedex'
+    assert_equal '$0', r['profile']['roles']['pokedex']['path'], 'el registro vive en el propio trainer'
+    d = h.call('get_pokedex')
+    assert d['available']
+    assert_equal 'array', d['layout']
+    assert_equal({ 'seen' => 384, 'owned' => 122 }, h.call('get_overview')['pokedex'])
+    assert_equal 384, d['seen'].size
+    assert_equal 122, d['owned'].size
+
+    before = h.session.doc.to_bytes
+    assert h.call('apply_ops', ops: [{ op: 'pokedex.set', id: '1', owned: true }], mode: 'hax')['applied']
+    assert_includes h.call('get_pokedex')['owned'], '1'
+    assert_includes h.call('get_pokedex')['seen'], '1', 'capturar implica haber visto'
+    h.call('undo')
+    assert_equal before, h.session.doc.to_bytes
+  end
+
   def test_sin_pokedex_en_ninguna_parte_no_hay_rol_y_get_pokedex_lo_dice
     Dir.mktmpdir('peshex_nodex') do |dir|
       path = File.join(dir, 'Game.rxdata')
