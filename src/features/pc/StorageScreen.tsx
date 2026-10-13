@@ -1,6 +1,7 @@
-import { HeartPulse, Monitor, Upload, Users } from "lucide-react";
+import { Copy, Download, HeartPulse, Monitor, Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { semantic } from "../../api/semantic";
+import type { PokemonSummary } from "../../api/types";
 import { displayName } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
@@ -9,10 +10,12 @@ import { usePc } from "../../stores/pc";
 import { useHexMode } from "../../stores/settings";
 import { useSession } from "../../stores/session";
 import { useUi } from "../../stores/ui";
-import { Banner, Button, ConfirmDialog, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Switch } from "../../ui";
+import { Banner, Button, ConfirmDialog, ContextMenu, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Switch, type MenuItem } from "../../ui";
 import { useLegality } from "../legality/useLegality";
 import { healOps } from "../pokemon/quick";
+import { useClonePokemon } from "../pokemon/actions";
 import { useSemanticQuery } from "../queries";
+import { AddPokemonDialog } from "./AddPokemonDialog";
 import { BoxPanel } from "./BoxPanel";
 import { InfoPanel } from "./InfoPanel";
 import { PartyTray } from "./PartyTray";
@@ -32,6 +35,10 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
   const { box, selected, setBox, select, onlyIllegal, setOnlyIllegal } = usePc();
   const [announce, setAnnounce] = useState("");
   const [releasing, setReleasing] = useState<string | null>(null);
+  // Clic derecho: casilla y posicion del menu; `adding` = casilla vacia donde se esta agregando un Pokémon.
+  const [menu, setMenu] = useState<{ x: number; y: number; dropRef: string; pk: PokemonSummary | null } | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
+  const clone = useClonePokemon();
 
   const storageQ = useSemanticQuery("storage", semantic.storage);
   const partyQ = useSemanticQuery("party", semantic.party);
@@ -103,6 +110,23 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
     if (r?.applied) select(null);
   }
 
+  function onContextMenu(e: React.MouseEvent, pk: PokemonSummary | null, dropRef: string) {
+    e.preventDefault();
+    select(dropRef);
+    setMenu({ x: e.clientX, y: e.clientY, dropRef, pk });
+  }
+
+  const menuItems: MenuItem[] = menu?.pk
+    ? [
+        { id: "edit", label: t("pc.menu.edit"), icon: <Pencil size={14} />, onSelect: () => openEditor(menu.pk!.ref) },
+        { id: "clone", label: t("pc.menu.clone"), icon: <Copy size={14} />, disabled: !editable, onSelect: () => void clone(menu.pk!.ref) },
+        { id: "export", label: t("pc.menu.export"), icon: <Download size={14} />, onSelect: () => useUi.getState().setExportRef(menu.pk!.ref) },
+        { id: "delete", label: t("pc.menu.delete"), icon: <Trash2 size={14} />, danger: true, disabled: !editable, onSelect: () => setReleasing(menu.pk!.ref) },
+      ]
+    : menu
+      ? [{ id: "add", label: t("pc.menu.add"), icon: <Plus size={14} />, disabled: !editable, onSelect: () => setAdding(menu.dropRef) }]
+      : [];
+
   if (storageQ.isPending || partyQ.isPending) return <PokeballSpinner />;
   if (mode === "pc" && !storage) return <EmptyState>{t("boxes.noStorage")}</EmptyState>;
 
@@ -150,6 +174,7 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
             dragProps={dnd.dragProps}
             onCellKey={onCellKey}
             wasDragged={dnd.wasDragged}
+            onContextMenu={onContextMenu}
           />
           <div className={styles.sideTools}>
             {mode === "pc" && storage && <div className="muted" data-testid="pc-total">{t("boxes.total", { count: storage.total })}</div>}
@@ -194,9 +219,10 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
             dragProps={dnd.dragProps}
             onCellKey={onCellKey}
             wasDragged={dnd.wasDragged}
+            onContextMenu={onContextMenu}
           />
         )}
-        <InfoPanel pokemonRef={infoRef} emptySlot={emptySelected} editable={editable} partial={report?.coverage.level !== "full"} onEdit={openEditor} onRelease={setReleasing} />
+        <InfoPanel pokemonRef={infoRef} emptySlot={emptySelected} emptyRef={emptySelected ? selected : null} editable={editable} partial={report?.coverage.level !== "full"} onEdit={openEditor} onRelease={setReleasing} onAdd={setAdding} />
       </div>
 
       {dnd.drag && ghostPk && (
@@ -206,6 +232,9 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
         </div>
       )}
       <div className={styles.srOnly} role="status" aria-live="polite">{announce}</div>
+
+      <ContextMenu open={!!menu} point={menu ? { x: menu.x, y: menu.y } : null} items={menuItems} label={t("pc.menuLabel")} onClose={() => setMenu(null)} />
+      <AddPokemonDialog target={adding} onClose={() => setAdding(null)} describe={describeRef} onAdded={select} />
 
       <ConfirmDialog
         open={!!releaseTarget}

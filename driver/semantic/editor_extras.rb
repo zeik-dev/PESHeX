@@ -317,9 +317,13 @@ module Sem
     end
 
     # Plantilla: otro Pokemon de la misma especie si lo hay; si no, el primero del equipo o cualquiera del save.
+    # (Se evitan los huevos: el Pokemon nuevo heredaria el contador de eclosion.)
     def pokemon_template(species)
-      same = @resolved.scan.pokemon.find { |r| Ids.of(PokeFacts.first(r.node, %w[@species])).to_s == species.to_s }
-      (same || @resolved.scan.pokemon.first)&.node
+      all = @resolved.scan.pokemon
+      hatched = all.reject { |r| @model.egg?(r.node) }
+      pool = hatched.empty? ? all : hatched
+      same = pool.find { |r| Ids.of(PokeFacts.first(r.node, %w[@species])).to_s == species.to_s }
+      (same || pool.first)&.node
     end
 
     def renew_personal_id(pk, path)

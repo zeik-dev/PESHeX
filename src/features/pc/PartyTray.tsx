@@ -19,6 +19,7 @@ interface Props {
   dragProps: (ref: string) => { onPointerDown: (e: React.PointerEvent) => void };
   onCellKey: (e: React.KeyboardEvent, occupant: string | null, dropRef: string) => boolean;
   wasDragged: () => boolean;
+  onContextMenu?: (e: React.MouseEvent, pk: PokemonSummary | null, dropRef: string) => void;
 }
 
 /** Equipo del jugador: seis casillas; si hay hueco se ofrece una casilla vacia al final
@@ -76,6 +77,7 @@ export function PartyTray(p: Props) {
               onPointerDown={pk ? p.dragProps(pk.ref).onPointerDown : undefined}
               onKeyDown={onKey}
               wasDragged={p.wasDragged}
+              onContextMenu={p.onContextMenu}
               flag={pk ? p.flags[pk.ref] ?? null : null}
             />
           );

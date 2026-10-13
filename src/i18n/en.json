@@ -228,7 +228,26 @@
     "boxName": "Box name",
     "grabbed": "{{name}} grabbed. Move with the arrow keys and press Space to drop it; Esc cancels.",
     "grabHint": "Pokémon grabbed: move with the arrow keys and press Space on the target slot (Esc cancels).",
-    "moved": "{{name}} moved to {{to}}."
+    "moved": "{{name}} moved to {{to}}.",
+    "menuLabel": "Slot actions",
+    "menu": {
+      "edit": "Edit Pokémon",
+      "clone": "Clone",
+      "export": "Export Pokémon",
+      "delete": "Delete",
+      "add": "Add Pokémon"
+    },
+    "add": {
+      "title": "Add Pokémon",
+      "destination": "Destination slot: {{to}}",
+      "speciesPlaceholder": "Search by name, number or ID",
+      "noGame": "Link the game folder to pick the species by name; without it you must type its internal ID.",
+      "maxIv": "Max IVs",
+      "help": "It is created with the species' own ability, gender and moves (up to the chosen level), no EVs and a neutral nature. You can fine-tune everything in the editor afterwards.",
+      "confirm": "Add",
+      "added": "{{name}} added to {{to}}."
+    },
+    "addPokemon": "Add Pokémon"
   },
   "legality": {
     "title": "Legality",

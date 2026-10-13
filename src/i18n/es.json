@@ -230,7 +230,26 @@
     "boxName": "Nombre de la caja",
     "grabbed": "{{name}} agarrado. Muévete con las flechas y pulsa Espacio para soltarlo; Esc cancela.",
     "grabHint": "Pokémon agarrado: muévete con las flechas y pulsa Espacio sobre la casilla de destino (Esc cancela).",
-    "moved": "{{name}} movido a {{to}}."
+    "moved": "{{name}} movido a {{to}}.",
+    "menuLabel": "Acciones de la casilla",
+    "menu": {
+      "edit": "Editar Pokémon",
+      "clone": "Clonar",
+      "export": "Exportar Pokémon",
+      "delete": "Eliminar",
+      "add": "Agregar Pokémon"
+    },
+    "add": {
+      "title": "Agregar Pokémon",
+      "destination": "Casilla de destino: {{to}}",
+      "speciesPlaceholder": "Busca por nombre, número o ID",
+      "noGame": "Vincula la carpeta del juego para elegir la especie por nombre; sin ella hay que escribir su ID interno.",
+      "maxIv": "IV al máximo",
+      "help": "Se crea con la habilidad, el género y los movimientos propios de la especie (hasta el nivel elegido), sin EV y con naturaleza neutra. Después puedes ajustar todo en el editor.",
+      "confirm": "Agregar",
+      "added": "{{name}} agregado en {{to}}."
+    },
+    "addPokemon": "Agregar Pokémon"
   },
   "legality": {
     "title": "Legalidad",

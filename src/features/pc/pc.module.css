@@ -464,3 +464,17 @@
 .dim {
   opacity: 0.28;
 }
+
+/* ── Agregar Pokémon ───────────────────────────────────────────────────── */
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: min(440px, 80vw);
+}
+.addSwitch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}

@@ -1,4 +1,4 @@
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { semantic } from "../../api/semantic";
 import { catEntry, speciesEntry } from "../../game/lookup";
 import { displayName, genderSymbol } from "../../lib/pokemon";
@@ -17,17 +17,20 @@ interface Props {
   /** ref del Pokemon seleccionado, o null (casilla vacia / nada seleccionado). */
   pokemonRef: string | null;
   emptySlot: boolean;
+  /** ref de la casilla vacia seleccionada (destino de «Agregar Pokémon»). */
+  emptyRef?: string | null;
   editable: boolean;
   /** La comprobacion de legalidad es parcial (faltan datos del juego). */
   partial?: boolean;
   onEdit: (ref: string) => void;
   onRelease: (ref: string) => void;
+  onAdd?: (dropRef: string) => void;
 }
 
 /** Datos del Pokemon seleccionado, estilo pantalla de resumen: sprite, tipos, nivel, objeto,
  *  naturaleza, habilidad, movimientos e IV/EV. Es el UNICO elemento de la pantalla que hace scroll; las acciones
  *  rápidas van en un desplegable y debajo solo quedan Editar, Clonar y Liberar. */
-export function InfoPanel({ pokemonRef, emptySlot, editable, partial, onEdit, onRelease }: Props) {
+export function InfoPanel({ pokemonRef, emptySlot, emptyRef, editable, partial, onEdit, onRelease, onAdd }: Props) {
   const { t, dynOr } = useT();
   const hex = useHexMode();
   const catalog = useGame((s) => s.catalogIndex);
@@ -38,6 +41,11 @@ export function InfoPanel({ pokemonRef, emptySlot, editable, partial, onEdit, on
     return (
       <aside className={styles.info} aria-label={t("pc.info")}>
         <p className="muted">{emptySlot ? t("pc.emptyHint") : t("pc.selectHint")}</p>
+        {emptySlot && emptyRef && onAdd && (
+          <Button variant="primary" size="sm" disabled={!editable} onClick={() => onAdd(emptyRef)}>
+            <Plus size={14} /> {t("pc.menu.add")}
+          </Button>
+        )}
         <p className="muted" style={{ fontSize: 12 }}>{t("pc.keyboardHelp")}</p>
       </aside>
     );

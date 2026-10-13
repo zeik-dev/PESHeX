@@ -27,6 +27,8 @@ export interface SlotCellProps {
   onPointerDown?: (e: React.PointerEvent) => void;
   onKeyDown: (e: React.KeyboardEvent, pk: PokemonSummary | null, dropRef: string) => void;
   wasDragged: () => boolean;
+  /** Clic derecho (o tecla de menu): abre el menu contextual de la casilla. */
+  onContextMenu?: (e: React.MouseEvent, pk: PokemonSummary | null, dropRef: string) => void;
   /** Etiqueta de legalidad, si existe. */
   flag?: "illegal" | "warning" | null;
 }
@@ -60,6 +62,7 @@ function SlotCellImpl(p: SlotCellProps) {
       }}
       onDoubleClick={() => pk && !p.wasDragged() && p.onOpen(pk.ref)}
       onKeyDown={(e) => p.onKeyDown(e, pk, p.dropRef)}
+      onContextMenu={p.onContextMenu ? (e) => p.onContextMenu!(e, pk, p.dropRef) : undefined}
     >
       {pk && (
         <>
