@@ -46,17 +46,44 @@ module Sem
         new(root, source: source).tap(&:load!)
       end
 
+      # Pasos de la carga (el orden importa: las MT se aplican a las especies ya cargadas y la version se
+      # deduce de ellas). La UI puede ejecutarlos uno a uno (`load_step!`) para mostrar el progreso real.
+      STEP_IDS = %w[species moves items abilities types extras settings].freeze
+
+      def steps
+        STEP_IDS
+      end
+
       def load!
         return self if @loaded
 
-        raise DriverError.new('GameFolderInvalid', 'la carpeta no existe', { path: @root }) unless File.directory?(@root)
-
-        DOMAINS.each { |d| load_domain(d) }
-        apply_tm_moves
-        scan_settings
-        @version = guess_version
-        @loaded = true
+        check_root!
+        STEP_IDS.each { |id| load_step!(id) }
         self
+      end
+
+      def check_root!
+        raise DriverError.new('GameFolderInvalid', 'la carpeta no existe', { path: @root }) unless File.directory?(@root)
+      end
+
+      def load_step!(id)
+        return self if @loaded
+
+        key = id.to_s
+        case key
+        when *DOMAINS.map(&:to_s) then load_domain(key.to_sym)
+        when 'extras' then apply_tm_moves
+        when 'settings'
+          scan_settings
+          @version = guess_version
+          @loaded = true
+        else raise DriverError.new('ValidationError', "paso de carga desconocido: #{id}", { code: 'unknown_step', step: id })
+        end
+        self
+      end
+
+      def loaded?
+        @loaded
       end
 
       # Limites efectivos del juego (los de Settings si se encontraron, vanilla si no).

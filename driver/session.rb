@@ -10,7 +10,7 @@
 class Session
   attr_accessor :doc, :file_path, :output_path, :page_size,
                 :revision, :script_paths, :semantic, :game, :game_calibration, :mode,
-                :legality_baseline
+                :legality_baseline, :game_loading
   attr_reader :journal
 
   def initialize(doc:, file_path:, output_path:, page_size:, script_paths: [])

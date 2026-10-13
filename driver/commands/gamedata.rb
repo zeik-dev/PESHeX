@@ -29,23 +29,62 @@ module Sem
       raise DriverError.new('NotAGameFolder', 'la carpeta no parece un juego de Pokémon Essentials', { path: root })
     end
 
-    def link!(session, path, source)
-      raise DriverError.new('PendingChanges', 'guarda o descarta los cambios antes de cambiar la carpeta del juego') if session.dirty?
-
+    # Desconecta la carpeta del juego (y cualquier carga a medias).
+    def detach!(session)
+      session.game_loading = nil
       session.game = nil
       session.game_calibration = nil
       session.reset_legality_baseline!
-      if path.nil? || path.to_s.strip.empty?
-        Api.state!(session).attach_game(nil, nil)
-        return
-      end
+      Api.state!(session).attach_game(nil, nil)
+    end
 
-      store = GameData::Store.load(normalize_root(path), source: source)
-      state = Api.state!(session)
-      calibration = store.species? ? GameData::Calibration.run(store, state.model) : nil
+    def link!(session, path, source)
+      begin_link!(session, path, source)
+      return if session.game_loading.nil?
+
+      session.game_loading[:store].steps.each { |id| link_step!(session, id) }
+      link_step!(session, 'calibration')
+      finish_link!(session)
+    end
+
+    # Carga por pasos (para mostrar el progreso real en la UI): begin -> step* -> finish.
+    # `begin` desvincula lo anterior y devuelve la lista de pasos; si `path` esta vacio solo desvincula.
+    def begin_link!(session, path, source)
+      raise DriverError.new('PendingChanges', 'guarda o descarta los cambios antes de cambiar la carpeta del juego') if session.dirty?
+
+      detach!(session)
+      return { steps: [], root: nil } if path.nil? || path.to_s.strip.empty?
+
+      store = GameData::Store.new(normalize_root(path), source: source)
+      store.check_root!
+      session.game_loading = { store: store, calibration: nil }
+      { root: store.root, steps: store.steps + ['calibration'] }
+    end
+
+    def link_step!(session, id)
+      pending = session.game_loading
+      raise DriverError.new('NoPendingGameLink', 'no hay una carga de la carpeta del juego en curso') unless pending
+
+      store = pending[:store]
+      if id.to_s == 'calibration'
+        pending[:calibration] = store.species? ? GameData::Calibration.run(store, Api.state!(session).model) : nil
+      else
+        store.load_step!(id)
+      end
+      { step: id.to_s }
+    end
+
+    def finish_link!(session)
+      pending = session.game_loading
+      raise DriverError.new('NoPendingGameLink', 'no hay una carga de la carpeta del juego en curso') unless pending
+
+      store = pending[:store]
+      raise DriverError.new('GameLinkIncomplete', 'faltan pasos por cargar', {}) unless store.loaded?
+
+      session.game_loading = nil
       session.game = store
-      session.game_calibration = calibration
-      state.attach_game(store, calibration)
+      session.game_calibration = pending[:calibration]
+      Api.state!(session).attach_game(store, pending[:calibration])
     end
   end
 end
@@ -53,6 +92,21 @@ end
 Commands.register('set_game_folder', bumps: true) do |ctx, params|
   source = %w[auto manual remembered].include?(params['source']) ? params['source'] : 'manual'
   Sem::GameApi.link!(ctx.session, params['path'], source)
+  { game: Sem::GameData::Status.build(ctx.session) }
+end
+
+# Carga por pasos (progreso real): game_link_begin -> game_link_step {id}* -> game_link_finish.
+Commands.register('game_link_begin', bumps: true) do |ctx, params|
+  source = %w[auto manual remembered].include?(params['source']) ? params['source'] : 'manual'
+  Sem::GameApi.begin_link!(ctx.session, params['path'], source)
+end
+
+Commands.register('game_link_step') do |ctx, params|
+  Sem::GameApi.link_step!(ctx.session, params['id'])
+end
+
+Commands.register('game_link_finish', bumps: true) do |ctx, _p|
+  Sem::GameApi.finish_link!(ctx.session)
   { game: Sem::GameData::Status.build(ctx.session) }
 end
 
