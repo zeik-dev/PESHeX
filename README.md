@@ -34,27 +34,37 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
 > (`Get-FileHash`). `LEEME.txt`, dentro del zip, lo explica paso a paso.
 
 <p align="center">
-  <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites, calibración y legalidad" width="96%" />
+  <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites y calibración" width="96%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos, con Quick Actions y preset de EV sugerido" width="48%" />
-  <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego" width="48%" />
+  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos: equipo, caja y panel de datos compacto" width="48%" />
+  <img src="docs/screenshots/pc-acciones.png" alt="Acciones rápidas desplegadas hacia la izquierda" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" /> 
+  <img src="docs/screenshots/editor.png" alt="Hoja de edición ancha: stats base, deslizadores, Poder oculto y estadísticas" width="48%" />
+  <img src="docs/screenshots/pokedex-ficha.png" alt="Ficha de especie de la Pokédex con los datos de tu PBS" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/bag.png" alt="Agregar objeto: búsqueda por nombre, icono e id, con las MT nombradas" width="48%" />
+  <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego (modo HeX)" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
+  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres y los iconos de tu juego" width="48%" />
+</p>
+<p align="center">
   <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres de tu juego" width="48%" />
   <img src="docs/screenshots/palette.png" alt="Búsqueda global y comandos (Ctrl+K)" width="48%" />
 </p>
 <p align="center">
   <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
 </p>
 
-<sub>Capturas con una carpeta de juego **sintética** de pruebas, ya vinculada y analizada
-(círculos de colores en lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu
-juego. Se regeneran con `npm run docs:shots`.</sub>
+<sub>Capturas con una partida y una carpeta de juego **reales** de *Pokémon Z* (un fangame de
+Essentials v16–v18), ya vinculada y analizada: los gráficos son los del propio juego del
+autor. PESHeX **no incluye ni distribuye** gráficos oficiales; usa los de tu juego. Se
+regeneran con `npm run docs:shots` (`PESHEX_DOCS_GAME=synthetic` usa una carpeta sintética
+de círculos de colores cuando no hay `test_pbs/`).</sub>
 
 ## Qué hace
 

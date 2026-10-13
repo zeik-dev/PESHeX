@@ -1,11 +1,18 @@
-// Capturas del README (docs/screenshots/*.png) con una carpeta de juego SINTETICA ya vinculada y analizada.
+// Capturas del README (docs/screenshots/*.png) con una carpeta de juego REAL ya vinculada y analizada.
 // No corre en la CI normal: `npm run docs:shots` (o PESHEX_DOCS=1 npx playwright test e2e/docs.spec.ts).
+//
+//   PESHEX_DOCS_GAME=z          Pokémon Z real: test_saves/Game.rxdata + test_pbs/*_POKEMON_Z (Data, Graphics, PBS).
+//   PESHEX_DOCS_GAME=synthetic  respaldo sin test_pbs/: carpeta de juego sintética (círculos de colores en vez de sprites).
+//
+// Sin la variable se usa Z si existe test_pbs/. Los gráficos de las capturas son los del propio juego del usuario:
+// PESHeX no los incluye ni los distribuye.
 import { expect, test } from "@playwright/test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { buildFakeGame } from "./support/fakegame";
 import { openSave, ROOT, serveGameAssets, setup, teardown, type Env } from "./support/harness";
+import { realGame, realGameAvailable } from "./support/realgames";
 
 test.skip(!process.env.PESHEX_DOCS, "solo con PESHEX_DOCS=1 (npm run docs:shots)");
 
@@ -16,31 +23,45 @@ test.afterEach(async () => {
 });
 
 const OUT = path.join(ROOT, "docs", "screenshots");
+const REAL = (process.env.PESHEX_DOCS_GAME ?? (realGameAvailable("z") ? "z" : "synthetic")) === "z";
+
+/** Qué se enseña en cada captura según el juego (los nombres cambian entre el Z real y el sintético). */
+const DEMO = REAL
+  ? { save: "Game.rxdata", trainer: "Kizuga", editRef: "party/1", palette: "milotic", paletteHit: /Milotic/, dex: "arcanine", dexName: "Arcanine", tm: "MT0" }
+  : { save: "Partida_2.rxdata", trainer: "Furikita", editRef: "party/1", palette: "grillita", paletteHit: /Grillita/, dex: "torrac", dexName: "Gatito Fuego", tm: "pot" };
 
 test("capturas del README con la carpeta del juego analizada", async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(300_000);
   fs.mkdirSync(OUT, { recursive: true });
-  const shot = (name: string) => page.screenshot({ path: path.join(OUT, `${name}.png`) });
+  const shot = async (name: string) => {
+    await page.waitForTimeout(450);
+    await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+  };
   const nav = (name: string) => page.getByRole("button", { name, exact: true }).click();
 
-  env = await setup(page);
+  env = await setup(page, DEMO.save);
   await serveGameAssets(page);
-  await page.setViewportSize({ width: 1360, height: 1120 });
-  await openSave(page, env);
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   // Ruta estable y corta para que la captura de Ajustes no enseñe un directorio temporal aleatorio.
-  const gameDir = path.join(os.tmpdir(), "peshex-docs", "Mi Juego");
-  fs.rmSync(path.dirname(gameDir), { recursive: true, force: true });
-  const game = buildFakeGame(ROOT, gameDir, env.savePath, { TORRACAT: "Gatito Fuego" }, { fronts: true });
-  env.bridge.dialogDir = game.root;
+  const base = path.join(os.tmpdir(), "peshex-docs");
+  fs.rmSync(base, { recursive: true, force: true });
+  fs.mkdirSync(base, { recursive: true });
+  const gameDir = REAL
+    ? realGame("z", base, "Pokémon Z")
+    : buildFakeGame(ROOT, path.join(base, "Mi Juego"), env.savePath, { TORRACAT: "Gatito Fuego" }, { fronts: true }).root;
+  if (!gameDir) throw new Error("falta test_pbs/: usa PESHEX_DOCS_GAME=synthetic");
+  env.bridge.dialogDir = gameDir;
+  await openSave(page, env, "es", DEMO.trainer);
+
+  // Ajustes: la carpeta analizada (datos, límites, calibración)
   await nav("Ajustes");
   await page.getByRole("button", { name: "Elegir carpeta…" }).click();
-  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Legalidad completa")).toBeVisible();
-
-  // Ajustes: la carpeta analizada (datos, límites, calibración y legalidad)
+  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 180_000 });
+  await expect(page.getByText(/imágenes indexadas/)).toBeVisible();
   const card = page.locator("section", { has: page.getByRole("heading", { name: "Carpeta del juego" }) });
   await card.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
   await card.screenshot({ path: path.join(OUT, "settings-game.png") });
 
   // HeX: aviso previo (con la carpeta ya vinculada) y, al aceptar, la tarjeta de legalidad del Resumen
@@ -53,30 +74,59 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
 
   await nav("Resumen");
   await expect(page.getByRole("button", { name: /^Legalidad/, expanded: true })).toBeVisible();
-  await expect(page.getByText("Legalidad completa").first()).toBeVisible();
-  await page.waitForTimeout(400);
   await shot("overview");
 
+  // PC: equipo, caja y panel de datos compacto; y «Acciones rápidas» desplegado hacia la izquierda
   await nav("PC");
-  await page.locator('[data-cell="party/1"]').click();
-  await expect(page.getByTestId("pc-info").getByTestId("ev-presets")).toBeVisible();
-  await page.waitForTimeout(500);
+  // La caja que se enseña es la primera con Pokémon (el save puede quedarse en una vacía).
+  const boxes = page.locator('select[aria-label="PC"]');
+  await boxes.waitFor();
+  const populated = await boxes.locator("option").evaluateAll((opts) => opts.find((o) => !/\(0\)/.test(o.textContent ?? ""))?.getAttribute("value") ?? null);
+  if (populated != null) await boxes.selectOption(populated);
+  await page.locator(`[data-cell="${DEMO.editRef}"]`).click();
+  const info = page.getByTestId("pc-info");
+  await expect(info.getByRole("button", { name: "Editar", exact: true })).toBeVisible();
   await shot("pc");
+  await info.getByRole("button", { name: /Acciones rápidas/ }).click();
+  await expect(page.getByRole("menu").or(page.getByRole("dialog", { name: /Acciones rápidas/ })).first()).toBeVisible();
+  await shot("pc-acciones");
+  await page.keyboard.press("Escape");
 
+  // Hoja de edición ancha: stats base, deslizadores, Poder oculto y estadísticas totales
+  await info.getByRole("button", { name: "Editar", exact: true }).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByTestId("base-stats")).toBeVisible();
+  await drawer.getByRole("tab", { name: "IV y EV" }).click();
+  await expect(drawer.getByText(/Poder oculto/).first()).toBeVisible();
+  await shot("editor");
+  await page.keyboard.press("Escape");
+
+  // Mochila: «Agregar objeto» arriba con el selector (nombre, icono e id)
+  await nav("Mochila");
+  const picker = page.getByRole("combobox", { name: "Objeto" }).first();
+  await picker.click();
+  await picker.fill(DEMO.tm);
+  await expect(page.getByRole("option").first()).toBeVisible();
+  await shot("bag");
+  await page.keyboard.press("Escape");
+
+  // Pokédex: lista y ficha de una especie con los datos del PBS
   await nav("Pokédex");
   await expect(page.getByText(/\d+ vistos · \d+ capturados/)).toBeVisible();
-  await page.waitForTimeout(400);
   await shot("pokedex");
+  await page.getByRole("textbox", { name: "Buscar por nombre o número" }).fill(DEMO.dex);
+  await page.getByRole("button", { name: `Ver la ficha de ${DEMO.dexName}` }).click();
+  await expect(page.getByTestId("species-sheet")).toBeVisible();
+  await shot("pokedex-ficha");
 
   await nav("Mundo");
-  await expect(page.getByText("Medalla 1")).toBeVisible();
-  await page.waitForTimeout(300);
+  await expect(page.getByRole("heading", { level: 1, name: "Mundo" })).toBeAttached();
   await shot("world");
 
   // Ctrl+K
   await page.keyboard.press("Control+k");
-  await page.getByRole("dialog", { name: "Buscar y comandos" }).getByRole("combobox").fill("grillita");
-  await expect(page.getByRole("option", { name: /Grillita/ })).toBeVisible();
+  await page.getByRole("dialog", { name: "Buscar y comandos" }).getByRole("combobox").fill(DEMO.palette);
+  await expect(page.getByRole("option", { name: DEMO.paletteHit }).first()).toBeVisible();
   await shot("palette");
   await page.keyboard.press("Escape");
 
@@ -90,7 +140,6 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await page.getByRole("button", { name: "Comparar", exact: true }).click();
   await expect(page.getByTestId("diff-view")).toBeVisible();
   await page.getByText("Partida guardada.").waitFor({ state: "hidden", timeout: 15_000 }).catch(() => undefined);
-  await page.waitForTimeout(400);
   await shot("diff");
-  fs.rmSync(path.dirname(gameDir), { recursive: true, force: true });
+  fs.rmSync(base, { recursive: true, force: true });
 });
