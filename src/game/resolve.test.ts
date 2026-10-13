@@ -6,6 +6,7 @@ import { boxGeometry, resolveBoxBackground, BOX_BITMAP } from "./resolve/box";
 import type { ResolveCtx } from "./resolve/common";
 import { frameInfo } from "./resolve/common";
 import { itemNameCandidates, resolveBallIcon, resolveHeldItemIcon, resolveItemIcon } from "./resolve/item";
+import { resolveCategorySheet } from "./resolve/category";
 import { iconNameCandidates, mapKey, resolvePokemonIcon } from "./resolve/pokemon";
 import type { ScanFile } from "./types";
 
@@ -179,5 +180,20 @@ describe("objetos, balls y cajas", () => {
     expect([g.originX, g.originY, g.stepX]).toEqual([10, 30, 48]);
     const g2 = boxGeometry(BOX_BITMAP.w * 2, BOX_BITMAP.h * 2);
     expect([g2.originX, g2.stepX]).toEqual([20, 96]);
+  });
+});
+
+describe("hoja de categorías de movimiento", () => {
+  it("encuentra category.png (3 cuadros apilados) en Pictures (v16-v20) y en UI (v21)", () => {
+    const legacy = resolveCategorySheet(ctxOf([["Graphics/Pictures/category.png", 64, 84]]));
+    expect(legacy).toMatchObject({ path: "Graphics/Pictures/category.png", frameW: 64, frameH: 28 });
+    const modern = resolveCategorySheet(ctxOf([["Graphics/UI/category.png", 64, 84], ["Graphics/Pictures/category.png", 32, 42]]));
+    expect(modern?.path).toBe("Graphics/UI/category.png"); // UI gana a Pictures
+  });
+
+  it("sin la hoja, o con una forma que no es de 3 cuadros, devuelve null (se usan los íconos propios)", () => {
+    expect(resolveCategorySheet(ctxOf(MODERN))).toBeNull();
+    expect(resolveCategorySheet(ctxOf([["Graphics/Pictures/category.png", 64, 80]]))).toBeNull(); // 80 no se divide en 3
+    expect(resolveCategorySheet(ctxOf([["Graphics/Pictures/category.png", 8, 84]]))).toBeNull(); // cuadros más altos que anchos
   });
 });

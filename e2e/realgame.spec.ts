@@ -69,6 +69,10 @@ test("Pokémon Z real: el editor trae stats base, habilidad derivada, bola de $B
   // Los ids de movimiento del save son números: el selector los muestra con su nombre del PBS.
   await expect(drawer.getByRole("combobox", { name: "Movimiento 1" })).toHaveValue(/Envite Ígneo/);
   await expect(drawer.getByRole("combobox", { name: "Movimiento 4" })).toHaveValue(/Voltio Cruel/);
+  // Íconos de categoría: Z trae Graphics/Pictures/category.png (64x84, 3 cuadros) y se usan en vez de los propios.
+  const icons = drawer.locator('[role="img"][data-category]');
+  await expect(icons.first()).toHaveAttribute("data-source", "game");
+  await expect.poll(() => icons.first().locator("img").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(64);
   await shot(page, "142-z-editor-moves-es-light");
 });
 

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useT } from "../lib/useT";
 import { useGame } from "../stores/game";
+import { CategoryIcon } from "../ui/CategoryIcon";
 import { ItemIcon, PokemonIcon } from "../ui/GameImage";
 import { itemDisplayName } from "./lookup";
 import type { ComboOption } from "../ui/combobox";
@@ -45,6 +46,7 @@ export function useMoveOptions(allowed?: ReadonlySet<string> | null): ComboOptio
       id: m.id,
       label: m.name ?? prettyId(m.id),
       sub: [m.type, m.power ? `Pot. ${m.power}` : null, m.pp ? `PP ${m.pp}` : null].filter(Boolean).join(" · ") || m.id,
+      icon: <CategoryIcon category={m.category} />,
     }));
   }, [catalog, allowed]);
 }

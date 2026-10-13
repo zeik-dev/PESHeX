@@ -750,3 +750,12 @@
     transition: none;
   }
 }
+
+/* Icono de categoria de movimiento (Fisico / Especial / Estado) */
+.categoryIcon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  line-height: 0;
+  vertical-align: middle;
+}

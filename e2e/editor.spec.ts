@@ -230,3 +230,33 @@ test("con el filtro por especie apagado, los selectores de habilidades y movimie
   expect(await page.getByRole("listbox").getByRole("option").count()).toBeGreaterThan(60);
   await page.keyboard.press("Escape");
 });
+
+for (const withSheet of [false, true]) {
+  test(`los movimientos muestran su categoría con íconos ${withSheet ? "de la carpeta del juego (category.png)" : "propios (el juego no trae category.png)"}`, async ({ page }) => {
+    env = await setup(page);
+    await serveGameAssets(page);
+    await openSave(page, env);
+    const game = buildFakeGame(ROOT, path.join(env.workDir, "Mi Juego"), env.savePath, { TORRACAT: "Gatito Fuego" }, { category: withSheet });
+    env.bridge.dialogDir = game.root;
+    await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+    await page.getByRole("button", { name: "Elegir carpeta…" }).click();
+    await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 30_000 });
+
+    const drawer = await openEditor(page);
+    await drawer.getByRole("tab", { name: /Movimientos/ }).click();
+    const icons = drawer.locator('[role="img"][data-category]');
+    await expect(icons.first()).toBeVisible();
+    await expect(icons.first()).toHaveAttribute("data-source", withSheet ? "game" : "own");
+    await expect(icons.first()).toHaveAttribute("aria-label", /Físico|Especial|Estado/);
+    if (withSheet) {
+      // La hoja del juego se carga de verdad (asset protocol) y se recorta el cuadro de la categoría.
+      await expect.poll(() => icons.first().locator("img").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(64);
+    }
+    await shot(page, `121-move-category-${withSheet ? "game" : "own"}-es-light`);
+
+    // El selector de movimientos también las muestra en cada opción.
+    await drawer.getByRole("combobox", { name: /Movimiento 1/ }).click();
+    await expect(page.getByRole("listbox").locator('[role="img"][data-category]').first()).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+}

@@ -106,6 +106,8 @@ export interface FakeGameOptions {
   iconAliases?: Record<string, string>;
   /** Tambien genera `Graphics/Pokemon/Front/<especie>.png` (referencia para las sugerencias por parecido). */
   fronts?: boolean;
+  /** Tambien genera `Graphics/Pictures/category.png` (hoja de 3 cuadros de 64x28 de colores: nunca arte oficial). */
+  category?: boolean;
 }
 
 /** Disco grande del color de la especie (sprite de combate inventado). */
@@ -138,6 +140,10 @@ export function buildFakeGame(
     write(`Graphics/Pokemon/Icons shiny/${base}.png`, iconStrip(`${base}-shiny`));
   }
   write("Graphics/Pokemon/Icons/000.png", iconStrip("000"));
+  if (opts.category) {
+    const bands: Pixel[] = [[255, 140, 0, 255], [30, 200, 60, 255], [200, 30, 200, 255]]; // Fisico, Especial, Estado
+    write("Graphics/Pictures/category.png", encodePng(64, 84, (_x, y) => bands[Math.floor(y / 28)]));
+  }
   for (const id of [...manifest.items, ...manifest.balls]) write(`Graphics/Items/${id}.png`, solid(48, 48, id));
   write("Graphics/Items/000.png", solid(48, 48, "000", 0.3));
   for (const id of manifest.balls) write(`Graphics/UI/Summary/icon_ball_${id}.png`, solid(24, 24, id, 0.4));

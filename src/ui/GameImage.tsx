@@ -18,13 +18,16 @@ interface GameImageProps {
   frames?: number;
   /** ancho/alto de un cuadro. */
   frameRatio?: number;
+  /** Hoja con cuadros apilados en vertical: cuántos hay y cuál se muestra (0 = el primero). */
+  rows?: number;
+  row?: number;
   alt?: string;
   className?: string;
   onFailed?: () => void;
 }
 
 /** Imagen de la carpeta del juego: asset protocol y, si falla, bytes por IPC. */
-export function GameImage({ rel, size, frames = 1, frameRatio = 1, alt = "", className, onFailed }: GameImageProps) {
+export function GameImage({ rel, size, frames = 1, frameRatio = 1, rows = 1, row = 0, alt = "", className, onFailed }: GameImageProps) {
   const root = useGame((s) => s.status.root);
   const [src, setSrc] = useState<string | null>(() => (root && !isProtocolBroken() ? directUrl(root, rel) : null));
   const [failed, setFailed] = useState(false);
@@ -56,7 +59,7 @@ export function GameImage({ rel, size, frames = 1, frameRatio = 1, alt = "", cla
         src={src}
         alt={alt}
         draggable={false}
-        style={{ height: size, width: Math.round(w * frames) }}
+        style={{ height: size * rows, width: Math.round(w * frames), marginTop: row ? -row * size : undefined }}
         onError={() => {
           // Si ya era un blob (plan B) y tambien falla, no hay mas que intentar.
           if (src.startsWith("blob:")) {

@@ -13,7 +13,7 @@ import { genderLabel, statTotal } from "../../lib/speciesInfo";
 import { typeMatchups } from "../../lib/typeChart";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
-import { Banner, Button, Chip, ItemIcon, PokemonIcon, PokeballSpinner, StatBar, Tabs, TypeChip } from "../../ui";
+import { Banner, Button, CategoryIcon, Chip, ItemIcon, PokemonIcon, PokeballSpinner, StatBar, Tabs, TypeChip } from "../../ui";
 import { useSemanticQuery } from "../queries";
 import styles from "./pokedex.module.css";
 
@@ -306,6 +306,7 @@ export function SpeciesSheet({ speciesId, onSelect, onClose }: { speciesId: stri
                   <span className={styles.moveLv}>{m.level == null ? "" : m.level === 0 ? t("pokedex.sheet.levelEvo") : m.level < 0 ? "—" : m.level}</span>
                   <span className={styles.moveName}>{moveName(m.id)}</span>
                   <TypeChip id={mv?.type} name={mv?.type ? typeName(mv.type) : null} />
+                  <CategoryIcon category={mv?.category} />
                   <span className="muted mono" style={{ fontSize: 11, minWidth: 28, textAlign: "right" }}>{mv?.power ? mv.power : ""}</span>
                 </li>
               );

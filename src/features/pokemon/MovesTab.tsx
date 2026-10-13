@@ -7,7 +7,7 @@ import { useMoveOptions } from "../../game/useCatalog";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { useHexMode, useSettings } from "../../stores/settings";
-import { Button, Chip, ComboBox, EmptyState, Field, NumberField, Switch, TextField, TypeChip } from "../../ui";
+import { Button, CategoryIcon, ComboBox, EmptyState, Field, NumberField, Switch, TextField, TypeChip } from "../../ui";
 import { usePatch } from "./editorShared";
 import styles from "./pokemon.module.css";
 
@@ -33,7 +33,6 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
   }, [filter, learnable, pk.moves, index]);
   const moveOptions = useMoveOptions(allowed);
   const canAdd = editable && pk.moves.length < pk.limits.maxMoves;
-  const categoryName = (c: number | null | undefined) => (c === 0 ? t("pokemon.moves.physical") : c === 1 ? t("pokemon.moves.special") : c === 2 ? t("pokemon.moves.status") : null);
 
   return (
     <div>
@@ -64,7 +63,7 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
               {entry && (
                 <div className={styles.moveInfo}>
                   {entry.type && <TypeChip id={entry.type} name={index?.types.get(entry.type)?.name} />}
-                  {categoryName(entry.category) && <Chip>{categoryName(entry.category)}</Chip>}
+                  <CategoryIcon category={entry.category} />
                   <span className="muted">
                     {entry.power ? t("pokemon.moves.power", { n: entry.power }) : null}
                     {entry.accuracy ? ` · ${t("pokemon.moves.accuracy", { n: entry.accuracy })}` : null}

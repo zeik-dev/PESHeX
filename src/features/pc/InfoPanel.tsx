@@ -5,7 +5,7 @@ import { displayName, genderSymbol } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { useHexMode } from "../../stores/settings";
-import { BallIcon, Button, Chip, HpBar, ItemIcon, PokemonIcon, TypeChip } from "../../ui";
+import { BallIcon, Button, CategoryIcon, Chip, HpBar, ItemIcon, PokemonIcon, TypeChip } from "../../ui";
 import { QuickActions } from "../pokemon/QuickActions";
 import { useClonePokemon } from "../pokemon/actions";
 import { FlagList } from "../legality/FlagList";
@@ -106,6 +106,7 @@ export function InfoPanel({ pokemonRef, emptySlot, emptyRef, editable, partial, 
             <li key={m.slot}>
               <span>{m.name ?? m.id}</span>
               {mv?.type && <TypeChip id={mv.type} name={catalog?.types.get(mv.type)?.name} />}
+              <CategoryIcon category={mv?.category} />
               {m.pp != null && <span className="muted mono" style={{ fontSize: 11 }}>{m.pp}</span>}
             </li>
           );
