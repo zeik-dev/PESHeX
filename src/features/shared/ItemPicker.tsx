@@ -36,6 +36,7 @@ export function ItemPicker({
         id={id}
         value={value == null ? null : String(value)}
         onCommit={(v) => onChange(v ? v.trim().toUpperCase() : null)}
+        live
         nullable={nullable}
         disabled={disabled}
         ariaLabel={ariaLabel}

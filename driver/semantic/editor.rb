@@ -479,6 +479,7 @@ module Sem
       raise DriverError.new('RoleNotFound', 'este save no tiene bolsa', { role: 'bag' }) unless bag
 
       pocket_i, item_id = resolve_bag_target(bag, op)
+      item_id = bag_item_key(bag, item_id)
       pocket = bag.array.items[pocket_i]
       raise DriverError.new('FieldMissing', "bolsillo inexistente: #{pocket_i}", { field: "bag.#{pocket_i}" }) unless Tree.array?(pocket)
 
@@ -501,6 +502,18 @@ module Sem
         builder.apply(ArrayInsert.new(pocket, pocket.items.size, pair, pocket_path))
       end
       builder.touch('bag')
+    end
+
+    # Las bases <= v18 guardan los objetos como NUMERO: un id interno ('POTION') se convierte con las tablas del
+    # juego vinculado para encontrar el objeto ya existente (y no duplicarlo) o insertarlo como entero.
+    def bag_item_key(bag, item_id)
+      return item_id unless item_id.is_a?(String) && item_id !~ /\A\d+\z/ && @session.game&.species?
+
+      sample = bag.array.items.flat_map { |p| Tree.array?(p) ? p.items : [] }.find { |p| Shapes.item_pair?(p) }&.items&.first
+      return item_id unless sample.is_a?(Integer)
+
+      @session.game.number_for(:item, item_id) ||
+        raise(DriverError.new('ValidationError', "objeto desconocido: #{item_id}", { code: 'unknown_id', field: 'item', value: item_id }))
     end
 
     def coerce_item_id(like, item_id)

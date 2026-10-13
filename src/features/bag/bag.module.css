@@ -57,6 +57,10 @@
   align-items: flex-end;
   flex-wrap: wrap;
 }
+.addPicker {
+  flex: 1 1 320px;
+  min-width: 240px;
+}
 
 /* Con el icono del juego, la inicial y el circulo sobran. */
 .itemIcon:has(img) {

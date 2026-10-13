@@ -142,3 +142,40 @@ class RealSavesTest < Minitest::Test
     end
   end
 end
+
+# La mochila de Pokémon Z guarda los objetos como números: se agregan y se encuentran por su id interno.
+class RealBagTest < Minitest::Test
+  include RealGames
+
+  def test_z_agregar_un_objeto_por_nombre_no_duplica_el_existente
+    h = Harness.new
+    with_save_copy('Game.rxdata') do |path|
+      h.open(path)
+      h.call('set_game_folder', path: real_game_root(:z), source: 'manual')
+      original = h.session.doc.to_bytes
+      bag = h.call('get_bag')['bag']
+      pocket = bag['pockets'].find { |p| p['slots'].any? }
+      slot = pocket['slots'].first
+      assert_kind_of Integer, slot['id'], 'Z guarda ids de objeto enteros'
+      internal = Sem::Api.state!(h.session).model.game.item(slot['id']).id
+
+      before = pocket['slots'].size
+      r = h.call('apply_ops', { ops: [{ op: 'bag.set', pocket: pocket['index'], id: internal, qty: slot['qty'] + 5 }], mode: 'hax' })
+      assert r['applied'], r.inspect
+      after = h.call('get_bag')['bag']['pockets'].find { |p| p['index'] == pocket['index'] }
+      assert_equal before, after['slots'].size, 'el objeto existente se actualiza, no se duplica'
+      assert_equal slot['qty'] + 5, after['slots'].find { |s| s['id'] == slot['id'] }['qty']
+
+      new_item = Sem::Api.state!(h.session).model.game.item('MASTERBALL')
+      h.call('apply_ops', { ops: [{ op: 'bag.set', pocket: new_item.pocket, id: 'MASTERBALL', qty: 3 }], mode: 'hax' })
+      pockets = h.call('get_bag')['bag']['pockets']
+      added = pockets.flat_map { |p| p['slots'] }.find { |s| s['id'] == new_item.number }
+      assert added, 'MASTERBALL se agrego como numero entero'
+      assert_equal 3, added['qty']
+      assert_equal 'Master Ball', added['name']
+
+      h.call('undo_all')
+      assert_equal original, h.session.doc.to_bytes
+    end
+  end
+end
