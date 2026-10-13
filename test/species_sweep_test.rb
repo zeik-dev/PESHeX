@@ -85,4 +85,36 @@ class SpeciesSweepTest < Minitest::Test
       assert_operator sweep(save, dir), :>, 50
     end
   end
+
+  # Un dato raro en una parte opcional no debe dejar la ficha sin datos: se entrega lo demas y el fallo viaja en `warnings`.
+  def test_la_ficha_degrada_por_partes
+    Dir.mktmpdir('peshex_degrade') do |dir|
+      save = File.join(SAVES_DIR, 'Partida_2.rxdata')
+      GameFixture.build(dir, from: save)
+      @h.open(save)
+      @h.call('set_game_folder', path: dir, source: 'manual')
+      game = @h.session.game
+      species = game.table(:species).values.find { |e| e.form.zero? }.species
+
+      ok = @h.call('get_species', species: species)['species']
+      refute ok.key?('warnings'), 'sin fallos no hay avisos'
+
+      game.define_singleton_method(:learn_profile) { |*_| raise 'perfil roto' }
+      game.define_singleton_method(:prevos) { |*_| raise 'evoluciones rotas' }
+      detail = @h.call('get_species', species: species)['species']
+      assert_equal species, detail['species']
+      assert_kind_of Hash, detail['baseStats']
+      assert_equal [], detail['learnable']
+      assert_equal [], detail['prevos']
+      assert_equal 1, detail['minimumLevel'], 'minimum_level tambien usa prevos'
+      assert_equal %w[learnable prevos minimumLevel], detail['warnings'].map { |w| w.split(':').first }
+      assert_match(/learnable: RuntimeError: perfil roto/, detail['warnings'].first)
+
+      game.define_singleton_method(:encounters_for) { |*_| raise 'zonas rotas' }
+      extras = @h.call('get_species_extras', species: species)
+      assert_equal [], extras['encounters']
+      assert_kind_of Hash, extras['regional']
+      assert_match(/encounters: RuntimeError: zonas rotas/, extras['warnings'].first)
+    end
+  end
 end

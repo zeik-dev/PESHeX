@@ -74,19 +74,37 @@ module Sem
 
         base = store.base_species(e.species) || e
         pick = ->(f) { blank?(e[f]) ? base[f] : e[f] }
-        info = INFO_FIELDS.to_h { |key, f| [key, pick.call(f)] }.reject { |_, v| blank?(v) }
-        profile = store.learn_profile(e.species, e.form)
-        { id: e.id, species: e.species, form: e.form, number: base.number, order: base.order, name: base.name,
-          formName: e.form_name, types: e.types.empty? ? base.types : e.types,
-          baseStats: store.base_stats(e.id, form), growthRate: store.growth_rate(e.id, form),
-          genderRatio: store.gender_ratio(e.id, form), abilities: pick.call(:abilities),
-          hiddenAbilities: pick.call(:hidden_abilities), levelMoves: pick.call(:moves),
-          tutorMoves: (e.tutor_moves + base.tutor_moves).uniq, eggMoves: (e.egg_moves + base.egg_moves).uniq,
-          tmMoves: (e.tm_moves + base.tm_moves).uniq, evolutions: base.evolutions, prevos: store.prevos(e.species),
-          minimumLevel: store.minimum_level(e.species), info: info, mega: e.mega, region: e.region,
-          # Todo lo que la especie (y sus preevoluciones) puede aprender, a cualquier nivel: nivel, tutor, MT y huevo.
-          learnable: (profile.min_level.keys + profile.always.to_a).uniq,
-          forms: forms_of(store, base) }
+        # Los bloques opcionales (datos de Pokedex, formas, lo que puede aprender, evoluciones previas) se aislan: un dato
+        # raro de uno de ellos no debe tumbar la ficha entera (la UI se quedaria en «Cargando…»); el fallo se avisa.
+        warnings = []
+        info = guard(warnings, 'info') { INFO_FIELDS.to_h { |key, f| [key, pick.call(f)] }.reject { |_, v| blank?(v) } } || {}
+        learnable = guard(warnings, 'learnable') do
+          profile = store.learn_profile(e.species, e.form)
+          (profile.min_level.keys + profile.always.to_a).uniq
+        end || []
+        detail = { id: e.id, species: e.species, form: e.form, number: base.number, order: base.order, name: base.name,
+                   formName: e.form_name, types: e.types.empty? ? base.types : e.types,
+                   baseStats: store.base_stats(e.id, form), growthRate: store.growth_rate(e.id, form),
+                   genderRatio: store.gender_ratio(e.id, form), abilities: pick.call(:abilities),
+                   hiddenAbilities: pick.call(:hidden_abilities), levelMoves: pick.call(:moves),
+                   tutorMoves: (e.tutor_moves + base.tutor_moves).uniq, eggMoves: (e.egg_moves + base.egg_moves).uniq,
+                   tmMoves: (e.tm_moves + base.tm_moves).uniq, evolutions: base.evolutions,
+                   prevos: guard(warnings, 'prevos') { store.prevos(e.species) } || [],
+                   minimumLevel: guard(warnings, 'minimumLevel') { store.minimum_level(e.species) } || 1,
+                   info: info, mega: e.mega, region: e.region,
+                   # Todo lo que la especie (y sus preevoluciones) puede aprender, a cualquier nivel: nivel, tutor, MT y huevo.
+                   learnable: learnable,
+                   forms: guard(warnings, 'forms') { forms_of(store, base) } || [] }
+        detail[:warnings] = warnings unless warnings.empty?
+        detail
+      end
+
+      # Ejecuta un bloque opcional: si falla, anota el aviso (`etiqueta: Clase: mensaje`) y devuelve nil.
+      def guard(warnings, label)
+        yield
+      rescue StandardError => e
+        warnings << "#{label}: #{e.class}: #{e.message}"[0, 160]
+        nil
       end
 
       # Formas alternativas (Mega, regionales...) de una especie base.

@@ -138,7 +138,14 @@ Commands.register('get_species_extras') do |ctx, params|
   entry = game.species_entry(species, params['form'].to_i)
   raise DriverError.new('SpeciesNotFound', "especie desconocida: #{species}", { id: species }) unless entry
 
-  { id: entry.species, encounters: game.encounters_for(entry.species), regional: game.regional_numbers(entry.species) }
+  # Cada parte se lee por separado: si una falla (archivo raro de zonas o de Pokedex regional) la otra se entrega igual y
+  # el fallo viaja en `warnings`, en vez de dejar la ficha sin datos.
+  warnings = []
+  encounters = Sem::GameData::Catalog.guard(warnings, 'encounters') { game.encounters_for(entry.species) } || []
+  regional = Sem::GameData::Catalog.guard(warnings, 'regional') { game.regional_numbers(entry.species) } || {}
+  out = { id: entry.species, encounters: encounters, regional: regional }
+  out[:warnings] = warnings unless warnings.empty?
+  out
 end
 
 # Stats esperados por la formula del motor. Dos usos:
