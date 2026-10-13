@@ -43,11 +43,6 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await card.scrollIntoViewIfNeeded();
   await card.screenshot({ path: path.join(OUT, "settings-game.png") });
 
-  // Zoom de la app
-  const zoomCard = page.locator("section", { has: page.getByRole("heading", { name: "Zoom de la aplicación" }) });
-  await zoomCard.scrollIntoViewIfNeeded();
-  await zoomCard.screenshot({ path: path.join(OUT, "settings-zoom.png") });
-
   // HeX: aviso previo (con la carpeta ya vinculada) y, al aceptar, la tarjeta de legalidad del Resumen
   await page.getByRole("radio", { name: "HeX" }).first().click();
   const warning = page.getByRole("dialog", { name: "Activar el modo HeX" });

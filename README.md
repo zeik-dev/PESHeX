@@ -37,14 +37,11 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
   <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites, calibración y legalidad" width="96%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/settings-zoom.png" alt="Zoom de la aplicación en Ajustes (50 %–200 %, por defecto 100 %)" width="96%" />
-</p>
-<p align="center">
   <img src="docs/screenshots/pc.png" alt="El PC como en los juegos, con Quick Actions y preset de EV sugerido" width="48%" />
   <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
+  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" /> 
   <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
 </p>
 <p align="center">
@@ -55,10 +52,9 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
   <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
 </p>
 
-<sub>Las capturas de PC, Resumen, Pokédex, búsqueda y carpeta del juego usan una partida y la carpeta de
-juego del autor (los sprites son los de ese juego); las del zoom, el aviso de HeX, Mundo y Cambios, una
-carpeta **sintética** de pruebas (círculos de colores en lugar de sprites). PESHeX no incluye gráficos
-oficiales: usa los de tu juego. Las sintéticas se regeneran con `npm run docs:shots`.</sub>
+<sub>Capturas con una carpeta de juego **sintética** de pruebas, ya vinculada y analizada
+(círculos de colores en lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu
+juego. Se regeneran con `npm run docs:shots`.</sub>
 
 ## Qué hace
 
