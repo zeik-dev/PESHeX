@@ -3,8 +3,9 @@
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
 ### Correcciones de la 1.1.0
-- **Pokédex**: la ficha de especie ya no se queda en «Cargando la ficha…»: si el motor tarda o falla, muestra el motivo y un botón para **reintentar**; las zonas y la numeración regional se piden aparte y nunca bloquean la ficha, y un dato raro de una parte opcional ya no la tumba.
+- **Pokédex**: abrir la ficha de una especie **desconectaba la partida del editor** (la respuesta de las zonas de aparición pisaba el identificador del protocolo y la app daba la conexión por perdida: «No save is open» y el resto de pestañas sin datos hasta volver a cargar). Corregido, con una prueba que comprueba el identificador de cada respuesta. Además la ficha ya no se queda en «Cargando la ficha…»: si el motor tarda o falla, muestra el motivo y un botón para **reintentar**; las zonas y la numeración regional se piden aparte y nunca bloquean la ficha, y un dato raro de una parte opcional ya no la tumba.
 - **Selectores de habilidades y movimientos**: con el interruptor «Mostrar solo … de la especie» apagado listan **todas** las opciones del juego (antes se cortaban a 60); al abrirlos se ve la opción actual.
+- **Desplegables de los selectores** (movimientos, habilidades, objetos, especies): si no caben debajo del campo —p. ej. el movimiento 4 de un Pokémon de la última fila— se abren **hacia arriba**, y su alto se ajusta al espacio libre para que nunca se salgan de la ventana.
 - **Íconos de categoría** (Físico, Especial, Estado) en los movimientos: se leen de `Graphics/Pictures/category.png` de tu carpeta de juego y, si no lo trae, se usan íconos propios (no se incluye arte oficial).
 
 ### Novedades de la 1.1.0
