@@ -20,7 +20,7 @@ module Sem
       module_function
 
       def run(store, model)
-        facts = model.scan.pokemon.map { |ref| PokeFacts.read(ref.node) }
+        facts = model.scan.pokemon.map { |ref| PokeFacts.read(ref.node, store) }
         known = facts.select { |f| f.species && store.species_entry(f.species, f.form) }
         {
           species: verdict(:species, facts.size, known.size),

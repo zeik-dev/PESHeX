@@ -19,18 +19,22 @@ module Sem
       Tree.first_ivar(obj, names)&.last&.last
     end
 
-    def read(pk)
+    # `game` (Store del juego vinculado, opcional) permite completar lo que las bases v16-18 no guardan
+    # (nivel, habilidad, genero, bola); ver Derived.
+    def read(pk, game = nil)
       sp = Ids.of(first(pk, %w[@species]))
       steps = Tree.int_value(first(pk, %w[@steps_to_hatch @eggsteps]))
       owner = first(pk, %w[@owner])
       owner_name = Tree.object?(owner) ? Tree.text(Tree.ivar(owner, '@name')) : Tree.text(first(pk, %w[@ot]))
-      PokemonFacts.new(
+      legacy = Derived.legacy?(pk)
+      f = PokemonFacts.new(
         node: pk, species: sp, form: Tree.int_value(first(pk, %w[@form])) || 0,
         level: Tree.int_value(first(pk, %w[@level])), exp: Tree.int_value(first(pk, %w[@exp @experience])),
-        nature: Ids.of(first(pk, %w[@nature @natureflag])),
+        nature: legacy ? Derived.nature_id(pk) : Ids.of(first(pk, %w[@nature @natureflag])),
         nature_for_stats: Ids.of(first(pk, %w[@nature_for_stats])),
-        ability: Ids.of(first(pk, %w[@ability @abilityflag])),
-        ability_index: Tree.int_value(first(pk, %w[@ability_index @abilityIndex])),
+        # v16-18: @abilityflag es un INDICE de casilla, no un id (la habilidad se deriva con la especie).
+        ability: legacy ? nil : Ids.of(first(pk, %w[@ability @abilityflag])),
+        ability_index: Tree.int_value(first(pk, %w[@ability_index @abilityIndex])) || (legacy ? Derived.ability_index(pk) : nil),
         gender: Tree.int_value(first(pk, %w[@gender @genderflag])),
         item: Ids.of(first(pk, %w[@item])), ball: Ids.of(first(pk, %w[@poke_ball @ballused])),
         moves: moves(pk), iv: StatMap.read(Tree.ivar(pk, '@iv')), ev: StatMap.read(Tree.ivar(pk, '@ev')),
@@ -46,6 +50,17 @@ module Sem
         shiny: first(pk, %w[@shiny @shinyflag]) == true,
         cannot_store: !first(pk, %w[@cannot_store]).nil? && first(pk, %w[@cannot_store]) != false
       )
+      complete_from_game(f, pk, game, legacy) if game&.species?
+      f
+    end
+
+    def complete_from_game(f, pk, game, legacy)
+      f.level ||= Derived.level(game, pk)
+      f.gender ||= Derived.gender(game, pk) if legacy
+      return unless legacy
+
+      f.ability = Derived.ability(game, pk)
+      f.ball = Derived.ball_item(game, f.ball)
     end
 
     def moves(pk)

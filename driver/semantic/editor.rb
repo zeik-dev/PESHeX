@@ -30,6 +30,8 @@ module Sem
       'gender' => { ivars: %w[@gender @genderflag], type: :int },
       'shiny' => { ivars: %w[@shiny @shinyflag], type: :bool },
       'nature' => { ivars: %w[@nature @natureflag], type: :id },
+      # Naturaleza cambiada con menta (v20+: la original sigue en @nature y los stats usan esta).
+      'natureForStats' => { ivars: %w[@nature_for_stats], type: :id, nullable: true },
       'ability' => { ivars: %w[@ability @abilityflag], type: :id },
       'abilityIndex' => { ivars: %w[@ability_index @abilityIndex], type: :int },
       'item' => { ivars: %w[@item], type: :id, nullable: true },
@@ -187,6 +189,23 @@ module Sem
       @resolved.facts.species_style || (@resolved.profile.ids == :integer ? :integer : :symbol)
     end
 
+    # Campo -> tipo de entidad, para convertir un id interno ('BULBASAUR') en el NUMERO que guardan las bases <= v18
+    # (usa las tablas del juego vinculado; sin carpeta del juego solo se aceptan numeros).
+    LEGACY_ID_KINDS = { 'species' => :species, 'item' => :item, 'moves.id' => :move, 'ball' => :ball,
+                        'nature' => :nature, 'ability' => :ability }.freeze
+
+    def legacy_number(field, value)
+      kind = LEGACY_ID_KINDS[field.to_s]
+      game = @session.game
+      raise type_error(field, :int) unless kind && game&.species?
+
+      number = game.number_for(kind, value)
+      return number if number
+
+      raise DriverError.new('ValidationError', "id desconocido para #{field}: #{value}",
+                            { code: 'unknown_id', field: field.to_s, value: value })
+    end
+
     def make_id(like, value, field)
       style = case like
               when RX::RxSym then :symbol
@@ -194,6 +213,7 @@ module Sem
               else id_style_default
               end
       if style == :integer
+        value = legacy_number(field, value) if value.is_a?(String)
         raise type_error(field, :int) unless value.is_a?(Integer)
 
         value
@@ -211,6 +231,7 @@ module Sem
 
       case old
       when Integer, RX::RxBig
+        value = legacy_number(field, value) if type == :id && value.is_a?(String)
         raise type_error(field, :int) unless value.is_a?(Integer) || (value.is_a?(Float) && value == value.to_i)
 
         value.to_i
@@ -309,6 +330,8 @@ module Sem
     end
 
     def patch_scalar(builder, pk, path, key, spec, value)
+      return if patch_legacy_scalar(builder, pk, path, key, value)
+
       name, pair = Tree.first_ivar(pk, spec[:ivars])
       if pair
         slot = Slot.of_ivar(pk, name, path)
@@ -321,6 +344,57 @@ module Sem
         node = coerce(nil, value, spec[:type], key, nullable: spec[:nullable])
         builder.apply(AddAttr.new(pk, @doc.sym(spec[:ivars].first), node, path))
       end
+    end
+
+    # Campos de un Pokemon v16-18 que NO se guardan como en v19+ (ver Derived): el nivel sale de la experiencia,
+    # la habilidad es un indice de casilla (@abilityflag) y `abilityIndex` es ese mismo ivar.
+    # Devuelve true si el campo se ha tratado aqui.
+    def patch_legacy_scalar(builder, pk, path, key, value)
+      return false unless Derived.legacy?(pk)
+
+      case key
+      when 'level'
+        return false if Tree.ivar?(pk, '@level')
+
+        set_level_via_exp!(builder, pk, path, value)
+        true
+      when 'ability'
+        index = value.is_a?(String) ? Derived.ability_slot_of(@session.game, pk, value) : value
+        unless index.is_a?(Integer)
+          raise DriverError.new('ValidationError', "la habilidad #{value} no pertenece a la especie (esta base guarda un indice de casilla)",
+                                { code: 'ability_not_in_species', field: 'ability', value: value })
+        end
+
+        patch_legacy_flag(builder, pk, path, '@abilityflag', index)
+      when 'abilityIndex'
+        patch_legacy_flag(builder, pk, path, '@abilityflag', value)
+      else false
+      end
+    end
+
+    def patch_legacy_flag(builder, pk, path, ivar, value)
+      raise type_error(ivar, :int) unless value.is_a?(Integer)
+
+      if Tree.ivar?(pk, ivar)
+        slot = Slot.of_ivar(pk, ivar, path)
+        set_slot(builder, slot, coerce(slot.get, value, :int, ivar))
+      else
+        builder.apply(AddAttr.new(pk, @doc.sym(ivar), value, path))
+      end
+      true
+    end
+
+    # Sin @level (v16-18) el nivel ES la experiencia minima de ese nivel.
+    def set_level_via_exp!(builder, pk, path, level)
+      raise type_error('level', :int) unless level.is_a?(Integer)
+
+      f = PokeFacts.read(pk, @session.game)
+      game = @session.game
+      unless game&.species? && f.species && game.species_entry(f.species, f.form)
+        raise DriverError.new('GameFolderRequired', 'esta base guarda la experiencia, no el nivel: vincula la carpeta del juego', {})
+      end
+
+      set_ivar(builder, pk, path, %w[@exp @experience], GameData::Tables.exp_at(game.growth_rate(f.species, f.form), level))
     end
 
     def patch_stats(builder, pk, path, ivar, values, label)

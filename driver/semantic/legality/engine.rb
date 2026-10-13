@@ -51,7 +51,7 @@ module Sem
       end
 
       def pokemon_flags(pk)
-        f = PokeFacts.read(pk)
+        f = PokeFacts.read(pk, @session.game)
         @enabled.flat_map { |r| r.fn.call(@ctx, f) || [] }
       end
 

@@ -93,7 +93,7 @@ Commands.register('calc_stats') do |ctx, params|
     found = m.resolve_pokemon(params['ref'].to_s)
     raise DriverError.new('PokemonNotFound', "no hay Pokemon en #{params['ref']}", { ref: params['ref'] }) unless found
 
-    f = Sem::PokeFacts.read(found[:node])
+    f = Sem::PokeFacts.read(found[:node], game)
     species, form, level, iv, ev, nature = f.species, f.form, f.level, f.iv, f.ev, f.nature_for_stats || f.nature
     cached = f.stats
   else

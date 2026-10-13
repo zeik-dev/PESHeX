@@ -234,18 +234,28 @@ module Sem
 
     def pokemon_summary(pk, ref)
       species = first_value(pk, %w[@species])
+      legacy = Derived.legacy?(pk)
       {
         ref: ref, species: id_dto(:species, species), form: Tree.int_value(first_value(pk, %w[@form])),
         nickname: Tree.text(first_value(pk, %w[@name @nickname])),
-        level: Tree.int_value(first_value(pk, %w[@level])),
-        gender: Tree.int_value(first_value(pk, %w[@gender @genderflag])),
+        level: Tree.int_value(first_value(pk, %w[@level])) || Derived.level(@game, pk),
+        gender: Tree.int_value(first_value(pk, %w[@gender @genderflag])) || (legacy ? Derived.gender(@game, pk) : nil),
         shiny: first_value(pk, %w[@shiny @shinyflag]) == true,
         egg: egg?(pk),
         hp: Tree.int_value(first_value(pk, %w[@hp])), totalHp: Tree.int_value(first_value(pk, %w[@totalhp])),
         item: id_dto(:item, first_value(pk, %w[@item])),
         status: Ids.of(first_value(pk, %w[@status])),
-        ball: Ids.of(first_value(pk, %w[@poke_ball @ballused]))
+        ball: Ids.of(first_value(pk, %w[@poke_ball @ballused])), ballItem: ball_dto(pk)
       }
+    end
+
+    # Bola como objeto del juego: v19+ ya guarda el id del objeto; v16-18 guarda un indice de $BallTypes.
+    def ball_dto(pk)
+      raw = Ids.of(first_value(pk, %w[@poke_ball @ballused]))
+      return nil if raw.nil? || raw == ''
+
+      item = Derived.ball_item(@game, raw)
+      item ? { id: item, name: name_of(:item, item) } : nil
     end
 
     def move_dtos(pk)
@@ -299,10 +309,9 @@ module Sem
         fieldPath: path, shared: shared,
         exp: Tree.int_value(first_value(pk, %w[@exp @experience])),
         superShiny: first_value(pk, %w[@super_shiny]) == true,
-        nature: id_dto(:nature, first_value(pk, %w[@nature @natureflag])),
-        natureForStats: id_dto(:nature, first_value(pk, %w[@nature_for_stats])),
-        ability: id_dto(:ability, first_value(pk, %w[@ability @abilityflag])),
-        abilityIndex: Tree.int_value(first_value(pk, %w[@ability_index @abilityIndex])),
+        nature: nature_dto(pk), natureForStats: id_dto(:nature, first_value(pk, %w[@nature_for_stats])),
+        ability: ability_dto(pk), abilityIndex: ability_index_of(pk),
+        capabilities: { natureForStats: !Derived.legacy?(pk) },
         statusCount: Tree.int_value(first_value(pk, %w[@statusCount])),
         happiness: Tree.int_value(first_value(pk, %w[@happiness])),
         ball: Ids.of(first_value(pk, %w[@poke_ball @ballused])),
@@ -316,13 +325,33 @@ module Sem
       )
     end
 
+    # v16-18: la naturaleza es @natureflag (indice) o sale del ID personal; v19+: @nature.
+    def nature_dto(pk)
+      return id_dto(:nature, first_value(pk, %w[@nature @natureflag])) unless Derived.legacy?(pk)
+
+      id = Derived.nature_id(pk)
+      id && { id: id, name: name_of(:nature, id) }
+    end
+
+    # v16-18: @abilityflag es un INDICE de casilla; la habilidad real sale de la lista de la especie.
+    def ability_dto(pk)
+      return id_dto(:ability, first_value(pk, %w[@ability @abilityflag])) unless Derived.legacy?(pk)
+
+      id = Derived.ability(@game, pk)
+      id && { id: id, name: name_of(:ability, id) }
+    end
+
+    def ability_index_of(pk)
+      Tree.int_value(first_value(pk, %w[@ability_index @abilityIndex])) || (Derived.legacy?(pk) ? Derived.ability_index(pk) : nil)
+    end
+
     # Stats guardados vs los que da la formula del motor con los datos del juego.
     # `trusted` solo si la calibracion confirmo que la formula cuadra con este save.
     def stats_info(pk, cached)
       info = { cached: cached }
       return info unless @game&.species?
 
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @game)
       base = @game.base_stats(f.species, f.form)
       return info if base.size < 6 || f.level.nil? || f.iv.values.any?(&:nil?) || f.ev.values.any?(&:nil?)
 
@@ -334,7 +363,7 @@ module Sem
     def growth_info(pk)
       return nil unless @game&.species?
 
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @game)
       rate = @game.growth_rate(f.species, f.form)
       return nil if f.level.nil?
 

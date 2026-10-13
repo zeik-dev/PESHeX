@@ -147,7 +147,7 @@ module Sem
 
     def op_pokemon_heal(builder, op)
       ref, pk, path = pokemon_for_op(op)
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @session.game)
       total = f.stats['HP']
       set_ivar(builder, pk, path, %w[@hp], total) if total
       status_name, status_pair = Tree.first_ivar(pk, %w[@status])
@@ -199,7 +199,7 @@ module Sem
     end
 
     def recalc_stats!(builder, pk, path)
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @session.game)
       base = @session.game.base_stats(f.species, f.form)
       raise DriverError.new('RecalcUnavailable', 'faltan las estadisticas base de la especie', { reason: 'species_unknown' }) if base.size < 6
       raise DriverError.new('RecalcUnavailable', 'faltan nivel, IV o EV', { reason: 'incomplete' }) if f.level.nil? || f.iv.values.any?(&:nil?) || f.ev.values.any?(&:nil?)
@@ -227,11 +227,15 @@ module Sem
       level = op['level']
       raise type_error('level', :int) unless level.is_a?(Integer)
 
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @session.game)
       old_total = f.stats['HP']
-      set_slot(builder, Slot.of_ivar(pk, *level_ivar(pk), path), level)
-      sync_exp_to_level!(builder, pk, path)
-      if stats_recalc_available? && f.level
+      if Tree.ivar?(pk, '@level')
+        set_slot(builder, Slot.of_ivar(pk, *level_ivar(pk), path), level)
+        sync_exp_to_level!(builder, pk, path)
+      else
+        set_level_via_exp!(builder, pk, path, level) # v16-18: el nivel se deriva de la experiencia
+      end
+      if stats_recalc_available? && (f.level || Derived.legacy?(pk))
         stats = recalc_stats!(builder, pk, path)
         hp = f.hp
         if hp && old_total && stats['HP'] > old_total
@@ -243,7 +247,7 @@ module Sem
 
     # Deja la experiencia en el minimo del nivel actual cuando el juego conoce la especie.
     def sync_exp_to_level!(builder, pk, path)
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, @session.game)
       game = @session.game
       return unless game&.species? && f.species && f.level && game.species_entry(f.species, f.form)
 

@@ -20,7 +20,8 @@ module Sem
 
       LearnProfile = Struct.new(:min_level, :always, keyword_init: true)
 
-      attr_reader :root, :info, :domains, :limit_overrides, :limit_sources, :settings_files, :errors, :source, :version
+      attr_reader :root, :info, :domains, :limit_overrides, :limit_sources, :settings_files, :errors, :source, :version,
+                  :ball_types
 
       def initialize(root, source: 'manual')
         @root = root
@@ -85,6 +86,11 @@ module Sem
         @tables[domain] || {}
       end
 
+      def base_or_form_number(id)
+        e = table(:species)[id.to_s]
+        e&.number
+      end
+
       def species_entry(id, form = 0)
         return nil if id.nil?
 
@@ -95,12 +101,26 @@ module Sem
         entry || table(:species)[key]
       end
 
+      # Especie base (forma 0). Acepta el id interno ('ARCANINE') o el numero de las bases <= v18 (59).
       def base_species(id)
-        table(:species)[id.to_s]
+        return nil if id.nil?
+
+        e = id.is_a?(Integer) ? by_number(:species, id) : table(:species)[id.to_s]
+        e && (e.form.zero? ? e : table(:species)[e.species])
+      end
+
+      # Id interno de una especie (acepta numeros de bases <= v18).
+      def species_key(id)
+        id.is_a?(Integer) ? (by_number(:species, id)&.species || id.to_s) : id.to_s
       end
 
       def move(id)
         id.is_a?(Integer) ? by_number(:moves, id) : table(:moves)[id.to_s]
+      end
+
+      # Id interno de un movimiento (acepta numeros de bases <= v18).
+      def move_key(id)
+        id.is_a?(Integer) ? (by_number(:moves, id)&.id || id.to_s) : id.to_s
       end
 
       def item(id)
@@ -113,6 +133,19 @@ module Sem
 
       def by_number(domain, number)
         (@by_number[domain] ||= table(domain).values.each_with_object({}) { |e, h| h[e.number] ||= e if e.respond_to?(:number) && e.number })[number]
+      end
+
+      # Numero (id entero de las bases <= v18) de una entidad dada su id interno ('BULBASAUR' -> 1), o nil.
+      #   kind: :species | :move | :item | :ability | :ball (indice de $BallTypes) | :nature (indice 0-24)
+      def number_for(kind, id)
+        case kind
+        when :species then base_or_form_number(id)
+        when :move then table(:moves)[id.to_s]&.number
+        when :item then table(:items)[id.to_s]&.number
+        when :ability then table(:abilities)[id.to_s]&.number
+        when :ball then Derived.ball_index_of(self, id)
+        when :nature then Tables::NATURE_IDS.index(id.to_s.upcase)
+        end
       end
 
       # Nombre del juego para un id, o nil si no se conoce (el llamador cae al embebido/ID).
@@ -163,7 +196,7 @@ module Sem
       def prevos(id)
         @prevos ||= build_prevo_index
         out = []
-        cur = id.to_s
+        cur = species_key(id)
         seen = Set.new
         while (p = @prevos[cur]) && seen.add?(p)
           out << p
@@ -175,12 +208,13 @@ module Sem
       # { min_level: { 'MOVE' => nivel }, always: Set } de lo que puede aprender la especie
       # (con sus preevoluciones): por nivel, tutores/MT y movimientos huevo.
       def learn_profile(id, form = 0)
-        @profiles[[id.to_s, form.to_i]] ||= build_profile(id, form.to_i)
+        key = species_key(id)
+        @profiles[[key, form.to_i]] ||= build_profile(key, form.to_i)
       end
 
       def move_learnable?(id, form, level, move_id)
         pr = learn_profile(id, form)
-        m = move_id.to_s
+        m = move_key(move_id)
         return true if pr.always.include?(m)
 
         lv = pr.min_level[m]
@@ -190,7 +224,7 @@ module Sem
       # Nivel minimo "razonable" segun las evoluciones por nivel de sus preevoluciones.
       def minimum_level(id)
         lvl = 1
-        child = id.to_s
+        child = species_key(id)
         prevos(id).each do |pv|
           evo = base_species(pv)&.evolutions&.find { |e| e[:species] == child && !e[:prevo] }
           lvl = [lvl, evo[:param]].max if evo && evo[:method] =~ /Level/i && evo[:param].is_a?(Integer)
@@ -343,6 +377,7 @@ module Sem
         @limit_overrides = res[:values]
         @limit_sources = res[:found]
         @settings_files = res[:files]
+        @ball_types = res[:balls].empty? ? nil : res[:balls]
         @errors << res[:error] if res[:error]
       end
 

@@ -19,23 +19,33 @@ module Sem
         'MAX_MONEY' => :maxMoney, 'MAX_COINS' => :maxCoins, 'MAX_BATTLE_POINTS' => :maxBattlePoints,
         'MAX_SOOT' => :maxSoot, 'MAX_PLAYER_NAME_SIZE' => :maxPlayerName, 'BAG_MAX_PER_SLOT' => :bagPerSlot,
         'IV_STAT_LIMIT' => :ivMax, 'EV_STAT_LIMIT' => :evStatMax, 'EV_LIMIT' => :evTotalMax,
-        'MAX_NAME_SIZE' => :maxNickname, 'MAX_MOVES' => :maxMoves
+        'MAX_NAME_SIZE' => :maxNickname, 'MAX_MOVES' => :maxMoves,
+        # nombres de Essentials v16-18 (sin guiones bajos)
+        'MAXIMUMLEVEL' => :maxLevel, 'MAXPARTYSIZE' => :partySize, 'STORAGEBOXES' => :boxCount,
+        'MAXMONEY' => :maxMoney, 'MAXCOINS' => :maxCoins
       }.freeze
       DEFAULTS = {
         maxLevel: 100, partySize: 6, boxCount: 40, maxMoney: 999_999, maxCoins: 99_999, maxBattlePoints: 9_999,
         maxSoot: 9_999, maxPlayerName: 10, bagPerSlot: 999, ivMax: 31, evStatMax: 252, evTotalMax: 510,
         maxNickname: 10, maxMoves: 4
       }.freeze
+      # `$BallTypes = { 0=>:POKEBALL, 1=>:GREATBALL, ... }` (v16-18): indice del Pokémon -> objeto-bola.
+      BALL_TABLE = /\$BallTypes\s*=\s*\{(.*?)\}/m
       LINE = /\A\s*(?:[A-Za-z_:]+::)?(#{CONSTANTS.keys.join('|')})\s*=\s*(-?\d[\d_]*)\s*(?:#.*)?\z/
 
       module_function
 
-      # Devuelve { values: { clave => n } (solo lo encontrado), found: { clave => 'archivo' }, files: n }
+      # Devuelve { values: { clave => n } (solo lo encontrado), found: { clave => 'archivo' }, files: n,
+      #            balls: { indice => 'POKEBALL' } (v16-18, si el juego define $BallTypes) }
       def scan(root)
         found = {}
+        balls = {}
         files = 0
         each_source(root) do |label, code|
           files += 1
+          if balls.empty? && code.include?('$BallTypes') && (bm = BALL_TABLE.match(code))
+            bm[1].scan(/(\d+)\s*=>\s*:(\w+)/) { |i, name| balls[i.to_i] = name }
+          end
           code.each_line do |line|
             next unless (m = LINE.match(line))
 
@@ -43,9 +53,10 @@ module Sem
             found[key] ||= { value: m[2].delete('_').to_i, source: label }
           end
         end
-        { values: found.transform_values { |v| v[:value] }, found: found.transform_values { |v| v[:source] }, files: files }
+        { values: found.transform_values { |v| v[:value] }, found: found.transform_values { |v| v[:source] }, files: files,
+          balls: balls }
       rescue StandardError => e
-        { values: {}, found: {}, files: 0, error: "#{e.class}: #{e.message}" }
+        { values: {}, found: {}, files: 0, balls: {}, error: "#{e.class}: #{e.message}" }
       end
 
       # Cede [etiqueta, codigo] de cada script del juego (rxdata zlib o .rb).

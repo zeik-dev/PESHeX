@@ -13,7 +13,7 @@ module Sem
     module_function
 
     def export_hash(model, session, pk)
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, session.game)
       owner = model.owner_dto(pk)
       {
         schema: SCHEMA, base: model.resolved.profile.id, species: f.species, form: f.form, nickname: f.nickname,
@@ -29,7 +29,7 @@ module Sem
     end
 
     def showdown(model, pk)
-      f = PokeFacts.read(pk)
+      f = PokeFacts.read(pk, model.game)
       species = name_of(model, :species, f.species) || f.species.to_s
       head = f.nickname && f.nickname != species ? "#{f.nickname} (#{species})" : species
       head += { 0 => ' (M)', 1 => ' (F)' }.fetch(f.gender, '')
