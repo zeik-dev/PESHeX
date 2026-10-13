@@ -27,8 +27,8 @@ const REAL = (process.env.PESHEX_DOCS_GAME ?? (realGameAvailable("z") ? "z" : "s
 
 /** Qué se enseña en cada captura según el juego (los nombres cambian entre el Z real y el sintético). */
 const DEMO = REAL
-  ? { save: "Game.rxdata", trainer: "Kizuga", editRef: "party/1", palette: "milotic", paletteHit: /Milotic/, dex: "arcanine", dexName: "Arcanine", tm: "MT0" }
-  : { save: "Partida_2.rxdata", trainer: "Furikita", editRef: "party/1", palette: "grillita", paletteHit: /Grillita/, dex: "torrac", dexName: "Gatito Fuego", tm: "pot" };
+  ? { save: "Game.rxdata", trainer: "Kizuga", editRef: "party/1", palette: "milotic", paletteHit: /Milotic/, dexName: "Arcanine", tm: "MT0" }
+  : { save: "Partida_2.rxdata", trainer: "Furikita", editRef: "party/1", palette: "grillita", paletteHit: /Grillita/, dexName: "Gatito Fuego", tm: "pot" };
 
 test("capturas del README con la carpeta del juego analizada", async ({ page }) => {
   test.setTimeout(300_000);
@@ -41,7 +41,7 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
 
   env = await setup(page, DEMO.save);
   await serveGameAssets(page);
-  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.setViewportSize({ width: 1440, height: 1000 });
 
   // Ruta estable y corta para que la captura de Ajustes no enseñe un directorio temporal aleatorio.
   const base = path.join(os.tmpdir(), "peshex-docs");
@@ -92,13 +92,15 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await shot("pc-acciones");
   await page.keyboard.press("Escape");
 
-  // Hoja de edición ancha: stats base, deslizadores, Poder oculto y estadísticas totales
+  // Hoja de edición ancha: stats base, deslizadores, Poder oculto y EV (más alto para que quepan más secciones)
   await info.getByRole("button", { name: "Editar", exact: true }).click();
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByTestId("base-stats")).toBeVisible();
   await drawer.getByRole("tab", { name: "IV y EV" }).click();
   await expect(drawer.getByText(/Poder oculto/).first()).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 1180 });
   await shot("editor");
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.keyboard.press("Escape");
 
   // Mochila: «Agregar objeto» arriba con el selector (nombre, icono e id)
@@ -114,8 +116,10 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await nav("Pokédex");
   await expect(page.getByText(/\d+ vistos · \d+ capturados/)).toBeVisible();
   await shot("pokedex");
-  await page.getByRole("textbox", { name: "Buscar por nombre o número" }).fill(DEMO.dex);
-  await page.getByRole("button", { name: `Ver la ficha de ${DEMO.dexName}` }).click();
+  // La ficha se abre sobre la lista completa (sin filtrar), con la especie elegida a la vista y resaltada.
+  const row = page.getByRole("button", { name: `Ver la ficha de ${DEMO.dexName}` });
+  await row.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await row.click();
   await expect(page.getByTestId("species-sheet")).toBeVisible();
   await shot("pokedex-ficha");
 
