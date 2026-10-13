@@ -62,15 +62,34 @@ juego. Se regeneran con `npm run docs:shots`.</sub>
 |---|---|
 | **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), base detectada y cobertura de clasificación; con el modo **HeX** activo, además, una tarjeta de **legalidad desplegable** |
 | **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
-| **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**: caja de 6×5 con el fondo y los iconos de *tu* juego, bandeja de equipo y panel de datos. Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo; editor lateral con **IV/EV**, movimientos, objeto, naturaleza, habilidad… |
-| **Mochila** | Bolsillos, búsqueda, cantidades, añadir/quitar objetos, favoritos |
-| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista (siempre visible; si tu base no lo guarda como esperamos, explica qué buscó) |
+| **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**, a todo el alto de la ventana: equipo, caja de 6×5 con el fondo y los iconos de *tu* juego y un panel de datos compacto (**lo único que hace scroll**). Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo. **Clic derecho**: en un Pokémon, *Editar · Clonar · Exportar · Eliminar*; en una casilla vacía, **Agregar Pokémon** por especie (con búsqueda por nombre y número). El panel lleva *Editar · Clonar · Liberar* y un único botón **Acciones rápidas** que despliega, hacia la izquierda, curar, IV al máximo, recalcular, presets de EV y exportar |
+| **Mochila** | Bolsillos, búsqueda, cantidades y favoritos. **Agregar objeto** está arriba del todo: busca por nombre, icono o id, lo manda a *su* bolsillo según el PBS y nombra las MT/MO con su movimiento (*MT01 · Ventisca*); el bolsillo 6 se llama **Megapiedras** |
+| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista (siempre visible; si tu base no lo guarda como esperamos, explica qué buscó). Con la carpeta del juego, cada especie abre una **ficha** con los datos de *tu* juego: texto de la Pokédex, altura, peso, género, grupos huevo, captura, EV que otorga, **stats base**, habilidades, **debilidades y resistencias** por tipo (de `types.txt`), cadena evolutiva y formas (Mega con su piedra), movimientos por nivel/MT/tutor/huevo, **dónde encontrarla** (`encounters.txt`) y su **numeración regional** |
 | **Mundo** | Interruptores y variables (con sus nombres), estadísticas y Salón de la Fama |
 | **Todo detectado** | Lista completa de lo que contiene la partida y cómo se clasificó (*clasificado · personalizado · mundo y motor · sin clasificar*). Nada se pierde |
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
 | **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
 | **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego, modo HaX/HeX y detección de la base |
+| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego (con **barra de progreso**), modo HaX/HeX y detección de la base |
+
+No hay títulos de página: la pestaña activa ya dice dónde estás.
+
+### Editar un Pokémon
+
+La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
+**General · IV y EV · Movimientos · Información** (más **Legalidad** en HeX):
+
+- **Stats base** de la especie *en tu juego* junto al sprite, con su total.
+- **Nivel, felicidad, PS, IV y EV** con deslizador *y* campo numérico (un gesto = un solo
+  «deshacer»); en PS, el campo admite 0 (debilitado). IV y EV siguen el orden
+  *IV → Poder oculto → acciones rápidas → EV → presets → estadísticas totales → recalcular*.
+- **Naturaleza** (la original no se toca) y **naturaleza por menta** (`nature_for_stats`, en bases v20+).
+- **Habilidad** y **movimientos** con interruptores *«Mostrar solo habilidades de la especie»* y
+  *«Mostrar solo movimientos aprendidos por la especie»* (activados por defecto y apagables en
+  HaX; en HeX el filtro es obligatorio). Los movimientos muestran su tipo, categoría, poder y PP.
+- **Objeto equipado** con el mismo selector de la mochila (nombre, icono e id) y **bola** usada.
+- **Información**: entrenador original, ID personal y **cintas** con su nombre (`ribbons.txt`).
+
 
 Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y`,
 **acciones rápidas** (curar, IV al máximo, recalcular estadísticas, subir de nivel
@@ -81,10 +100,11 @@ exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
 
 ### Modos HaX y HeX
 
-- **HaX** (por defecto) permite cualquier cambio; los problemas de legalidad se
-  muestran como avisos y nunca se bloquea nada.
-- **HeX** se activa a mano (con un aviso previo) y no deja introducir Pokémon ni
-  valores **ilegales para tu juego**: especie inexistente, movimientos que no
+- **HaX** (por defecto) permite cualquier cambio y **no muestra nada de legalidad**
+  (ni interruptores, ni insignias, ni pestañas): solo se explica qué es HeX.
+- **HeX** se activa a mano (con un aviso previo), muestra la legalidad (insignias
+  ✗/!, tarjeta del Resumen, pestaña *Legalidad*, filtro *Solo ilegales*) y no deja
+  introducir Pokémon ni valores **ilegales para tu juego**: especie inexistente, movimientos que no
   puede aprender, habilidad no permitida, nivel o experiencia fuera de rango,
   IV/EV imposibles, PP de más, objetos o bolsillos erróneos… Lo que la partida
   ya traía se marca pero no impide editar otras cosas.
@@ -107,6 +127,19 @@ los límites de `Settings` y los nombres de interruptores y variables
 **PESHeX no incluye ningún sprite ni artwork oficial.** Sin esa carpeta todo
 funciona igual, con el ID interno embellecido en lugar del nombre y marcadores
 de color en lugar de iconos.
+
+Los `PBS/` se leen en **ambos formatos**: el CSV de Essentials v16–v18 (ids
+enteros, descripciones entrecomilladas, `tm.txt`, `[N]` + `InternalName`) y el INI
+de v19–v21 (formas, `ribbons.txt`, `regional_dexes.txt`, `encounters.txt`…). En las
+bases antiguas el save solo guarda números y PESHeX los traduce a nombres (y de
+vuelta al escribir); el nivel, la habilidad, la naturaleza y la bola, que esas
+bases no guardan, se derivan con las mismas fórmulas del motor.
+
+Al abrir una partida **sin carpeta de juego asociada**, PESHeX pregunta si quieres
+agregarla (*Agregar directorio de juego · Cancelar · «No volver a preguntar para
+esta partida»*) y muestra una **barra de progreso** con los pasos reales de la
+lectura (especies, movimientos, objetos, habilidades, tipos, MT, límites,
+calibración, gráficos…).
 
 - **Seguro:** guardar crea siempre una copia `.bak`, y *editar + deshacer todo*
   devuelve el archivo byte a byte (hay pruebas automáticas que lo comprueban).
@@ -179,10 +212,16 @@ npm run dev              # solo la UI en el navegador (sin backend)
 
 npm run typecheck        # tsc
 npm test                 # vitest: i18n, formateadores, contraste, controles
-npm run test:ruby        # minitest: protocolo, capa semántica, edición, bases antiguas
+npm run test:ruby        # minitest: protocolo, capa semántica, edición, bases antiguas y juegos reales
 cargo test -p rxdriver   # integración Rust<->Ruby (cd src-tauri)
 npm run e2e              # Playwright: UI real contra el driver Ruby real
 ```
+
+**Pruebas con juegos reales.** `test_pbs/` trae el `PBS` de *Pokémon Añil* (Essentials v21) y
+los `Data`, `Graphics`, `Fonts` y `PBS` de *Pokémon Z* (v16–v18), junto a sus partidas en
+`test_saves/`. `test/real_pbs_test.rb`, `test/real_saves_test.rb` y `e2e/realgame.spec.ts` los
+usan (ensamblados en un directorio temporal, sin modificar nada) y **se omiten solos** si
+`test_pbs/` no está.
 
 Las pruebas **e2e** levantan Vite y sustituyen el backend de Tauri por un
 puente que habla con el driver Ruby real (`e2e/support/bridge.ts`), sobre
@@ -224,6 +263,11 @@ publica el Release con `SHA256SUMS.txt`.
   gráficos del propio juego, carpeta del juego (nombres, límites, calibración),
   modos HeX/HaX, Pokédex, mundo, copias y comparación, búsqueda global, atajos,
   acciones rápidas e importar/exportar Pokémon.
+- **Hecho en la 1.1.0:** interfaz sin títulos de página, Equipo/PC a alto completo con
+  clic derecho y *Agregar Pokémon*, legalidad solo en HeX, mochila con selector de objetos
+  y Megapiedras, hoja de edición ancha con deslizadores, stats base, naturaleza por menta
+  y filtros por especie, lector de PBS v16–v21 (CSV e INI), ficha de especie en la
+  Pokédex, cintas, y barra de progreso y aviso al abrir una partida sin carpeta de juego.
 - **Pendiente / ideas:** firma de código del ejecutable (el flujo ya la admite
   con los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`), perfiles
   afinados con más saves reales de otras bases (Reborn, Rejuvenation, v16–v18…)

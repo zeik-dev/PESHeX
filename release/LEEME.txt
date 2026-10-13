@@ -11,8 +11,16 @@ mochila, IV/EV, movimientos... y tiene dos modos:
        aprende cada Pokemon, sus habilidades, etc.) y puede equivocarse en algunos fangames
        (randomizer, mecanicas propias).
 
-En Ajustes puedes cambiar el zoom de la aplicacion (50 % a 200 %, por defecto 100 %). Con el modo
-HeX activo, el Resumen muestra una tarjeta de legalidad que se puede desplegar y plegar.
+En Ajustes puedes cambiar el zoom de la aplicacion (50 % a 200 %, por defecto 100 %). Todo lo
+relativo a la legalidad (insignias, tarjeta del Resumen, pestana Legalidad, filtro "Solo ilegales")
+solo aparece con el modo HeX activo.
+
+Novedades de la 1.1.0: Equipo y PC a todo el alto con clic derecho (Editar, Clonar, Exportar,
+Eliminar y Agregar Pokemon), un unico boton "Acciones rapidas", hoja de edicion ancha con
+deslizadores, stats base y naturaleza por menta, selector de objetos con busqueda por nombre/id,
+ficha de especie en la Pokedex (tipos, evoluciones, movimientos, zonas) y lectura de los PBS de
+Essentials v16 a v21. Al abrir una partida sin carpeta de juego, PESHeX te ofrece agregarla (con
+barra de progreso).
 
 Ademas: Pokedex, interruptores y variables del juego, copias de seguridad con comparacion y
 restauracion, busqueda global (Ctrl+K), atajos (Ctrl+S / Ctrl+Z / Ctrl+Y), acciones rapidas

@@ -2,6 +2,15 @@
 
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
+### Novedades de la 1.1.0
+- **Equipo y PC a todo el alto**, sin títulos de página: solo el panel de datos hace scroll. Un único botón **Acciones rápidas** (se abre hacia la izquierda) y **clic derecho** en cada casilla: *Editar · Clonar · Exportar · Eliminar* o, en una casilla vacía, **Agregar Pokémon** por especie.
+- **La legalidad solo se muestra en HeX**: en HaX no hay interruptores, insignias, pestañas ni tarjetas de legalidad.
+- **Hoja de edición ancha**: stats base de la especie en tu juego, deslizadores con campo numérico (nivel, felicidad, PS, IV y EV), Poder oculto, estadísticas totales, **naturaleza por menta**, filtros «solo habilidades / movimientos de la especie» y selector de objeto con icono, nombre e id.
+- **Mochila**: *Agregar objeto* arriba, cada objeto va a su bolsillo, MT/MO con su movimiento (*MT01 · Ventisca*) y bolsillo **Megapiedras**.
+- **Pokédex con ficha de especie** (datos de tu PBS): stats base, habilidades, debilidades por tipo, evoluciones, formas, movimientos, **dónde encontrarla** y numeración regional; **cintas** con nombre en la información del Pokémon.
+- **PBS de Essentials v16 a v21** (CSV e INI) para nombres, MT y datos de las bases antiguas, con nivel, habilidad, naturaleza y bola derivados.
+- **Barra de progreso** al cargar la carpeta del juego y aviso al abrir una partida que no tiene una asociada (*No volver a preguntar para esta partida*).
+
 ### Novedades de la 1.0.0
 - **PC como en los juegos**: cajas 6×5 con los sprites de *tu* juego (Graphics), equipo, panel de datos y arrastrar y soltar (ratón o teclado).
 - **Modos HaX y HeX**: HaX (por defecto) permite cualquier cambio; HeX, que se activa a mano con un aviso, no deja introducir Pokémon ni valores ilegales para tu juego y depende de vincular antes la carpeta del juego (puede fallar en algunos fangames).
