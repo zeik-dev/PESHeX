@@ -231,6 +231,44 @@ test("con el filtro por especie apagado, los selectores de habilidades y movimie
   await page.keyboard.press("Escape");
 });
 
+test("los desplegables de los selectores se abren hacia arriba cuando abajo no caben y nunca se salen de la ventana", async ({ page }) => {
+  test.setTimeout(120_000);
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  await page.setViewportSize({ width: 1280, height: 560 }); // baja: el 4.º movimiento queda pegado al borde inferior
+
+  const drawer = await openEditor(page);
+  await drawer.getByRole("tab", { name: /Movimientos/ }).click();
+  const moveSwitch = drawer.getByRole("switch", { name: "Mostrar solo movimientos aprendidos por la especie" });
+  if ((await moveSwitch.getAttribute("aria-checked")) === "true") await moveSwitch.click(); // todos los movimientos: lista larga
+
+  const sides = new Set<string>();
+  for (const n of [1, 2, 3, 4]) {
+    const input = drawer.getByRole("combobox", { name: new RegExp(`Movimiento ${n}`) });
+    await input.scrollIntoViewIfNeeded();
+    await input.click();
+    const list = page.getByRole("listbox");
+    await expect(list.getByRole("option").first()).toBeVisible();
+    const box = (await list.boundingBox())!;
+    const field = (await input.boundingBox())!;
+    const vh = page.viewportSize()!.height;
+    expect(box.y, `lista del movimiento ${n} por encima del borde superior`).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height, `lista del movimiento ${n} por debajo del borde inferior`).toBeLessThanOrEqual(vh);
+    const side = (await list.getAttribute("data-side")) ?? "";
+    sides.add(side);
+    // pegada al campo por el lado elegido, sin taparlo
+    if (side === "up") expect(box.y + box.height).toBeLessThanOrEqual(field.y + 1);
+    else expect(box.y).toBeGreaterThanOrEqual(field.y + field.height - 1);
+    // la última opción de la lista se alcanza con el scroll de la propia lista (alto limitado al espacio libre)
+    await list.getByRole("option").last().scrollIntoViewIfNeeded();
+    await page.keyboard.press("Escape");
+  }
+  expect([...sides], "al menos un selector tuvo que abrirse hacia arriba en una ventana tan baja").toContain("up");
+  await shot(page, "150-combobox-flip-es-light");
+});
+
 for (const withSheet of [false, true]) {
   test(`los movimientos muestran su categoría con íconos ${withSheet ? "de la carpeta del juego (category.png)" : "propios (el juego no trae category.png)"}`, async ({ page }) => {
     env = await setup(page);

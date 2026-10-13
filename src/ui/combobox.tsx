@@ -14,6 +14,49 @@ export interface ComboOption {
 
 const MAX_RESULTS = 60;
 
+const LIST_MAX_HEIGHT = 320; // = max-height de .comboList
+const LIST_MIN_WIDTH = 240;
+const LIST_GAP = 2;
+const LIST_MARGIN = 8;
+
+export interface DropdownPlacement {
+  left: number;
+  width: number;
+  /** Abierto hacia abajo: distancia desde el borde superior de la ventana. */
+  top?: number;
+  /** Abierto hacia arriba: distancia desde el borde inferior de la ventana. */
+  bottom?: number;
+  maxHeight: number;
+  up: boolean;
+}
+
+/** Dónde pintar el desplegable de un campo (`anchor`) sin salirse de la ventana: hacia abajo si cabe; si no, hacia arriba
+ *  cuando allí hay más sitio (p. ej. el 4.º movimiento de un Pokémon de la última fila). El alto se limita al espacio libre
+ *  del lado elegido. `prefer` mantiene el lado ya elegido mientras siga cabiendo (no salta al escribir y filtrar). */
+export function placeDropdown(
+  anchor: { left: number; top: number; bottom: number; width: number },
+  viewport: { width: number; height: number },
+  contentHeight: number,
+  prefer?: "up" | "down",
+): DropdownPlacement {
+  const below = viewport.height - anchor.bottom - LIST_GAP - LIST_MARGIN;
+  const above = anchor.top - LIST_GAP - LIST_MARGIN;
+  const want = Math.min(contentHeight, LIST_MAX_HEIGHT);
+  const fitsBelow = below >= want;
+  const fitsAbove = above >= want;
+  let up: boolean;
+  if (prefer === "up" && fitsAbove) up = true;
+  else if (prefer === "down" && fitsBelow) up = false;
+  else up = !fitsBelow && above > below;
+  const room = up ? above : below;
+  const maxHeight = Math.max(80, Math.min(LIST_MAX_HEIGHT, room));
+  const width = Math.min(Math.max(anchor.width, LIST_MIN_WIDTH), Math.max(viewport.width - 2 * LIST_MARGIN, 0));
+  const left = Math.max(LIST_MARGIN, Math.min(anchor.left, viewport.width - width - LIST_MARGIN));
+  return up
+    ? { left, width, bottom: viewport.height - anchor.top + LIST_GAP, maxHeight, up }
+    : { left, width, top: anchor.bottom + LIST_GAP, maxHeight, up };
+}
+
 /** Selector con busqueda (difusa, sin acentos) para especies, movimientos, objetos y
  *  habilidades. ARIA combobox/listbox con teclado: flechas, Enter, Esc.
  *  `allowCustom` deja confirmar un ID que no esta en la lista (bases con contenido propio). */
@@ -47,12 +90,14 @@ export function ComboBox({
   const autoId = useId();
   const listId = `${autoId}-list`;
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const sideRef = useRef<"up" | "down" | undefined>(undefined);
   const current = useMemo(() => options.find((o) => o.id === value), [options, value]);
   const shown = current ? current.label : (value ?? "");
   const [text, setText] = useState(shown);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [rect, setRect] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [placement, setPlacement] = useState<DropdownPlacement | null>(null);
 
   useEffect(() => {
     if (!open) setText(shown);
@@ -74,20 +119,33 @@ export function ComboBox({
     if (open) document.getElementById(`${autoId}-opt-${active}`)?.scrollIntoView?.({ block: "nearest" });
   }, [open, active, autoId, results]);
 
+  // Se coloca junto al campo y se recoloca al cambiar los resultados, al hacer scroll o al redimensionar la ventana.
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      sideRef.current = undefined;
+      setPlacement(null);
+      return;
+    }
     const place = () => {
       const r = inputRef.current?.getBoundingClientRect();
-      if (r) setRect({ left: r.left, top: r.bottom + 2, width: r.width });
+      if (!r) return;
+      const content = (listRef.current?.scrollHeight ?? LIST_MAX_HEIGHT) + 2; // + borde
+      const next = placeDropdown(r, { width: window.innerWidth, height: window.innerHeight }, content, sideRef.current);
+      sideRef.current = next.up ? "up" : "down";
+      // Sin cambios no se vuelve a pintar (un scroll dentro de la lista larga dispararia cientos de renders).
+      setPlacement((prev) => (prev && prev.left === next.left && prev.width === next.width && prev.top === next.top && prev.bottom === next.bottom && prev.maxHeight === next.maxHeight ? prev : next));
+    };
+    const onScroll = (e: Event) => {
+      if (e.target !== listRef.current) place(); // el scroll de la propia lista no mueve el campo
     };
     place();
     window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
       window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("scroll", onScroll, true);
     };
-  }, [open]);
+  }, [open, results]);
 
   function choose(o: ComboOption) {
     setOpen(false);
@@ -164,13 +222,18 @@ export function ComboBox({
         }}
       />
       {open &&
-        rect &&
         createPortal(
           <ul
+            ref={listRef}
             id={listId}
             role="listbox"
             className={styles.comboList}
-            style={{ left: rect.left, top: rect.top, width: Math.max(rect.width, 240) }}
+            data-side={placement?.up ? "up" : "down"}
+            style={
+              placement
+                ? { left: placement.left, top: placement.top, bottom: placement.bottom, width: placement.width, maxHeight: placement.maxHeight }
+                : { left: -9999, top: 0, visibility: "hidden" } // primera pasada: se mide antes de colocarlo
+            }
           >
             {results.length === 0 && <li className={styles.comboEmpty}>—</li>}
             {results.map((o, i) => (
