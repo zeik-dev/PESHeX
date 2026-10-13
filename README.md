@@ -37,11 +37,14 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
   <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites, calibración y legalidad" width="96%" />
 </p>
 <p align="center">
+  <img src="docs/screenshots/settings-zoom.png" alt="Zoom de la aplicación en Ajustes (50 %–200 %, por defecto 100 %)" width="96%" />
+</p>
+<p align="center">
   <img src="docs/screenshots/pc.png" alt="El PC como en los juegos, con Quick Actions y preset de EV sugerido" width="48%" />
   <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" /> 
+  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
   <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
 </p>
 <p align="center">
@@ -52,15 +55,16 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
   <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
 </p>
 
-<sub>Capturas con una carpeta de juego **sintética** de pruebas, ya vinculada y analizada
-(círculos de colores en lugar de sprites): PESHeX no incluye gráficos oficiales; usa los de tu
-juego. Se regeneran con `npm run docs:shots`.</sub>
+<sub>Las capturas de PC, Resumen, Pokédex, búsqueda y carpeta del juego usan una partida y la carpeta de
+juego del autor (los sprites son los de ese juego); las del zoom, el aviso de HeX, Mundo y Cambios, una
+carpeta **sintética** de pruebas (círculos de colores en lugar de sprites). PESHeX no incluye gráficos
+oficiales: usa los de tu juego. Las sintéticas se regeneran con `npm run docs:shots`.</sub>
 
 ## Qué hace
 
 | Pestaña | Contenido |
 |---|---|
-| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), legalidad, base detectada y cobertura de clasificación |
+| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), base detectada y cobertura de clasificación; con el modo **HeX** activo, además, una tarjeta de **legalidad desplegable** |
 | **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
 | **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**: caja de 6×5 con el fondo y los iconos de *tu* juego, bandeja de equipo y panel de datos. Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo; editor lateral con **IV/EV**, movimientos, objeto, naturaleza, habilidad… |
 | **Mochila** | Bolsillos, búsqueda, cantidades, añadir/quitar objetos, favoritos |
@@ -70,7 +74,7 @@ juego. Se regeneran con `npm run docs:shots`.</sub>
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
 | **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
 | **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, carpeta del juego, modo HeX/HaX y detección de la base |
+| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego, modo HaX/HeX y detección de la base |
 
 Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y`,
 **acciones rápidas** (curar, IV al máximo, recalcular estadísticas, subir de nivel

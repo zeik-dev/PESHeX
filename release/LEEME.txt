@@ -11,6 +11,9 @@ mochila, IV/EV, movimientos... y tiene dos modos:
        aprende cada Pokemon, sus habilidades, etc.) y puede equivocarse en algunos fangames
        (randomizer, mecanicas propias).
 
+En Ajustes puedes cambiar el zoom de la aplicacion (50 % a 200 %, por defecto 100 %). Con el modo
+HeX activo, el Resumen muestra una tarjeta de legalidad que se puede desplegar y plegar.
+
 Ademas: Pokedex, interruptores y variables del juego, copias de seguridad con comparacion y
 restauracion, busqueda global (Ctrl+K), atajos (Ctrl+S / Ctrl+Z / Ctrl+Y), acciones rapidas
 (curar, IV al maximo, presets de EV segun los stats mas altos del Pokemon, recalcular

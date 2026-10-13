@@ -5,6 +5,7 @@ Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fan
 ### Novedades de la 1.0.0
 - **PC como en los juegos**: cajas 6×5 con los sprites de *tu* juego (Graphics), equipo, panel de datos y arrastrar y soltar (ratón o teclado).
 - **Modos HaX y HeX**: HaX (por defecto) permite cualquier cambio; HeX, que se activa a mano con un aviso, no deja introducir Pokémon ni valores ilegales para tu juego y depende de vincular antes la carpeta del juego (puede fallar en algunos fangames).
+- **Zoom de la aplicación** en Ajustes (50 %–200 %, por defecto 100 %) y, con HeX activo, una tarjeta de **legalidad desplegable** en el Resumen.
 - **Carpeta del juego**: nombres reales, selectores con búsqueda, límites leídos de los scripts y legalidad según tus datos.
 - **Pokédex, mundo y copias**: marca vistas/capturadas, edita interruptores y variables con sus nombres, compara y restaura copias `.bak`.
 - **Búsqueda global (`Ctrl+K`)**, atajos (`Ctrl+S`, `Ctrl+Z`, `Ctrl+Y`), acciones rápidas (curar, IV al máximo, recalcular estadísticas y siete presets de EV, con el sugerido según los stats más altos del Pokémon) y **clonar / importar / exportar** Pokémon (texto de Pokémon Showdown y JSON).
