@@ -5,6 +5,7 @@ name: release-windows
 #   * push de un tag vX.Y.Z (o vX.Y.Z-sufijo)       -> compila, prueba, empaqueta y PUBLICA el Release
 #   * push a `development` con "release: X.Y.Z" como primera linea del mensaje del commit
 #                                                    -> igual; el Release crea el tag vX.Y.Z sobre ese commit
+#     + "[replace-release]" en el mensaje: si el Release/tag de esa version ya existe, se borra y se recrea sobre este commit
 #   * push a `development` con "[winbuild]" en el mensaje
 #                                                    -> compila, prueba y empaqueta, pero NO publica (ensayo)
 #   * workflow_dispatch                              -> igual que el ensayo (solo si este archivo esta en la rama por defecto)
@@ -162,15 +163,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
           VERSION: ${{ needs.build.outputs.version }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
           flags=()
           [[ "$PRERELEASE" == "true" ]] && flags+=(--prerelease)
           files=(dist-release/PESHeX-*-windows-x64.zip dist-release/SHA256SUMS.txt)
+          # "[replace-release]" en el mensaje del commit: se borra el Release (y su tag) de esta version y se vuelve a
+          # crear sobre ESTE commit (por ejemplo, tras reescribir el historial). Solo vale en pushes a la rama.
+          if [[ "$GITHUB_REF_TYPE" != "tag" && "$HEAD_MESSAGE" == *"[replace-release]"* ]] && gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Reemplazando el Release $TAG existente"
+            gh release delete "$TAG" --cleanup-tag --yes
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             # Re-ejecucion del mismo commit: se reponen los archivos. Si el tag apunta a OTRO commit, se aborta.
             tagged="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${TAG}" --jq .sha)"
-            [[ "$tagged" == "$GITHUB_SHA" ]] || { echo "ya existe $TAG en otro commit ($tagged): sube la version"; exit 1; }
+            [[ "$tagged" == "$GITHUB_SHA" ]] || { echo "ya existe $TAG en otro commit ($tagged): sube la version o usa [replace-release]"; exit 1; }
             gh release upload "$TAG" "${files[@]}" --clobber
           else
             gh release create "$TAG" "${files[@]}" \

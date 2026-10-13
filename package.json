@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:ruby": "ruby -Itest scripts/run_ruby_tests.rb",
     "e2e": "playwright test",
+    "docs:shots": "node scripts/docs-shots.mjs",
     "test:release": "node --test scripts/release.test.mjs"
   },
   "dependencies": {
