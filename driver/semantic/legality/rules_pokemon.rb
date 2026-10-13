@@ -48,9 +48,14 @@ module Sem
           [ill('species_unknown', f.species.to_s)] unless c.game.species_entry(f.species, 0)
         }),
         Rule.new('form_unknown', :species, lambda { |c, f|
-          next unless f.species && f.form.to_i.positive? && c.game.species_entry(f.species, 0)
+          next unless f.species && f.form.to_i.positive?
+          # Las bases <= v18 definen las formas en scripts (MultipleForms), no en el PBS: no hay nada que comprobar.
+          next if c.game.forms_scripted?
 
-          [warn('form_unknown', f.form, species: f.species.to_s, form: f.form)] unless c.game.table(:species)["#{f.species}_#{f.form}"]
+          base = c.game.base_species(f.species)
+          next unless base
+
+          [warn('form_unknown', f.form, species: base.species.to_s, form: f.form)] unless c.game.table(:species)["#{base.species}_#{f.form}"]
         }),
         Rule.new('level_range', :basic, lambda { |c, f|
           next if f.level.nil?
@@ -217,6 +222,8 @@ module Sem
         }),
         Rule.new('stats_mismatch', :stats, lambda { |c, f|
           next if f.level.nil? || f.stats.values.any?(&:nil?) || f.iv.values.any?(&:nil?) || f.ev.values.any?(&:nil?)
+          # Una forma definida por scripts (<= v18) puede cambiar los stats base y el PBS no los trae.
+          next if f.form.to_i.positive? && c.game.forms_scripted?
 
           base = c.game.base_stats(f.species, f.form)
           next if base.size < 6

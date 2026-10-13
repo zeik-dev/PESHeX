@@ -103,6 +103,16 @@ class RealSavesTest < Minitest::Test
     end
   end
 
+  def test_z_las_formas_que_define_un_script_no_se_marcan_como_inexistentes
+    open_z do
+      d = pokemon('party/0') # Arcanine con @form = 1 (forma del propio juego, definida en sus scripts)
+      assert_equal 1, d['form']
+      codes = d['flags'].map { |f| f['code'] }
+      refute_includes codes, 'form_unknown', 'el PBS de v16-18 no lista las formas: no se puede afirmar que no existan'
+      refute_includes codes, 'stats_mismatch', 'los stats base de esa forma no estan en el PBS: no se compara'
+    end
+  end
+
   # ── Pokémon Añil (v21) ───────────────────────────────────────────────────
   def open_anil
     with_save_copy('Partida.rxdata') do |path|
@@ -131,6 +141,15 @@ class RealSavesTest < Minitest::Test
       assert_nil pokemon('party/0')['natureForStats']
       @h.call('undo_all')
       assert_equal @original, @h.session.doc.to_bytes
+    end
+  end
+
+  def test_anil_una_forma_inexistente_si_se_avisa
+    open_anil do
+      assert_equal false, Sem::Api.model(@h.ctx).then { |m| @h.session.game.forms_scripted? }
+      r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { form: 99 } }])
+      assert r['applied'], r.inspect
+      assert_includes pokemon('party/0')['flags'].map { |f| f['code'] }, 'form_unknown'
     end
   end
 

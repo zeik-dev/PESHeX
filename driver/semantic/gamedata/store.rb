@@ -128,6 +128,14 @@ module Sem
         entry || table(:species)[key]
       end
 
+      # Bases <= v18 con PBS de texto (CSV numerado): las formas (Mega, regionales...) no estan en el PBS sino en scripts,
+      # asi que el PBS no puede decir si una forma existe.
+      def forms_scripted?
+        return @forms_scripted unless @forms_scripted.nil?
+
+        @forms_scripted = @domains[:species][:source] == 'pbs' && table(:species).each_value.any? { |s| s.form.zero? && !s.number.nil? }
+      end
+
       # Especie base (forma 0). Acepta el id interno ('ARCANINE') o el numero de las bases <= v18 (59).
       def base_species(id)
         return nil if id.nil?
