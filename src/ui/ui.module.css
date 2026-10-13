@@ -630,3 +630,120 @@
   min-height: 20px;
   border: 1px solid rgb(0 0 0 / 20%);
 }
+
+/* ── Popover y menu contextual ───────────────────────────────────────────── */
+.popover {
+  position: fixed;
+  z-index: 60; /* sobre drawers/modales (50), bajo toasts (80) y el desplegable del ComboBox (1000) */
+  max-width: min(420px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  padding: 10px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  animation: fade 0.1s ease-out;
+}
+.popover:focus {
+  outline: none;
+}
+.menu {
+  min-width: 190px;
+  padding: 4px;
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.menuItem:hover:not(:disabled),
+.menuItem:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+.menuItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.menuDanger {
+  color: var(--danger);
+}
+.menuIcon {
+  display: inline-flex;
+  width: 18px;
+  justify-content: center;
+}
+
+/* ── Deslizador ──────────────────────────────────────────────────────────── */
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.slider {
+  flex: 1;
+  min-width: 80px;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.slider:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── Progreso de carga ───────────────────────────────────────────────────── */
+.loadProgress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.loadBody {
+  flex: 1;
+  min-width: 0;
+}
+.loadLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.loadTrack {
+  height: 10px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border: 2px solid var(--pb-ink);
+  border-radius: var(--radius-pill);
+}
+.loadFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transition: width 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loadFill {
+    transition: none;
+  }
+}

@@ -8,26 +8,13 @@ import { clearAssetCache } from "../game/assetUrl";
 import { emptyMap, normalizeMap, withIgnored, withMapping, type AssetMap, type MapKind } from "../game/assetmap";
 import { detectLayout, type Layout } from "../game/layout";
 import type { ResolveCtx } from "../game/resolve/common";
+import { indexCatalog, type CatalogIndex } from "../game/lookup";
 import type { Catalog, GameSource, GameStatus } from "../game/types";
 import { errorText } from "../lib/errors";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
 
-export interface CatalogIndex {
-  species: Map<string, Catalog["species"][number]>;
-  moves: Map<string, Catalog["moves"][number]>;
-  items: Map<string, Catalog["items"][number]>;
-  abilities: Map<string, Catalog["abilities"][number]>;
-}
-
-function indexCatalog(c: Catalog): CatalogIndex {
-  return {
-    species: new Map(c.species.map((s) => [s.id, s])),
-    moves: new Map(c.moves.map((m) => [m.id, m])),
-    items: new Map(c.items.map((i) => [i.id, i])),
-    abilities: new Map(c.abilities.map((a) => [a.id, a])),
-  };
-}
+export type { CatalogIndex } from "../game/lookup";
 
 export const UNLINKED: GameStatus = { linked: false, legality: { level: "basic", reasons: ["no_game_folder"] } };
 

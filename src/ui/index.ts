@@ -6,3 +6,7 @@ export { cx } from "./cx";
 export { GameImage, PokemonIcon, ItemIcon, BallIcon, HeldItemMark } from "./GameImage";
 export { ComboBox, type ComboOption } from "./combobox";
 export { TypeChip } from "./TypeChip";
+export { Popover, placePopover, type PopoverPlacement, type PopoverPoint } from "./popover";
+export { ContextMenu, type MenuItem } from "./menu";
+export { SliderField } from "./slider";
+export { LoadProgress } from "./LoadProgress";
