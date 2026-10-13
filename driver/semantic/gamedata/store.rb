@@ -51,6 +51,7 @@ module Sem
         raise DriverError.new('GameFolderInvalid', 'la carpeta no existe', { path: @root }) unless File.directory?(@root)
 
         DOMAINS.each { |d| load_domain(d) }
+        apply_tm_moves
         scan_settings
         @version = guess_version
         @loaded = true
@@ -198,7 +199,81 @@ module Sem
         lvl
       end
 
+      # ── Datos de apoyo del PBS (opcionales y perezosos) ───────────────────
+      # Cintas (ribbons.txt, v19+): [Ribbon].
+      def ribbons
+        @ribbons ||= pbs_optional('ribbons.txt') { |t| Pbs.ribbons(t) } || []
+      end
+
+      # Pokédex regionales (regional_dexes.txt, v19+): [{ index:, species: [...] }].
+      def regional_dexes
+        @regional_dexes ||= pbs_optional('regional_dexes.txt') { |t| Pbs.regional_dexes(t) } || []
+      end
+
+      # Encuentros salvajes (encounters.txt, ambos formatos).
+      def encounter_maps
+        @encounter_maps ||= pbs_optional('encounters.txt') { |t| Pbs.encounters(t) } || []
+      end
+
+      # Donde aparece una especie: [{ map:, name:, method:, min:, max:, chance: }], agregado por mapa y metodo.
+      def encounters_for(id)
+        key = id.to_s
+        out = {}
+        encounter_maps.each do |m|
+          m[:tables].each do |t|
+            hits = t[:slots].select { |s| s[:species].to_s == key }
+            next if hits.empty?
+
+            row = (out[[m[:map], t[:type]]] ||= { map: m[:map], name: m[:name] || map_name(m[:map]), method: t[:type],
+                                                  min: nil, max: nil, chance: nil })
+            hits.each do |h|
+              row[:min] = [row[:min], h[:min]].compact.min
+              row[:max] = [row[:max], h[:max]].compact.max
+              row[:chance] = (row[:chance] || 0) + h[:chance] if h[:chance]
+            end
+          end
+        end
+        out.values.sort_by { |r| [r[:map], r[:method]] }
+      end
+
+      # Nombre de un mapa (de MapInfos.rxdata, si existe y se pudo leer).
+      def map_name(number)
+        @map_names ||= MapInfos.read(@root)
+        @map_names[number.to_i]
+      end
+
+      # Numero de la especie en cada Pokédex regional: { indice => posicion (1-based) }.
+      def regional_numbers(id)
+        regional_dexes.each_with_object({}) do |d, h|
+          pos = d[:species].index(id.to_s)
+          h[d[:index]] = pos + 1 if pos
+        end
+      end
+
       private
+
+      def pbs_optional(name)
+        path = Locator.resolve(@root, "PBS/#{name}")
+        path ? yield(Pbs.read_text(path)) : nil
+      rescue StandardError => e
+        @errors << "#{name}: #{e.class}: #{e.message}"[0, 200]
+        nil
+      end
+
+      # MT de v16-18 (tm.txt): cada especie guarda los movimientos de MT que aprende.
+      def apply_tm_moves
+        return unless species?
+
+        table = pbs_optional('tm.txt') { |t| Pbs.tm(t) }
+        return if table.nil? || table.empty?
+
+        by_species = Hash.new { |h, k| h[k] = [] }
+        table.each { |move, list| list.each { |sp| by_species[sp] << move } }
+        table(:species).each_value do |e|
+          mv = by_species[e.species]
+          e.tm_moves = (e.tm_moves + mv).uniq unless mv.empty?
+        end
+      end
 
       def load_domain(domain)
         status = @domains[domain]
@@ -239,10 +314,14 @@ module Sem
           path = Locator.resolve(@root, "PBS/#{name}")
           next unless path
 
-          extra = domain == :species ? Locator.resolve(@root, 'PBS/pokemon_forms.txt') : nil
           text = Pbs.read_text(path)
-          entries = Pbs.public_send(domain, text)
-          entries += Pbs.species(Pbs.read_text(extra)) if extra
+          entries =
+            if domain == :species
+              extra = Locator.resolve(@root, 'PBS/pokemon_forms.txt')
+              Pbs.species_with_forms(text, extra && Pbs.read_text(extra))
+            else
+              Pbs.public_send(domain, text)
+            end
           entries = entries.compact
           if entries.any?
             store(domain, entries, 'pbs')
@@ -301,6 +380,7 @@ module Sem
           e.moves.each { |lv, mv| min[mv] = lv if min[mv].nil? || lv < min[mv] }
           always.merge(e.tutor_moves)
           always.merge(e.egg_moves)
+          always.merge(e.tm_moves)
         end
         LearnProfile.new(min_level: min, always: always)
       end

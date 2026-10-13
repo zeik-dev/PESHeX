@@ -73,6 +73,16 @@ Commands.register('get_species') do |ctx, params|
   { species: detail }
 end
 
+# Datos de apoyo de una especie que no cuestan nada hasta que se piden (Pokedex): donde aparece y su numero en las
+# Pokedex regionales. { id } -> { encounters: [...], regional: { indice => posicion } }
+Commands.register('get_species_extras') do |ctx, params|
+  game = Sem::GameApi.game!(ctx.session)
+  entry = game.species_entry(params['id'], params['form'].to_i)
+  raise DriverError.new('SpeciesNotFound', "especie desconocida: #{params['id']}", { id: params['id'] }) unless entry
+
+  { id: entry.species, encounters: game.encounters_for(entry.species), regional: game.regional_numbers(entry.species) }
+end
+
 # Stats esperados por la formula del motor. Dos usos:
 #   { ref }                            -> para un Pokemon del save (compara con los guardados)
 #   { species, form, level, iv, ev, nature } -> calculo suelto (simulador del editor)

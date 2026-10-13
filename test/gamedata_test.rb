@@ -69,6 +69,75 @@ class PbsParserTest < Minitest::Test
     assert_equal 'BULBASAUR_1', sp.first.id
     assert_equal 1, sp.first.form
   end
+
+  def test_csv_respeta_comillas_con_comas
+    assert_equal ['6', 'HONEY', 'Miel', 'Su aroma, muy dulce, atrae.', '2'], PBS.csv_split('6,HONEY,Miel,"Su aroma, muy dulce, atrae.",2')
+    assert_equal ['1', 'Dice "hola"', ''], PBS.csv_split('1,"Dice ""hola""",')
+  end
+
+  def test_items_csv_con_descripcion_con_comas_no_desplaza_columnas
+    text = "6,HONEY,Miel,Mieles,1,100,\"Atrae Pokémon, cuevas o árboles.\",2,0,0,\n" \
+           "288,TM01,MT01,MT01s,4,3000,\"Ventisca, helada.\",3,0,0,BLIZZARD\n"
+    honey, tm = PBS.items(text)
+    assert_equal 2, honey.field_use
+    refute honey.machine?, 'una descripcion con comas no convierte un objeto en MT'
+    assert_equal 'Atrae Pokémon, cuevas o árboles.', honey.description
+    assert tm.machine?
+    assert_equal 'BLIZZARD', tm.move
+  end
+
+  def test_abilities_csv_conserva_la_descripcion_completa
+    ab = PBS.abilities("1,STENCH,Hedor,\"Puede hacer retroceder, repele.\"\n").first
+    assert_equal 'Puede hacer retroceder, repele.', ab.description
+  end
+
+  def test_evoluciones_con_parametro_vacio
+    evo = PBS.triples_evo('ESPEON,HappinessDay,,UMBREON,HappinessNight,,SYLVEON,Item,SHINYSTONE')
+    assert_equal %w[ESPEON UMBREON SYLVEON], evo.map { |e| e[:species] }
+    assert_nil evo[0][:param]
+    assert_equal 'SHINYSTONE', evo[2][:param]
+    assert_equal ['IVYSAUR'], PBS.triples_evo('IVYSAUR,Level,16,').map { |e| e[:species] }
+  end
+
+  def test_movimientos_de_nivel_menos_uno_se_conservan
+    assert_equal [[-1, 'AMNESIA'], [0, 'WORRYSEED'], [1, 'TACKLE']], PBS.pairs_moves('-1,AMNESIA,0,WORRYSEED,1,TACKLE')
+  end
+
+  def test_claves_ini_sin_distinguir_mayusculas
+    sp = PBS.species("[PIKACHU]\nName = Pikachu\npokedex = Un ratón, eléctrico.\nHatchSteps = 2560\n").first
+    assert_equal 'Un ratón, eléctrico.', sp.pokedex
+    assert_equal 2560, sp.hatch_steps
+  end
+
+  def test_formas_heredan_de_la_especie_base_y_el_listado_tiene_orden
+    base = "[BULBASAUR]\nName = Bulbasaur\nTypes = GRASS,POISON\nBaseStats = 45,49,49,45,65,65\nGrowthRate = Parabolic\n" \
+           "[IVYSAUR]\nName = Ivysaur\nTypes = GRASS,POISON\nBaseStats = 60,62,63,60,80,80\n"
+    forms = "[IVYSAUR,1]\nFormName = Mega\nMegaStone = IVYSAURITE\nBaseStats = 80,100,123,80,122,120\n"
+    list = PBS.species_with_forms(base, forms)
+    mega = list.find { |s| s.id == 'IVYSAUR_1' }
+    assert_equal 'Ivysaur', mega.name
+    assert_equal %w[GRASS POISON], mega.types
+    assert_equal 80, mega.base_stats['HP']
+    assert_equal 'IVYSAURITE', mega.mega[:stone]
+    assert_equal [1, 2, 2], list.map(&:order)
+  end
+
+  def test_tm_txt_une_las_lineas_de_cada_movimiento
+    tm = PBS.tm("# TMs\n[VENOSHOCK]\nBULBASAUR,IVYSAUR,\nVENUSAUR\n[SCALD]\nSQUIRTLE,\n")
+    assert_equal %w[BULBASAUR IVYSAUR VENUSAUR], tm['VENOSHOCK']
+    assert_equal ['SQUIRTLE'], tm['SCALD']
+  end
+
+  def test_encuentros_de_los_dos_formatos
+    legacy = PBS.encounters("#####\n007 # Ruta 1\n12,2,2\nLand\nBIDOOF,3,5\nFLETCHLING,3,5\nOldRod\nKRABBY,4,6\n")
+    assert_equal 'Ruta 1', legacy.first[:name]
+    assert_equal [20, 20], legacy.first[:tables].first[:slots].map { |s| s[:chance] }
+    modern = PBS.encounters("[002] # Pueblo Paleta\nLand,12\n    25,PIDGEY,2,4\n    10,MAREEP,2\nSuperRod\n    100,MARILL,4,6\n")
+    assert_equal 2, modern.first[:map]
+    assert_equal [25, 10], modern.first[:tables].first[:slots].map { |s| s[:chance] }
+    assert_equal 2, modern.first[:tables].first[:slots].last[:max]
+    assert_equal 'SuperRod', modern.first[:tables].last[:type]
+  end
 end
 
 # Carpeta de juego sintetica derivada de Partida_2 (nada oficial).
@@ -152,7 +221,7 @@ class GameDataTest < Minitest::Test
   def test_catalogo_y_ficha_de_especie
     link
     cat = @h.call('get_catalog')['catalog']
-    assert_equal %w[abilities items moves natures species types], cat.keys.sort
+    assert_equal %w[abilities items moves natures ribbons species types], cat.keys.sort
     assert_equal 25, cat['natures'].size
     assert(cat['species'].any? { |s| s['id'] == 'TORRACAT' && s['name'] == 'Gatito Fuego' })
     only = @h.call('get_catalog', kinds: %w[moves])['catalog']

@@ -7,6 +7,6 @@ module Sem
   module GameData; end
 end
 
-%w[tables locator dat_reader entries pbs settings_scan system_data store calibration catalog status].each do |f|
+%w[tables locator dat_reader entries pbs settings_scan system_data map_infos store calibration catalog status].each do |f|
   require_relative "gamedata/#{f}"
 end
