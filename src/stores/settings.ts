@@ -11,7 +11,7 @@ interface SettingsState {
   theme: ThemePref;
   ball: BallTheme;
   backup: boolean;
-  /** HeX = solo cambios legales segun el juego; HaX = cualquier cambio. Por defecto HeX. */
+  /** HaX = cualquier cambio (por defecto); HeX = solo cambios legales segun el juego, se activa a mano. */
   mode: EditMode;
   recent: string[];
   /** Carpeta del juego recordada por save (ruta del save -> raiz del juego). */
@@ -70,7 +70,7 @@ export const useSettings = create<SettingsState>()(
       theme: "auto",
       ball: "classic",
       backup: true,
-      mode: "hex",
+      mode: "hax",
       recent: [],
       gameFolders: {},
       recentGames: [],
@@ -93,7 +93,14 @@ export const useSettings = create<SettingsState>()(
           return { gameFolders: rest };
         }),
     }),
-    { name: STORE_KEY, storage: createJSONStorage(() => safeStorage), version: 1 },
+    {
+      name: STORE_KEY,
+      storage: createJSONStorage(() => safeStorage),
+      version: 2,
+      // v2: el modo por defecto pasa de HeX a HaX. Lo que haya guardado hasta ahora era el valor por defecto, no una
+      // eleccion: se restablece (HeX vuelve a elegirse a mano, con su aviso).
+      migrate: (persisted, from) => (from < 2 ? { ...(persisted as object), mode: "hax" } : persisted) as SettingsState,
+    },
   ),
 );
 

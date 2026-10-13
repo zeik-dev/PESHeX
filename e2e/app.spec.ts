@@ -111,6 +111,10 @@ test("editar dinero, ver el cambio pendiente y deshacerlo", async ({ page }) => 
 
 test("HeX rechaza un valor ilegal y HaX lo permite", async ({ page }) => {
   await openSave(page);
+  // HaX es el modo por defecto: HeX se activa a mano, tras su aviso
+  await expect(page.getByRole("radio", { name: "HaX" }).first()).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radio", { name: "HeX" }).first().click();
+  await page.getByRole("dialog", { name: "Activar el modo HeX" }).getByRole("button", { name: "Activar HeX" }).click();
   await page.getByRole("button", { name: "Entrenador", exact: true }).click();
   const money = page.getByLabel("Dinero");
   await money.fill("99999999");
@@ -194,6 +198,32 @@ test("base antigua v16-v18 (sintetica): detecta el perfil y edita con ids numeri
   await shot(page, "71-legacy-bag-es-light");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   await expect(page.getByText("Partida guardada.")).toBeVisible();
+});
+
+test("la pestaña Pokédex sale siempre: con datos en el entrenador (base antigua) y sin Pokédex", async ({ page }) => {
+  // Base antigua que guarda @seen/@owned directamente en el entrenador: se detecta y se puede editar
+  const withDex = path.join(workDir, "ConDex.rxdata");
+  execFileSync("ruby", ["-r", path.join(ROOT, "test", "fixtures", "make_legacy_save.rb"), "-e", "File.binwrite(ARGV[0], LegacyFixture.build(dex: true))", withDex]);
+  bridge.dialogPath = withDex;
+  await openSave(page, "es", "Red");
+  await page.getByRole("button", { name: "Pokédex", exact: true }).click();
+  await expect(page.getByText("3 vistos · 1 capturados")).toBeVisible();
+  const row = page.getByRole("list", { name: "Pokédex" }).getByRole("listitem").filter({ hasText: "#129" });
+  await row.getByRole("switch").nth(1).click(); // capturar la 129 (el array de capturados se agranda)
+  await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
+  await expect(page.getByText("3 vistos · 2 capturados")).toBeVisible();
+  await page.getByRole("button", { name: "Deshacer", exact: true }).click();
+  await expect(page.getByText("3 vistos · 1 capturados")).toBeVisible();
+
+  // Base sin ningun Pokédex: la pestaña sigue ahí y explica qué pasa
+  await page.getByRole("button", { name: "Cerrar archivo" }).click();
+  const noDex = path.join(workDir, "SinDex.rxdata");
+  execFileSync("ruby", ["-r", path.join(ROOT, "test", "fixtures", "make_legacy_save.rb"), "-e", "File.binwrite(ARGV[0], LegacyFixture.build)", noDex]);
+  bridge.dialogPath = noDex;
+  await page.getByRole("button", { name: "Abrir partida…" }).click();
+  await expect(page.getByText("Sparky").first()).toBeVisible();
+  await page.getByRole("button", { name: "Pokédex", exact: true }).click();
+  await expect(page.getByText(/No se encontró un Pokédex que se pueda editar/)).toBeVisible();
 });
 
 test("un archivo de forma desconocida queda en solo lectura hasta confirmar", async ({ page }) => {

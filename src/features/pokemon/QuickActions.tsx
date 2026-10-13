@@ -5,8 +5,9 @@ import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
 import { useToasts } from "../../stores/toasts";
 import { useUi } from "../../stores/ui";
-import { Button, SelectField } from "../../ui";
-import { EV_PRESETS, evPresetOps, healOps, perfectIvOps, type EvPreset } from "./quick";
+import { Button } from "../../ui";
+import { EvPresetControl } from "./EvPresets";
+import { healOps, perfectIvOps } from "./quick";
 import styles from "./pokemon.module.css";
 
 /** El recalculo exige carpeta del juego y estadisticas calibradas (si no, el driver lo rechaza con RecalcUnavailable). */
@@ -14,8 +15,9 @@ export function useRecalcAvailable(): boolean {
   return useGame((s) => s.status.linked && s.status.calibration?.stats?.status === "ok");
 }
 
-export function QuickActions({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
-  const { t, dyn } = useT();
+/** `hideEv`: la pestaña IV y EV del editor ya trae su propio selector de presets (no se duplica). */
+export function QuickActions({ pk, editable, hideEv }: { pk: PokemonDetail; editable: boolean; hideEv?: boolean }) {
+  const { t } = useT();
   const apply = useEdit((s) => s.apply);
   const busy = useEdit((s) => s.busy);
   const recalc = useRecalcAvailable();
@@ -47,16 +49,7 @@ export function QuickActions({ pk, editable }: { pk: PokemonDetail; editable: bo
           <Download size={14} /> {t("quick.export")}
         </Button>
       </div>
-      <div className={styles.quickRow}>
-        <label className="muted" htmlFor={`ev-preset-${pk.ref}`} style={{ fontSize: 12 }}>{t("quick.evPreset")}</label>
-        <SelectField<string>
-          id={`ev-preset-${pk.ref}`}
-          value=""
-          disabled={off}
-          options={[{ value: "", label: t("quick.evChoose") }, ...EV_PRESETS.map((p) => ({ value: p as string, label: dyn(`quick.ev.${p}`) }))]}
-          onChange={(v) => v && void apply(evPresetOps(pk, v as EvPreset))}
-        />
-      </div>
+      {!hideEv && <EvPresetControl pk={pk} editable={editable} />}
     </section>
   );
 }

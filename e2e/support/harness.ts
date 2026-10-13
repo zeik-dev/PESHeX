@@ -68,3 +68,14 @@ export async function loadedGameImages(page: Page): Promise<number> {
     () => [...document.images].filter((i) => i.naturalWidth > 0 && (i.src.includes("/__game/") || i.src.startsWith("blob:"))).length,
   );
 }
+
+/** Cambia de modo desde la cabecera. HeX pide confirmacion (aviso previo): se acepta. */
+export async function setMode(page: Page, mode: "hex" | "hax", lang: "es" | "en" = "es") {
+  await page.getByRole("radio", { name: mode === "hex" ? "HeX" : "HaX" }).first().click();
+  if (mode === "hex") {
+    const dialog = page.getByRole("dialog", { name: lang === "es" ? "Activar el modo HeX" : "Turn on HeX mode" });
+    await dialog.getByRole("button", { name: lang === "es" ? "Activar HeX" : "Turn on HeX" }).click();
+    await expect(dialog).toHaveCount(0);
+  }
+  await expect(page.getByRole("radio", { name: mode === "hex" ? "HeX" : "HaX" }).first()).toHaveAttribute("aria-checked", "true");
+}

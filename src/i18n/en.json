@@ -313,9 +313,8 @@
   },
   "mode": {
     "label": "Edit mode",
-    "hexHelp": "HeX: only allows legal changes according to your game's rules.",
-    "haxHelp": "HaX: allows any change. Warnings are shown but do not block.",
-    "haxBanner": "HaX mode on: any change is allowed; nothing is blocked for legality.",
+    "hexHelp": "HeX: only allows legal changes according to your game's rules. Link the game folder first.",
+    "haxHelp": "HaX (default): allows any change. Warnings are shown but never block.",
     "haxApplied_one": "Change applied with {{count}} legality warning.",
     "haxApplied_other": "Change applied with {{count}} legality warnings.",
     "rejectedTitle": "Change not allowed in HeX",
@@ -325,9 +324,21 @@
     "switchToHax": "Switch to HaX",
     "title": "Edit mode",
     "hexTitle": "HeX",
-    "hexBody": "Does not let you introduce Pokémon or values that are illegal for your game (species, moves, abilities, ranges…). What the save already had is left alone.",
-    "haxTitle": "HaX",
-    "haxBody": "Allows any change. Legality problems show up as warnings, but nothing is ever blocked."
+    "hexBody": "Does not let you introduce illegal Pokémon or values for your game (species, moves, abilities, ranges…). What the save already had is left alone. It is turned on by hand and works best with the game folder linked.",
+    "haxTitle": "HaX (default)",
+    "haxBody": "Allows any change. Legality problems are shown as warnings but nothing is ever blocked.",
+    "warn": {
+      "title": "Turn on HeX mode",
+      "intro": "HeX rejects changes that would introduce something illegal according to your game's rules. Before turning it on, keep in mind:",
+      "needsGame": "It depends on the game folder: link it first (in Settings) so PESHeX can read which moves each Pokémon can learn, its abilities, items and stats, and so check whether something is legal.",
+      "canFail": "It can be wrong in some fangames (randomizer bases, custom mechanics or data): rejecting changes that are actually valid or skipping some rules.",
+      "fallback": "Without the game folder only basic rules are checked (ranges, duplicates, sizes). If HeX gets in the way, switch back to HaX at any time.",
+      "confirm": "Turn on HeX",
+      "link": "Link the game folder",
+      "linkedTitle": "Game folder linked",
+      "unlinkedTitle": "You have not linked the game folder yet",
+      "unlinkedBody": "Without it, HeX will only apply the basic rules (“partial legality”)."
+    }
   },
   "pokemon": {
     "tabs": {
@@ -363,8 +374,7 @@
       "title": "Quick actions",
       "perfectIv": "Perfect IVs (31)",
       "clearIv": "IVs to 0",
-      "clearEv": "Clear EVs",
-      "spread252": "EVs 252/252/6 (Attack & Speed)"
+      "clearEv": "Clear EVs"
     },
     "moves": {
       "title": "Moves",
@@ -811,11 +821,20 @@
     "ev": {
       "none": "No EVs",
       "physical": "Physical attacker (Atk + Spe)",
-      "special": "Special attacker (SpA + Spe)",
-      "bulky": "Bulky (HP + Def)"
+      "special": "Special attacker (Sp. Atk + Spe)",
+      "bulkyPhysical": "Bulky Physical (HP + Atk)",
+      "bulkySpecial": "Bulky Special (HP + Sp. Atk)",
+      "tankDefense": "Tank Defense (HP + Def)",
+      "tankSpDefense": "Tank Sp. Defense (HP + Sp. Def)"
     },
     "cloned": "Pokémon cloned into the first free PC slot.",
-    "healParty": "Heal party"
+    "healParty": "Heal party",
+    "evSuggested": "Suggested EV preset: {{preset}}",
+    "evBecause": "Based on its highest stats: {{a}} and {{b}} ({{source}}).",
+    "evSourceBase": "species base stats",
+    "evSourceSaved": "stats stored in the save",
+    "evNoData": "Not enough stats to suggest an EV preset.",
+    "evOthers": "Other EV presets"
   },
   "transfer": {
     "import": "Import",
@@ -854,7 +873,7 @@
   "pokedex": {
     "title": "Pokédex",
     "counts": "{{seen}} seen · {{owned}} caught · {{total}} total",
-    "none": "This save has no editable Pokédex.",
+    "none": "No editable Pokédex was found in this save. PESHeX looks for a “Pokedex” object or for a seen/caught record inside the trainer, and your base may store it differently. Check “Everything detected” or “Advanced” to locate it.",
     "noCatalogTitle": "Only the species the save mentions are shown",
     "noCatalog": "Link the game folder in Settings to see every species, with names and graphics.",
     "search": "Search by name or number",

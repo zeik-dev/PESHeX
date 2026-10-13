@@ -85,7 +85,7 @@ export function CommandPalette() {
       act("save", t("palette.save"), () => void st().save(), { shortcut: "Ctrl+S", disabled: pending === 0, keywords: "guardar save" }),
       act("undo", t("common.undo"), () => void st().undo(), { shortcut: "Ctrl+Z", disabled: pending === 0, keywords: "undo deshacer" }),
       act("redo", t("common.redo"), () => void st().redo(), { shortcut: "Ctrl+Y", disabled: redoCount === 0, keywords: "redo rehacer" }),
-      act("mode", t("palette.toggleMode", { mode: settings.mode === "hex" ? "HaX" : "HeX" }), () => void st().changeMode(settings.mode === "hex" ? "hax" : "hex"), { keywords: "hex hax modo mode" }),
+      act("mode", t("palette.toggleMode", { mode: settings.mode === "hex" ? "HaX" : "HeX" }), () => st().requestMode(settings.mode === "hex" ? "hax" : "hex"), { keywords: "hex hax modo mode" }),
       act("heal", t("palette.healParty"), () => {
         void semantic.party().then((party) => useEdit.getState().apply(healOps(party.map((p) => p.ref)))).catch(toastError);
       }, { disabled: !(profile?.editable ?? false), keywords: "curar heal equipo party" }),

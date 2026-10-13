@@ -19,7 +19,6 @@ import { CommandPalette } from "../features/palette/CommandPalette";
 import { ShortcutsHost } from "../features/palette/ShortcutsHost";
 import { Hosts } from "./Hosts";
 import { OpenScreen } from "./OpenScreen";
-import { HaxStrip } from "./ModeSwitch";
 import { PokeHeader } from "./PokeHeader";
 import styles from "./app.module.css";
 
@@ -48,7 +47,6 @@ export default function App() {
       {filePath ? (
         <div className={styles.shell}>
           <PokeHeader />
-          <HaxStrip />
           <main className={styles.main}>
             <div className={styles.content}>
               <CurrentView />

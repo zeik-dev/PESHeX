@@ -6,6 +6,9 @@ interface UiState {
   paletteOpen: boolean;
   setPalette: (open: boolean) => void;
   togglePalette: () => void;
+  /** Aviso previo a activar HeX (puede fallar en algunos fangames y depende de la carpeta del juego). */
+  hexConfirm: boolean;
+  setHexConfirm: (open: boolean) => void;
   /** Importar Pokemon (dialogo global, se abre desde el PC o la paleta). */
   importOpen: boolean;
   setImportOpen: (open: boolean) => void;
@@ -21,6 +24,8 @@ export const useUi = create<UiState>((set) => ({
   paletteOpen: false,
   setPalette: (paletteOpen) => set({ paletteOpen }),
   togglePalette: () => set((s) => ({ paletteOpen: !s.paletteOpen })),
+  hexConfirm: false,
+  setHexConfirm: (hexConfirm) => set({ hexConfirm }),
   importOpen: false,
   setImportOpen: (importOpen) => set({ importOpen }),
   exportRef: null,

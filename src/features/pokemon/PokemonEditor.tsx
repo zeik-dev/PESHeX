@@ -17,6 +17,7 @@ import {
 import { FlagList } from "../legality/FlagList";
 import { LegalityBadge } from "../legality/LegalityBadge";
 import { ExtrasList } from "../shared/ExtrasList";
+import { EvPresetControl } from "./EvPresets";
 import { QuickActions } from "./QuickActions";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
@@ -72,7 +73,7 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
             {t("banner.sharedBody", { paths: pk.shared.join(", ") })}
           </Banner>
         )}
-        <QuickActions pk={pk} editable={editable} />
+        <QuickActions pk={pk} editable={editable} hideEv={tab === "stats"} />
         <Tabs
           value={tab}
           onChange={setTab}
@@ -247,11 +248,8 @@ function Stats({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
         <Button size="sm" disabled={!editable} onClick={() => setAll("iv", lim.ivMax)}>{t("pokemon.quick.perfectIv")}</Button>
         <Button size="sm" disabled={!editable} onClick={() => setAll("iv", 0)}>{t("pokemon.quick.clearIv")}</Button>
         <Button size="sm" disabled={!editable} onClick={() => setAll("ev", 0)}>{t("pokemon.quick.clearEv")}</Button>
-        <Button size="sm" disabled={!editable}
-          onClick={() => patch({ ev: { HP: 6, ATTACK: 252, DEFENSE: 0, SPECIAL_ATTACK: 0, SPECIAL_DEFENSE: 0, SPEED: 252 } })}>
-          {t("pokemon.quick.spread252")}
-        </Button>
       </div>
+      <EvPresetControl pk={pk} editable={editable} />
       {block("iv", lim.ivMax)}
       {block("ev", lim.evStatMax)}
       <div className={styles.total}>

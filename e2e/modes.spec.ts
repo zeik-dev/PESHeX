@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { buildFakeGame } from "./support/fakegame";
-import { openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
+import { openSave, ROOT, serveGameAssets, setMode, setup, shot, teardown, type Env } from "./support/harness";
 
 let env: Env | undefined;
 
@@ -20,31 +20,58 @@ async function linkGame(page: Page, e: Env) {
 
 const modeBtn = (page: Page, name: "HeX" | "HaX") => page.getByRole("radio", { name }).first();
 
-test("el modo por defecto es HeX y HaX muestra una franja de aviso", async ({ page }) => {
+test("el modo por defecto es HaX y activar HeX pide confirmación con un aviso", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
-  await expect(modeBtn(page, "HeX")).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText(/Modo HaX activo/)).toHaveCount(0);
-  await modeBtn(page, "HaX").click();
   await expect(modeBtn(page, "HaX")).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText(/Modo HaX activo/)).toBeVisible();
-  await shot(page, "100-hax-strip-es-light");
-  // el modo se recuerda al volver a abrir
+  await expect(page.getByText(/Modo HaX activo/)).toHaveCount(0); // ya no hay franja de aviso
+
+  // HeX: aviso (depende de la carpeta del juego; puede fallar en algunos fangames) y se puede cancelar
+  await modeBtn(page, "HeX").click();
+  const dialog = page.getByRole("dialog", { name: "Activar el modo HeX" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/Depende de la carpeta del juego/)).toBeVisible();
+  await expect(dialog.getByText(/Puede equivocarse en algunos fangames/)).toBeVisible();
+  await expect(dialog.getByText("Todavía no has vinculado la carpeta del juego")).toBeVisible();
+  await shot(page, "100-hex-warning-es-light");
+  await dialog.getByRole("button", { name: "Cancelar" }).click();
+  await expect(modeBtn(page, "HaX")).toHaveAttribute("aria-checked", "true");
+
+  // sin carpeta vinculada se ofrece ir a vincularla
+  await modeBtn(page, "HeX").click();
+  await dialog.getByRole("button", { name: "Vincular carpeta del juego" }).click();
+  await expect(page.getByRole("heading", { name: "Carpeta del juego" })).toBeVisible();
+  await expect(modeBtn(page, "HaX")).toHaveAttribute("aria-checked", "true");
+
+  // al aceptar, HeX queda activo y se recuerda al volver a abrir
+  await setMode(page, "hex");
   await page.getByRole("button", { name: "Cerrar archivo" }).click();
   await page.getByRole("button", { name: "Abrir partida…" }).click();
-  await expect(page.getByText(/Modo HaX activo/)).toBeVisible();
+  await expect(modeBtn(page, "HeX")).toHaveAttribute("aria-checked", "true");
+  await setMode(page, "hax"); // volver a HaX no pide confirmación
+});
+
+test("con la carpeta del juego vinculada el aviso de HeX lo refleja", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  await modeBtn(page, "HeX").click();
+  const dialog = page.getByRole("dialog", { name: "Activar el modo HeX" });
+  await expect(dialog.getByText("Carpeta del juego vinculada")).toBeVisible();
+  await expect(dialog.getByText("Legalidad completa")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Vincular carpeta del juego" })).toHaveCount(0);
 });
 
 test("guardar cambios hechos en HaX no se puede en HeX hasta cambiar de modo", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
-  await modeBtn(page, "HaX").click();
   await page.getByRole("button", { name: "Entrenador", exact: true }).click();
   await page.getByLabel("Dinero").fill("99999999");
   await page.getByLabel("Dinero").press("Enter");
   await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
 
-  await modeBtn(page, "HeX").click();
+  await setMode(page, "hex");
   await page.getByRole("button", { name: "Guardar cambios" }).click();
   const dialog = page.getByRole("dialog", { name: "No se puede guardar en HeX" });
   await expect(dialog).toBeVisible();
@@ -59,7 +86,6 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   await serveGameAssets(page);
   await openSave(page, env);
   await linkGame(page, env);
-  await modeBtn(page, "HaX").click();
 
   // Provocar una ilegalidad desde el editor (nivel fuera de rango).
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
@@ -91,7 +117,7 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   await shot(page, "104-pc-illegal-filter-es-light");
 
   // HeX rechaza otra ilegalidad en ese mismo Pokemon pero deja editar lo legal.
-  await modeBtn(page, "HeX").click();
+  await setMode(page, "hex");
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
   await page.getByRole("button", { name: /^Trump/ }).click();
   await page.getByRole("button", { name: "Editar", exact: true }).click();
@@ -119,6 +145,9 @@ test("modos en inglés y modo oscuro", async ({ page }) => {
   await openSave(page, env, "en", "Furikita");
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Edit mode" })).toBeVisible();
+  await page.getByRole("radio", { name: "HeX" }).first().click();
+  await expect(page.getByRole("dialog", { name: "Turn on HeX mode" }).getByText(/It depends on the game folder/)).toBeVisible();
+  await page.getByRole("dialog", { name: "Turn on HeX mode" }).getByRole("button", { name: "Cancel" }).click();
   await page.getByRole("button", { name: /^Theme/ }).click();
   await page.getByRole("button", { name: /^Theme/ }).click();
   await shot(page, "105-mode-settings-en-dark");

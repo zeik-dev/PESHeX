@@ -315,9 +315,8 @@
   },
   "mode": {
     "label": "Modo de edición",
-    "hexHelp": "HeX: solo permite cambios legales según las reglas de tu juego.",
-    "haxHelp": "HaX: permite cualquier cambio. Los avisos se muestran pero no bloquean.",
-    "haxBanner": "Modo HaX activo: se permite cualquier cambio; no se bloquea nada por legalidad.",
+    "hexHelp": "HeX: solo permite cambios legales según las reglas de tu juego. Pide vincular antes la carpeta del juego.",
+    "haxHelp": "HaX (por defecto): permite cualquier cambio. Los avisos se muestran pero no bloquean.",
     "haxApplied_one": "Cambio aplicado con {{count}} aviso de legalidad.",
     "haxApplied_other": "Cambio aplicado con {{count}} avisos de legalidad.",
     "rejectedTitle": "Cambio no permitido en HeX",
@@ -327,9 +326,21 @@
     "switchToHax": "Cambiar a HaX",
     "title": "Modo de edición",
     "hexTitle": "HeX",
-    "hexBody": "No deja introducir Pokémon ni valores ilegales para tu juego (especie, movimientos, habilidades, rangos…). Lo que la partida ya traía no se toca.",
-    "haxTitle": "HaX",
-    "haxBody": "Permite cualquier cambio. Los problemas de legalidad se muestran como avisos, pero nunca se bloquea nada."
+    "hexBody": "No deja introducir Pokémon ni valores ilegales para tu juego (especie, movimientos, habilidades, rangos…). Lo que la partida ya traía no se toca. Se activa a mano, y funciona mejor con la carpeta del juego vinculada.",
+    "haxTitle": "HaX (por defecto)",
+    "haxBody": "Permite cualquier cambio. Los problemas de legalidad se muestran como avisos, pero nunca se bloquea nada.",
+    "warn": {
+      "title": "Activar el modo HeX",
+      "intro": "HeX rechaza los cambios que introducirían algo ilegal según las reglas de tu juego. Antes de activarlo, ten en cuenta:",
+      "needsGame": "Depende de la carpeta del juego: tienes que vincularla antes (en Ajustes) para que PESHeX lea qué movimientos puede aprender cada Pokémon, sus habilidades, objetos y estadísticas, y así poder comprobar si algo es legal.",
+      "canFail": "Puede equivocarse en algunos fangames (bases con randomizer, mecánicas o datos propios): rechazar cambios que sí son válidos o no comprobar ciertas reglas.",
+      "fallback": "Sin la carpeta del juego solo se comprueban reglas básicas (rangos, duplicados, tamaños). Si HeX te estorba, vuelve a HaX en cualquier momento.",
+      "confirm": "Activar HeX",
+      "link": "Vincular carpeta del juego",
+      "linkedTitle": "Carpeta del juego vinculada",
+      "unlinkedTitle": "Todavía no has vinculado la carpeta del juego",
+      "unlinkedBody": "Sin ella, HeX solo aplicará las reglas básicas («legalidad parcial»)."
+    }
   },
   "pokemon": {
     "tabs": {
@@ -365,8 +376,7 @@
       "title": "Acciones rápidas",
       "perfectIv": "IV perfectos (31)",
       "clearIv": "IV a 0",
-      "clearEv": "Quitar EV",
-      "spread252": "EV 252/252/6 (Ataque y Velocidad)"
+      "clearEv": "Quitar EV"
     },
     "moves": {
       "title": "Movimientos",
@@ -814,11 +824,20 @@
     "ev": {
       "none": "Sin EV",
       "physical": "Atacante físico (Ataq + Vel)",
-      "special": "Atacante especial (At. Esp + Vel)",
-      "bulky": "Resistente (PS + Def)"
+      "special": "Atacante especial (At. Esp. + Vel)",
+      "bulkyPhysical": "Bulky Physical (PS + Ataque)",
+      "bulkySpecial": "Bulky Special (PS + At. Esp.)",
+      "tankDefense": "Tank Defense (PS + Defensa)",
+      "tankSpDefense": "Tank Sp. Defense (PS + Def. Esp.)"
     },
     "cloned": "Pokémon clonado en la primera casilla libre del PC.",
-    "healParty": "Curar equipo"
+    "healParty": "Curar equipo",
+    "evSuggested": "Preset de EV sugerido: {{preset}}",
+    "evBecause": "Por sus stats más altos: {{a}} y {{b}} ({{source}}).",
+    "evSourceBase": "stats base de la especie",
+    "evSourceSaved": "stats guardados en la partida",
+    "evNoData": "No hay stats suficientes para sugerir un preset de EV.",
+    "evOthers": "Otros presets de EV"
   },
   "transfer": {
     "import": "Importar",
@@ -857,7 +876,7 @@
   "pokedex": {
     "title": "Pokédex",
     "counts": "{{seen}} vistos · {{owned}} capturados · {{total}} en total",
-    "none": "Esta partida no tiene Pokédex que se pueda editar.",
+    "none": "No se encontró un Pokédex que se pueda editar en esta partida. PESHeX lo busca como un objeto «Pokedex» o como un registro de vistos y capturados dentro del entrenador, y tu base puede guardarlo de otra forma. Mira «Todo detectado» o «Avanzado» para localizarlo.",
     "noCatalogTitle": "Solo se ven las especies que la partida menciona",
     "noCatalog": "Vincula la carpeta del juego en Ajustes para ver todas las especies, con sus nombres y gráficos.",
     "search": "Buscar por nombre o número",

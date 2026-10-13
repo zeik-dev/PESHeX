@@ -10,6 +10,7 @@ import { useEdit } from "./edit";
 import { useGame } from "./game";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
+import { useUi } from "./ui";
 
 export type ViewId =
   | "overview" | "trainer" | "party" | "boxes" | "bag" | "pokedex" | "world" | "unclassified" | "changes" | "backups"
@@ -43,6 +44,8 @@ interface SessionState {
   setView: (v: ViewId) => void;
   /** Cambia HeX/HaX: se recuerda en ajustes y se avisa al driver si hay un archivo abierto. */
   changeMode: (mode: Mode) => Promise<void>;
+  /** Pide un modo: HaX se aplica directamente; HeX pasa antes por el aviso (puede fallar en algunos fangames). */
+  requestMode: (mode: Mode) => void;
   setProfile: (p: Profile) => void;
   noteRevision: (n: number) => void;
   setCounts: (pending: number, redo?: number) => void;
@@ -91,8 +94,8 @@ export const useSession = create<SessionState>((set, get) => ({
         view: "overview",
       });
       useSettings.getState().pushRecent(path);
-      // El modo (HeX/HaX) se recuerda entre sesiones: el driver arranca en HeX.
-      if (useSettings.getState().mode !== (info.mode ?? "hex")) void semantic.setMode(useSettings.getState().mode).catch(() => undefined);
+      // El modo (HeX/HaX) se recuerda entre sesiones: el driver arranca en HaX.
+      if (useSettings.getState().mode !== (info.mode ?? "hax")) void semantic.setMode(useSettings.getState().mode).catch(() => undefined);
       // Carpeta del juego (nombres + sprites): en segundo plano, no bloquea el primer render.
       useGame.getState().reset();
       void useGame.getState().onSaveOpened(path, info.gameSuggestion);
@@ -134,6 +137,11 @@ export const useSession = create<SessionState>((set, get) => ({
     } catch (e) {
       toastError(e);
     }
+  },
+  requestMode(mode) {
+    if (mode === useSettings.getState().mode) return;
+    if (mode === "hex") useUi.getState().setHexConfirm(true);
+    else void get().changeMode(mode);
   },
   setProfile: (profile) => set({ profile }),
   noteRevision: (n) => set((s) => (n > s.revision ? { revision: n } : s)),

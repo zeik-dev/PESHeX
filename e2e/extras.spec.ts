@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { suggestEvPreset } from "../src/features/pokemon/quick";
 import { buildFakeGame } from "./support/fakegame";
 import { openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
 
@@ -231,7 +232,6 @@ test("importar un Pokémon desde texto Showdown (HaX) y verlo en el PC", async (
   await serveGameAssets(page);
   await openSave(page, env);
   await linkGame(page, env);
-  await page.getByRole("radio", { name: "HaX" }).first().click();
   await page.getByRole("button", { name: "PC", exact: true }).click();
   await page.getByRole("button", { name: "Importar", exact: true }).click();
   const dlg = page.getByRole("dialog", { name: "Importar Pokémon" });
@@ -341,3 +341,45 @@ for (const lang of ["es", "en"] as const) {
     expect((await page.evaluate(() => document.body.innerText)).match(KEY_LIKE)?.[0] ?? null, "importar").toBeNull();
   });
 }
+
+test("el preset de EV sugerido sale de los stats más altos de cada Pokémon y se puede aplicar", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await page.getByRole("button", { name: "PC", exact: true }).click();
+  const seen = new Set<string>();
+  for (let i = 0; i < 6; i++) {
+    const r = (await env.bridge.handle("driver_call", { cmd: "get_pokemon", params: { ref: `party/${i}` } })) as {
+      value: { pokemon: { stats: { cached: Record<string, number> } } };
+    };
+    const expected = suggestEvPreset(r.value.pokemon.stats.cached)?.preset;
+    expect(expected).toBeTruthy();
+    seen.add(expected!);
+    await page.locator(`[data-cell="party/${i}"]`).click();
+    const advice = page.getByTestId("pc-info").getByTestId("ev-presets");
+    await expect(advice.locator(`[data-preset="${expected}"]`)).toBeVisible();
+    await expect(advice.getByText(/Por sus stats más altos: .+ y .+ \(stats guardados en la partida\)/)).toBeVisible();
+  }
+  // Aplicar el sugerido deja los EV del preset (una sola acción que se deshace)
+  await page.locator('[data-cell="party/1"]').click();
+  const info = page.getByTestId("pc-info");
+  await info.getByTestId("ev-presets").getByRole("button", { name: /^Preset de EV sugerido/ }).click();
+  await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
+  await shot(page, "117-ev-preset-es-light");
+  await page.keyboard.press("Control+z");
+  await expect(page.getByRole("button", { name: /^Cambios \d/ })).toHaveCount(0);
+
+  // El desplegable ofrece los presets nuevos
+  const select = info.getByLabel("Otros presets de EV");
+  for (const label of ["Bulky Physical (PS + Ataque)", "Bulky Special (PS + At. Esp.)", "Tank Defense (PS + Defensa)", "Tank Sp. Defense (PS + Def. Esp.)"]) {
+    await expect(select.locator("option", { hasText: label })).toHaveCount(1);
+  }
+  await select.selectOption({ label: "Tank Sp. Defense (PS + Def. Esp.)" });
+  await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
+  await info.getByRole("button", { name: "Editar", exact: true }).click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByRole("tab", { name: "IV y EV" }).click();
+  await expect(drawer.getByRole("textbox", { name: "EV PS" })).toHaveValue("252");
+  await expect(drawer.getByRole("textbox", { name: "EV Def. Esp." })).toHaveValue("252");
+  await expect(drawer.getByRole("textbox", { name: "EV Defensa" })).toHaveValue("4");
+  await expect(drawer.getByTestId("ev-presets")).toBeVisible(); // también en la pestaña IV y EV
+});

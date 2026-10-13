@@ -1,8 +1,59 @@
 import { useTranslation } from "react-i18next";
 import { useEdit } from "../stores/edit";
+import { useGame } from "../stores/game";
 import { useSession } from "../stores/session";
-import { ConfirmDialog, Modal, Button } from "../ui";
+import { useUi } from "../stores/ui";
+import { ConfirmDialog, Modal, Button, Banner, Chip } from "../ui";
 import { FlagList } from "../features/legality/FlagList";
+
+/** Aviso previo a activar HeX: depende de la carpeta del juego y puede equivocarse en algunos fangames. */
+function HexWarning() {
+  const { t } = useTranslation();
+  const open = useUi((s) => s.hexConfirm);
+  const setOpen = useUi((s) => s.setHexConfirm);
+  const changeMode = useSession((s) => s.changeMode);
+  const filePath = useSession((s) => s.filePath);
+  const setView = useSession((s) => s.setView);
+  const linked = useGame((s) => s.status.linked);
+  const legality = useGame((s) => s.status.legality);
+  const close = () => setOpen(false);
+
+  return (
+    <Modal
+      open={open}
+      title={t("mode.warn.title")}
+      onClose={close}
+      footer={
+        <>
+          <Button variant="primary" onClick={() => { close(); void changeMode("hex"); }}>{t("mode.warn.confirm")}</Button>
+          {filePath && !linked && (
+            <Button onClick={() => { close(); setView("settings"); }}>{t("mode.warn.link")}</Button>
+          )}
+          <Button onClick={close}>{t("common.cancel")}</Button>
+        </>
+      }
+    >
+      <p>{t("mode.warn.intro")}</p>
+      <ul style={{ margin: "8px 0", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>
+        <li>{t("mode.warn.needsGame")}</li>
+        <li>{t("mode.warn.canFail")}</li>
+        <li>{t("mode.warn.fallback")}</li>
+      </ul>
+      {filePath && (
+        <Banner tone={linked && legality.level === "full" ? "info" : "warn"} title={linked ? t("mode.warn.linkedTitle") : t("mode.warn.unlinkedTitle")}>
+          {linked ? (
+            <span>
+              <Chip tone={legality.level === "full" ? "good" : "warn"}>{t(`game.level.${legality.level}`)}</Chip>{" "}
+              {t(`game.levelHelp.${legality.level}`)}
+            </span>
+          ) : (
+            t("mode.warn.unlinkedBody")
+          )}
+        </Banner>
+      )}
+    </Modal>
+  );
+}
 
 /** Dialogos globales: rechazo de HeX, guardar con un archivo que no se reconstruye identico y
  *  cerrar con cambios pendientes. (En HaX no hay confirmaciones de validacion: se permite todo.) */
@@ -22,6 +73,7 @@ export function Hosts() {
 
   return (
     <>
+      <HexWarning />
       <Modal
         open={!!rejected}
         title={rejected?.where === "save" ? t("mode.rejectedSaveTitle") : t("mode.rejectedTitle")}

@@ -376,15 +376,6 @@
   background: #ffd84a;
   color: #111;
 }
-.haxStrip {
-  background: repeating-linear-gradient(135deg, #ffd84a 0 14px, #f0c419 14px 28px);
-  color: #111;
-  font-weight: 800;
-  font-size: 12px;
-  text-align: center;
-  padding: 3px 12px;
-  border-bottom: 2px solid #111;
-}
 
 .hbtn:disabled {
   opacity: 0.45;

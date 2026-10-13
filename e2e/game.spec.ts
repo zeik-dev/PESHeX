@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
 import { buildFakeGame } from "./support/fakegame";
-import { loadedGameImages, openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
+import { loadedGameImages, openSave, ROOT, serveGameAssets, setMode, setup, shot, teardown, type Env } from "./support/harness";
 
 let env: Env | undefined;
 
@@ -42,6 +42,7 @@ test("vincular la carpeta del juego: nombres reales, sprites y selectores con b√
   await shot(page, "81-party-sprites-es-light");
 
   // Selector de especie con busqueda difusa (sin acentos, tolera erratas).
+  await setMode(page, "hex"); // HaX es el modo por defecto: con HeX se comprueba contra los datos del juego
   await page.getByRole("button", { name: /^Trump/ }).click();
   await page.getByRole("button", { name: "Editar", exact: true }).click();
   const drawer = page.getByRole("dialog");
