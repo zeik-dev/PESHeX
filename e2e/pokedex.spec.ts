@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openSave, setup, shot, teardown, type Env } from "./support/harness";
+import fs from "node:fs";
+import path from "node:path";
+import { openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
 import { realGame } from "./support/realgames";
 
 let env: Env | undefined;
@@ -88,4 +90,56 @@ test("sin carpeta del juego la lista no abre fichas y el aviso lo explica", asyn
   await expect(page.getByText("Solo se ven las especies que la partida menciona")).toBeVisible();
   await expect(page.getByTestId("species-sheet")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Ver la ficha de/ })).toHaveCount(0);
+});
+
+/** Abre el save de `game` (Z o Añil) con su carpeta real vinculada y entra en la Pokédex. false = omitir (falta test_pbs/). */
+async function openDexWith(page: Page, game: "z" | "anil", before?: (e: Env) => void): Promise<boolean> {
+  const save = game === "z" ? "Game.rxdata" : "Partida_2.rxdata";
+  if (!fs.existsSync(path.join(ROOT, "test_saves", save))) return false;
+  env = await setup(page, save);
+  const root = realGame(game, env.workDir);
+  if (!root) return false;
+  env.bridge.dialogDir = root;
+  before?.(env);
+  await serveGameAssets(page);
+  await openSave(page, env, "es", game === "z" ? "Kizuga" : "Furikita");
+  await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+  await page.getByRole("button", { name: "Elegir carpeta…" }).click();
+  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 120_000 });
+  await page.getByRole("button", { name: "Pokédex", exact: true }).click();
+  return true;
+}
+
+const dexRows = (page: Page) => page.locator('ul[aria-label="Pokédex"] button[aria-label^="Ver la ficha de"]');
+
+for (const game of ["z", "anil"] as const) {
+  test(`Pokédex (${game === "z" ? "Pokémon Z" : "Pokémon Añil"}): elegir una especie tras otra en la lista siempre abre su ficha`, async ({ page }) => {
+    test.setTimeout(180_000);
+    test.skip(!(await openDexWith(page, game)), "falta test_pbs/ o el save de prueba");
+    const rows = dexRows(page);
+    await expect(rows.first()).toBeVisible();
+    for (let i = 0; i < 12; i++) {
+      const name = (await rows.nth(i).getAttribute("aria-label"))!.replace("Ver la ficha de ", "");
+      await rows.nth(i).click();
+      const sheet = page.getByTestId("species-sheet");
+      await expect(sheet.getByTestId("sheet-stats"), `ficha ${i + 1} (${name})`).toBeVisible({ timeout: 3_000 });
+      await expect(sheet).toContainText(name);
+      await expect(page.getByText("Cargando la ficha…")).toHaveCount(0);
+    }
+  });
+}
+
+test("Pokédex: con latencia y clics rápidos entre especies, la última elegida acaba cargando", async ({ page }) => {
+  test.setTimeout(180_000);
+  test.skip(!(await openDexWith(page, "z", (e) => { e.bridge.callDelayMs = 600; })), "falta test_pbs/ o el save de prueba");
+  const rows = dexRows(page);
+  await expect(rows.first()).toBeVisible();
+  for (let i = 0; i < 6; i++) {
+    await rows.nth(i).click();
+    await page.waitForTimeout(120);
+  }
+  const last = (await rows.nth(5).getAttribute("aria-label"))!.replace("Ver la ficha de ", "");
+  const sheet = page.getByTestId("species-sheet");
+  await expect(sheet.getByTestId("sheet-stats")).toBeVisible({ timeout: 15_000 });
+  await expect(sheet).toContainText(last);
 });

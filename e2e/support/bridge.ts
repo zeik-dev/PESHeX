@@ -21,6 +21,10 @@ export class DriverBridge {
   locale = "es-ES";
   /** Retraso artificial (ms) de cada `game_link_step`: deja ver la barra de progreso en las pruebas. */
   stepDelayMs = 0;
+  /** Retraso artificial (ms) de `get_species` y `get_species_extras`: emula la latencia de IPC y de Ruby de la app real. */
+  callDelayMs = 0;
+  /** Comandos que fallan a propósito (prueba de errores): `cmd` → error lógico del driver, `times` veces (o siempre). */
+  private failing = new Map<string, { kind: string; message: string; times: number }>();
   /** Raiz de juego vinculada (la fija scan_game_folder, como AppState.game_root en Rust). */
   private gameRoot: string | null = null;
   /** Mapas manuales por raiz (en Rust: directorio de datos de la app). */
@@ -40,6 +44,15 @@ export class DriverBridge {
       else this.buffer.push(line);
     });
     this.proc.stderr.on("data", (d) => process.stderr.write(`[driver] ${d}`));
+  }
+
+  /** Hace que `cmd` devuelva un error lógico `times` veces (por defecto, siempre hasta `clearFailures`). */
+  failCommand(cmd: string, message = "fallo simulado", kind = "SimulatedError", times = Number.POSITIVE_INFINITY) {
+    this.failing.set(cmd, { kind, message, times });
+  }
+
+  clearFailures() {
+    this.failing.clear();
   }
 
   private send(cmd: string, params: Json = {}): Promise<Json> {
@@ -67,6 +80,12 @@ export class DriverBridge {
         return { value: null };
       case "driver_call": {
         if (this.stepDelayMs && args.cmd === "game_link_step") await new Promise((r) => setTimeout(r, this.stepDelayMs));
+        if (this.callDelayMs && /^get_species/.test(String(args.cmd))) await new Promise((r) => setTimeout(r, this.callDelayMs));
+        const fail = this.failing.get(String(args.cmd));
+        if (fail && fail.times > 0) {
+          fail.times -= 1;
+          return { error: { kind: fail.kind, message: fail.message, params: null, fatal: false } };
+        }
         const res = await this.send(String(args.cmd), (args.params as Json) ?? {});
         return this.wrap(res);
       }
