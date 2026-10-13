@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useT } from "../lib/useT";
 import { useGame } from "../stores/game";
 import { ItemIcon, PokemonIcon } from "../ui/GameImage";
 import { itemDisplayName } from "./lookup";
@@ -65,9 +66,11 @@ export function useItemOptions(pocket?: number | null): ComboOption[] | null {
   }, [catalog, index, pocket]);
 }
 
-/** `allowed` pone primero las habilidades de la especie; con `onlyAllowed` la lista se limita a ellas. */
-export function useAbilityOptions(allowed?: string[], onlyAllowed = false): ComboOption[] | null {
+/** `allowed` pone primero las habilidades de la especie; con `onlyAllowed` la lista se limita a ellas; `hidden` marca
+ *  las habilidades ocultas. */
+export function useAbilityOptions(allowed?: string[], onlyAllowed = false, hidden?: string[]): ComboOption[] | null {
   const catalog = useGame((s) => s.catalog);
+  const { t } = useT();
   return useMemo(() => {
     if (!catalog) return null;
     const rank = new Map((allowed ?? []).map((a, i) => [a, i]));
@@ -75,10 +78,10 @@ export function useAbilityOptions(allowed?: string[], onlyAllowed = false): Comb
     const all = pool.map((a) => ({
       id: a.id,
       label: a.name ?? prettyId(a.id),
-      sub: a.id,
+      sub: hidden?.includes(a.id) ? `${a.id} · ${t("pokemon.abilityHidden")}` : a.id,
       order: rank.get(a.id) ?? 9999,
     }));
     all.sort((x, y) => x.order - y.order);
     return all.map(({ order: _o, ...o }) => o);
-  }, [catalog, allowed, onlyAllowed]);
+  }, [catalog, allowed, onlyAllowed, hidden, t]);
 }

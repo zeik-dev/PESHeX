@@ -1,8 +1,43 @@
 .head {
   display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 4px 24px 16px;
+}
+.headMain {
+  display: flex;
   gap: 16px;
   align-items: center;
-  padding: 4px 24px 16px;
+  min-width: 0;
+  flex: 1 1 280px;
+}
+.baseStats {
+  flex: 0 1 320px;
+  min-width: 240px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.baseStatsTitle {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.baseStatRow {
+  display: grid;
+  grid-template-columns: 74px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
 }
 .title {
   font-size: 22px;
@@ -14,10 +49,66 @@
 }
 .statRow {
   display: grid;
-  grid-template-columns: 110px 1fr 84px;
+  grid-template-columns: 110px 1fr;
   align-items: center;
   gap: 12px;
   padding: 5px 0;
+}
+.statsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.hiddenPower {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.evActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+.evActions > :first-child {
+  flex: 1 1 320px;
+}
+.statDiff {
+  font-size: 11px;
+  color: var(--warning);
+}
+.hpField {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hpField > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.filterSwitch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.natureEffective {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.moveInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
 }
 .statName {
   font-weight: 600;

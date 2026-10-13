@@ -376,7 +376,8 @@
       "title": "Quick actions",
       "perfectIv": "Perfect IVs (31)",
       "clearIv": "IVs to 0",
-      "clearEv": "Clear EVs"
+      "clearEv": "Clear EVs",
+      "ivTitle": "Quick IV actions"
     },
     "moves": {
       "title": "Moves",
@@ -385,7 +386,12 @@
       "pp": "PP",
       "ppUps": "PP Ups",
       "add": "Add move",
-      "empty": "No moves"
+      "empty": "No moves",
+      "physical": "Physical",
+      "special": "Special",
+      "status": "Status",
+      "power": "Pow. {{n}}",
+      "accuracy": "Acc. {{n}}"
     },
     "info": {
       "owner": "Original trainer",
@@ -394,7 +400,27 @@
       "others": "Other Pokémon data",
       "customs": "Custom data from the base"
     },
-    "close": "Close editor"
+    "close": "Close editor",
+    "baseStats": "Base stats in this game",
+    "bst": "Total {{n}}",
+    "baseStatsHint": "Link the game folder to see the species' base stats.",
+    "fainted": "Fainted",
+    "hpHint": "The slider stops at 1; type 0 to faint it.",
+    "natureNeutral": "Neutral",
+    "natureMint": "Mint nature",
+    "natureMintNone": "No mint: stats use the original nature.",
+    "natureMintOption": "— No mint —",
+    "natureEffective": "Effective nature for stats: {{nature}}",
+    "onlySpeciesAbilities": "Show only the species' abilities",
+    "onlySpeciesMoves": "Show only moves the species learns",
+    "abilityHidden": "hidden",
+    "hiddenPower": "Hidden Power",
+    "hiddenPowerPower": "power {{power}}",
+    "totalStats": "Total stats",
+    "totalStatsHint": "Computed with the game's formula (base + IV + EV + level + effective nature).",
+    "totalStatsSavedOnly": "Values saved in the file (link the game folder to compute them).",
+    "totalStatsSaved": "saved: {{n}}",
+    "totalStatsDiff": "The value saved in the file differs from the computed one; \"Recalculate stats\" makes them match."
   },
   "stat": {
     "HP": "HP",

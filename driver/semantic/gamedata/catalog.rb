@@ -75,6 +75,7 @@ module Sem
         base = store.base_species(e.species) || e
         pick = ->(f) { blank?(e[f]) ? base[f] : e[f] }
         info = INFO_FIELDS.to_h { |key, f| [key, pick.call(f)] }.reject { |_, v| blank?(v) }
+        profile = store.learn_profile(e.species, e.form)
         { id: e.id, species: e.species, form: e.form, number: base.number, order: base.order, name: base.name,
           formName: e.form_name, types: e.types.empty? ? base.types : e.types,
           baseStats: store.base_stats(e.id, form), growthRate: store.growth_rate(e.id, form),
@@ -83,6 +84,8 @@ module Sem
           tutorMoves: (e.tutor_moves + base.tutor_moves).uniq, eggMoves: (e.egg_moves + base.egg_moves).uniq,
           tmMoves: (e.tm_moves + base.tm_moves).uniq, evolutions: base.evolutions, prevos: store.prevos(e.species),
           minimumLevel: store.minimum_level(e.species), info: info, mega: e.mega, region: e.region,
+          # Todo lo que la especie (y sus preevoluciones) puede aprender, a cualquier nivel: nivel, tutor, MT y huevo.
+          learnable: (profile.min_level.keys + profile.always.to_a).uniq,
           forms: forms_of(store, base) }
       end
 

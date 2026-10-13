@@ -7,6 +7,7 @@ import styles from "./ui.module.css";
  *  es una sola edicion (y un solo "deshacer"). El campo numerico admite escribir el valor exacto y, con
  *  `numberMin`/`numberMax`, valores fuera del recorrido del deslizador (p. ej. 0 PS = debilitado). */
 export function SliderField({
+  id,
   value,
   min,
   max,
@@ -20,6 +21,8 @@ export function SliderField({
   numberWidth = 64,
   valueText,
 }: {
+  /** `id` del campo numerico (para enlazarlo con su etiqueta). */
+  id?: string;
   value: number | null | undefined;
   min: number;
   max: number;
@@ -65,6 +68,7 @@ export function SliderField({
         onBlur={commit}
       />
       <NumberField
+        id={id}
         value={draft ?? value}
         onCommit={onCommit}
         min={numberMin ?? min}

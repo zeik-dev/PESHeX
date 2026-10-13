@@ -1,12 +1,10 @@
 import { Gauge } from "lucide-react";
-import { gameApi } from "../../api/game";
 import type { PokemonDetail, StatId } from "../../api/types";
 import { STAT_IDS } from "../../api/types";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
-import { useGame } from "../../stores/game";
 import { Button, SelectField } from "../../ui";
-import { useSemanticQuery } from "../queries";
+import { useSpeciesDetail } from "./useSpeciesDetail";
 import { EV_PRESETS, evPresetOps, suggestEvPreset, type EvPreset, type EvSuggestion } from "./quick";
 import styles from "./pokemon.module.css";
 
@@ -19,10 +17,7 @@ export interface EvAdvice {
 
 /** Preset de EV que encaja con los dos stats mas altos del Pokemon: los base de la especie si hay carpeta del juego, si no los guardados. */
 export function useEvAdvice(pk: PokemonDetail): EvAdvice {
-  const linked = useGame((s) => s.status.linked);
-  const id = pk.species?.id;
-  const q = useSemanticQuery(["species", id, pk.form], () => gameApi.species(String(id), pk.form ?? 0), linked && typeof id === "string");
-  const base = q.data?.baseStats;
+  const base = useSpeciesDetail(pk)?.baseStats;
   const fromBase = !!base && STAT_IDS.every((s) => typeof base[s] === "number");
   const stats = fromBase ? (base as Record<StatId, number>) : pk.stats.cached;
   return { suggestion: suggestEvPreset(stats), source: fromBase ? "base" : "saved", stats };

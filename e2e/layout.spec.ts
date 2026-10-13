@@ -89,3 +89,30 @@ test("etiqueta de total e interruptor de ilegales bajo el equipo; el interruptor
   await expect(page.getByRole("switch", { name: "Solo ilegales" })).toBeVisible();
   await shot(page, "layout-equipo-hex");
 });
+
+test("en HaX ninguna vista menciona la legalidad (solo la ayuda del selector de modo en Ajustes)", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  for (const name of ["Resumen", "Entrenador", "Equipo", "PC", "Mochila", "Pokédex", "Mundo", "Todo detectado", "Copias", "Cambios", "Avanzado"]) {
+    await page.getByRole("button", { name, exact: true }).click();
+    await page.waitForTimeout(150);
+    await expect(page.locator("body"), `vista ${name}`).not.toContainText(/legal/i);
+  }
+  // En PC/Equipo, con un Pokémon seleccionado y con el editor abierto tampoco
+  await page.getByRole("button", { name: "PC", exact: true }).click();
+  await page.locator('[data-cell="party/0"]').click();
+  await expect(page.locator("body")).not.toContainText(/legal/i);
+  await page.getByTestId("pc-info").getByRole("button", { name: "Editar", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/legal/i);
+  await page.keyboard.press("Escape");
+
+  // Ajustes: la tarjeta de la carpeta del juego no tiene el bloque de legalidad
+  await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+  await expect(page.getByText(/Legalidad (completa|parcial|básica)/)).toHaveCount(0);
+
+  // Con HeX activo sí aparece
+  await setMode(page, "hex");
+  await page.getByRole("button", { name: "Resumen", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /^Legalidad/ })).toBeVisible();
+});

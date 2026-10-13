@@ -343,6 +343,8 @@ export interface PokemonPatch {
   gender?: number;
   shiny?: boolean;
   nature?: string;
+  /** Naturaleza cambiada con menta (`null` = quitar la menta). Solo en bases v20+. */
+  natureForStats?: string | null;
   ability?: string;
   abilityIndex?: number;
   item?: string | number | null;

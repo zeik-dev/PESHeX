@@ -95,15 +95,22 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   const level = drawer.getByLabel("Nivel", { exact: true });
   await level.fill("150");
   await level.press("Enter");
-  await drawer.getByRole("tab", { name: /Legalidad/ }).click();
-  await expect(drawer.getByText(/Nivel 150 fuera del rango permitido \(1–100\)/)).toBeVisible();
-  await shot(page, "102-legality-tab-es-light");
+  // En HaX la hoja no tiene pestaña «Legalidad» ni el Resumen su tarjeta: la legalidad solo existe con HeX activo
+  await expect(drawer.getByRole("tab", { name: /Legalidad/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
-
-  // En HaX el Resumen no muestra la tarjeta de legalidad: solo con HeX activo (lo que la partida ya traia no se bloquea)
   await page.getByRole("button", { name: "Resumen", exact: true }).click();
   await expect(page.getByRole("heading", { name: /^Legalidad/ })).toHaveCount(0);
+
+  // Con HeX activo aparece (lo que la partida ya traia no se bloquea; el nivel 150 si se ve como ilegal)
   await setMode(page, "hex");
+  await page.getByRole("button", { name: "Equipo", exact: true }).click();
+  await page.getByRole("button", { name: /^Trump/ }).click();
+  await page.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("tab", { name: /Legalidad/ }).click();
+  await expect(page.getByRole("dialog").getByText(/Nivel 150 fuera del rango permitido \(1–100\)/)).toBeVisible();
+  await shot(page, "102-legality-tab-es-light");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Resumen", exact: true }).click();
 
   // Resumen: tarjeta de legalidad con el problema y enlace a verlo.
   const card = page.getByRole("heading", { name: /^Legalidad/ });

@@ -16,6 +16,9 @@ interface SettingsState {
   zoom: number;
   /** Tarjeta "Legalidad" del Resumen (solo existe en HeX): desplegada o plegada. */
   legalityOpen: boolean;
+  /** Editor de Pokémon (solo HaX; en HeX siempre se filtra): mostrar solo las habilidades / los movimientos de la especie. */
+  onlySpeciesAbilities: boolean;
+  onlySpeciesMoves: boolean;
   /** HaX = cualquier cambio (por defecto); HeX = solo cambios legales segun el juego, se activa a mano. */
   mode: EditMode;
   recent: string[];
@@ -29,6 +32,8 @@ interface SettingsState {
   setBackup: (backup: boolean) => void;
   setZoom: (zoom: number) => void;
   setLegalityOpen: (open: boolean) => void;
+  setOnlySpeciesAbilities: (v: boolean) => void;
+  setOnlySpeciesMoves: (v: boolean) => void;
   setMode: (mode: EditMode) => void;
   pushRecent: (path: string) => void;
   removeRecent: (path: string) => void;
@@ -79,6 +84,8 @@ export const useSettings = create<SettingsState>()(
       backup: true,
       zoom: ZOOM_DEFAULT,
       legalityOpen: true,
+      onlySpeciesAbilities: true,
+      onlySpeciesMoves: true,
       mode: "hax",
       recent: [],
       gameFolders: {},
@@ -89,6 +96,8 @@ export const useSettings = create<SettingsState>()(
       setBackup: (backup) => set({ backup }),
       setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
       setLegalityOpen: (legalityOpen) => set({ legalityOpen }),
+      setOnlySpeciesAbilities: (onlySpeciesAbilities) => set({ onlySpeciesAbilities }),
+      setOnlySpeciesMoves: (onlySpeciesMoves) => set({ onlySpeciesMoves }),
       setMode: (mode) => set({ mode }),
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),

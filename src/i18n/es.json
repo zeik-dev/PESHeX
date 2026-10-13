@@ -378,7 +378,8 @@
       "title": "Acciones rápidas",
       "perfectIv": "IV perfectos (31)",
       "clearIv": "IV a 0",
-      "clearEv": "Quitar EV"
+      "clearEv": "Limpiar EV",
+      "ivTitle": "Acciones rápidas de IV"
     },
     "moves": {
       "title": "Movimientos",
@@ -387,7 +388,12 @@
       "pp": "PP",
       "ppUps": "Subidas de PP",
       "add": "Añadir movimiento",
-      "empty": "Sin movimientos"
+      "empty": "Sin movimientos",
+      "physical": "Físico",
+      "special": "Especial",
+      "status": "Estado",
+      "power": "Pot. {{n}}",
+      "accuracy": "Prec. {{n}}"
     },
     "info": {
       "owner": "Entrenador original",
@@ -396,7 +402,27 @@
       "others": "Otros datos del Pokémon",
       "customs": "Datos personalizados de la base"
     },
-    "close": "Cerrar editor"
+    "close": "Cerrar editor",
+    "baseStats": "Stats base en este juego",
+    "bst": "Total {{n}}",
+    "baseStatsHint": "Vincula la carpeta del juego para ver los stats base de la especie.",
+    "fainted": "Debilitado",
+    "hpHint": "El deslizador llega a 1; escribe 0 para dejarlo debilitado.",
+    "natureNeutral": "Neutra",
+    "natureMint": "Naturaleza por menta",
+    "natureMintNone": "Sin menta: los stats usan la naturaleza original.",
+    "natureMintOption": "— Sin menta —",
+    "natureEffective": "Naturaleza efectiva para las estadísticas: {{nature}}",
+    "onlySpeciesAbilities": "Mostrar solo habilidades de la Especie",
+    "onlySpeciesMoves": "Mostrar solo movimientos aprendidos por la especie",
+    "abilityHidden": "oculta",
+    "hiddenPower": "Poder oculto",
+    "hiddenPowerPower": "potencia {{power}}",
+    "totalStats": "Estadísticas totales",
+    "totalStatsHint": "Calculadas con la fórmula del juego (base + IV + EV + nivel + naturaleza efectiva).",
+    "totalStatsSavedOnly": "Valores guardados en la partida (vincula la carpeta del juego para calcularlos).",
+    "totalStatsSaved": "guardado: {{n}}",
+    "totalStatsDiff": "El valor guardado en la partida es distinto del calculado; «Recalcular estadísticas» los iguala."
   },
   "stat": {
     "HP": "PS",

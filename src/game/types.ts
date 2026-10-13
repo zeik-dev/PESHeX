@@ -181,6 +181,8 @@ export interface SpeciesDetail {
   eggMoves: string[];
   /** Movimientos de MT (tm.txt de v16-18). */
   tmMoves?: string[];
+  /** Todo lo que la especie (y sus preevoluciones) puede aprender a cualquier nivel: nivel, tutor, MT y huevo. */
+  learnable?: string[];
   evolutions: SpeciesEvolution[];
   prevos: string[];
   minimumLevel: number;

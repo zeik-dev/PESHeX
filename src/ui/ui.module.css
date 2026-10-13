@@ -355,6 +355,9 @@
   box-shadow: var(--shadow-lg);
   animation: slide 0.16s ease-out;
 }
+.drawerWide {
+  width: min(980px, max(58vw, 640px), 100%);
+}
 .modalHead {
   display: flex;
   align-items: center;
