@@ -67,7 +67,7 @@ export function InfoPanel({ pokemonRef, emptySlot, emptyRef, editable, partial, 
           </div>
           {pk.nickname && pk.species && !pk.egg && <div className="muted">{pk.species.name}</div>}
           <div className={styles.infoTypes}>
-            {sp?.types.map((ty) => <TypeChip key={ty} id={ty} name={catalog ? undefined : null} />)}
+            {sp?.types.map((ty) => <TypeChip key={ty} id={ty} name={catalog?.types.get(ty)?.name} />)}
           </div>
           <div className={styles.infoTags}>
             {pk.level != null && <Chip tone="accent">{t("party.level", { level: pk.level })}</Chip>}
@@ -105,7 +105,7 @@ export function InfoPanel({ pokemonRef, emptySlot, emptyRef, editable, partial, 
           return (
             <li key={m.slot}>
               <span>{m.name ?? m.id}</span>
-              {mv?.type && <TypeChip id={mv.type} />}
+              {mv?.type && <TypeChip id={mv.type} name={catalog?.types.get(mv.type)?.name} />}
               {m.pp != null && <span className="muted mono" style={{ fontSize: 11 }}>{m.pp}</span>}
             </li>
           );
