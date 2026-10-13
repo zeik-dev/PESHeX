@@ -1,0 +1,197 @@
+﻿# Consulta la documentación de la wiki para aprender a modificar este archivo.
+0,POKEMONTRAINER_ChicoNeutro,Entrenador,60,,,,Male,,
+1,POKEMONTRAINER_ChicaNeutra,Entrenador,60,,,,Female,,
+2,POKEMONTRAINER_ChicoArio,Entrenador,60,,,,Male,,
+3,POKEMONTRAINER_ChicaAria,Entrenador,60,,,,Female,,
+4,POKEMONTRAINER_ChicoNegro,Entrenador,60,,,,Male,,
+5,POKEMONTRAINER_ChicaNegra,Entrenador,60,,,,Female,,
+6,CRISANTO1,Rival,100,Rival.ogg,,,Male,100
+7,MELIA1,Rival,100,Rival.ogg,,,Female,100
+8,CAMPESINO,Campesino,20,Entrenador.ogg,,EncuentroJovial.ogg,Male,100
+9,CAMPESINA,Campesina,20,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+10,BURGUES,Monsieur,80,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+11,BURGUESA,Madame,80,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+12,LADRONA,Ladrona,30,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+13,AZOTHO,Recluta Azoth,60,CombateAzoth.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Male,100
+14,AZOTHA,Recluta Azoth,60,CombateAzoth.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Female,100
+15,AZOTHOS,Reclutas Azoth,60,CombateAzoth.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Female,100
+16,MELIAALIADA0,Rival,100,Rival.ogg,,,Female,100
+17,MELIAALIADA1,Rival,100,Rival.ogg,,,Female,100
+18,MELIAALIADA2,Rival,100,Rival.ogg,,,Female,100
+19,MOSQUETERO,Mosquetero,60,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+20,MOSQUETERA,Mosquetera,60,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+21,LIDER1,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+22,DUOMOSQUETERO,Mosquetero,150,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+23,NUBILA1,Alquimista Azoth,70,CombateComandante.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Female,100
+24,CRISANTO2,Rival,100,Rival.ogg,,,Male,100
+25,CURANDERA,Herbolaria,50,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+26,MELIA2,Rival,100,Rival.ogg,,,Female,100
+27,ILUSTRADO,Ilustrado,80,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+28,CANTANTE,Cantante,50,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+29,LIDER2,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+30,ACTORMALVO,Rey Sombrío,150,nada.ogg,nada.ogg,,Male,100
+31,METRE,Metre,50,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+32,DONCELLA,Doncella,50,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+33,MIRRA1,Clérigo,150,CombateMirra.ogg,,EncuentroNoble.ogg,Male,100
+34,BRUJITA,Brujita,60,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+35,CAZADOR,Cazador,60,Entrenador.ogg,,EncuentroMisterioso.ogg,Male,100
+36,MERLOT,Capitán,150,CombateMilitar.ogg,,EncuentroNoble.ogg,Male,100
+37,PIRATA,Pirata,60,Entrenador.ogg,,EncuentroDuro.ogg,Female,100
+38,DUOBURGUES,Monsieur y Madame,160,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+39,DUOMISTICO,Hermanas Misteriosas,150,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+40,ALQUIMISTA,Alquimista,50,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+41,WOLFRAM1,Alquimista Azoth,70,CombateComandante.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Female,100
+42,LIDER3,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+43,JARDINERO,Jardinero,50,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+44,NINASONADORA,Niña Soñadora,50,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+45,CRISANTO3,Rival,100,Rival.ogg,,,Male,100
+46,VAMPIRO,Vampiro Azoth,100,CombateOscuro.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Male,100
+47,NUBILA2,Alquimista Azoth,70,CombateComandante.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Female,100
+48,LANTO1,Monsieur,150,CombateLanto.ogg,,EncuentroNoble.ogg,Male,100
+49,DRUIDA,Druida,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Female,100
+50,MIRRA2,Clérigo,150,CombateMirra.ogg,,EncuentroNoble.ogg,Male,100
+51,CHEF,Chef,80,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+52,LIDER4,Regente,150,nada.ogg,Victoria Importante.ogg,,Female,100
+53,CRITICO,Crítico de cocina,150,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+54,MELIA3,Rival,100,Rival.ogg,,,Female,100
+55,CRISANTOALIADO0,Entrenador,100,Rival.ogg,,,Male,100
+56,CRISANTOALIADO1,Entrenador,100,Rival.ogg,,,Male,100
+57,CRISANTOALIADO2,Entrenador,100,Rival.ogg,,,Male,100
+58,REYACERTIJOS,Rey de los,150,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+59,REVOLUCIONARIO,Revolucionario,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+60,REVOLUCIONARIA,Revolucionaria,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Female,100
+61,ALCA1,Entrenadora,50,Alca2.ogg,jajaju.ogg,EncuentroRev.ogg,Female,100
+62,DUOREVOLUCIONARIO,Revolucionarios,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+63,LIDER5,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+64,PIRATAS,Dúo Pirata,50,Entrenador.ogg,,EncuentroDuro.ogg,Female,100
+65,CRISANTO4,Rival,100,Rival.ogg,,,Male,100
+66,GENOS1,Alquimista Azoth,70,CombateComandante.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Male,100
+67,WOLFRAM2,Alquimista Azoth,70,CombateComandante.ogg,VictoriaAzoth.ogg,EncuentroAzoth.ogg,Male,100
+68,SANADORA,Sanadora,50,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+69,MELIAALIADA3,Rival,100,Rival.ogg,,,Female,100
+70,MELIAALIADA4,Rival,100,Rival.ogg,,,Female,100
+71,MELIAALIADA5,Rival,100,Rival.ogg,,,Female,100
+72,LIDER6,Regente,150,nada.ogg,Victoria Importante.ogg,,Female,100
+73,MELIA4,Rival,100,Rival.ogg,,,Female,100
+74,ESPINO,Espadachín,150,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+75,PLUMANEGRA,Malhechor,150,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+76,POKEMONTRAINER_MChicoNeutro,Entrenador,60,,,,Male,,
+77,POKEMONTRAINER_MChicaNeutra,Entrenador,60,,,,Female,,
+78,POKEMONTRAINER_MChicoArio,Entrenador,60,,,,Male,,
+79,POKEMONTRAINER_MChicaAria,Entrenador,60,,,,Female,,
+80,POKEMONTRAINER_MChicoNegro,Entrenador,60,,,,Male,,
+81,POKEMONTRAINER_MChicaNegra,Entrenador,60,,,,Female,,
+82,LANTO2,Monsieur,150,CombateLanto2.ogg,,EncuentroNoble.ogg,Male,100
+83,ALTOMANDO1,Alto Caballero,150,CombateLiga1.ogg,,EncuentroNoble.ogg,Male,100
+84,ALTOMANDO2,Alta Dama,150,CombateLiga1.ogg,,EncuentroNoble.ogg,Male,100
+85,ALTOMANDO3,Alto Caballero,150,CombateLiga1.ogg,,EncuentroNoble.ogg,Male,100
+86,ALTOMANDO4,Alta Dama,150,CombateLiga1.ogg,,EncuentroNoble.ogg,Male,100
+87,AZ1,Rey,150,CombateAZ1.ogg,Nada.ogg,EncuentroNoble.ogg,Male,100
+88,AZ2,Reyes,150,Nada.ogg,VictoriaAZ.ogg,EncuentroNoble.ogg,Male,100
+89,CARABINERO,Carabinero,60,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+90,CARABINERA,Carabinera,60,EntrenadorRev.ogg,,EncuentroRev.ogg,Female,100
+91,CINTIA,Entrenadora Prodigiosa,50,CombateMilitar.ogg,,EncuentroRev.ogg,Female,100
+92,FERROFAZ,Prisionero Loco,50,CombateFerrofaz.ogg,Nada.ogg,EncuentroRev.ogg,Male,100
+93,CARABINEROS,Dúo Carabinero,150,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+94,PINOT,Alcaide,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+95,PROTANEUTRO,Entrenador,60,,,,Male,100
+96,PROTANEUTRA,Entrenadora,60,,,,Female,100
+97,PROTARUBIO,Entrenador,60,,,,Male,100
+98,PROTARUBIA,Entrenadora,60,,,,Female,100
+99,PROTANEGRO,Entrenador,60,,,,Male,100
+100,PROTANEGRA,Entrenadora,60,,,,Female,100
+101,LUNATICO,Lunático,20,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,10
+102,LUNATICA,Lunática,20,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Female,10
+103,HOMBREDELSACO,Hombre del,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+104,LIDER7,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+105,Doppelganger,Clon,150,CombateOscuro.ogg,Victoria Importante.ogg,,Male,100
+106,OBRERO,Obrero,40,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+107,CRISANTO5,Capitán,100,CombateFinalCrisanto.ogg,,,Male,100
+108,OBREROS,Obreros,80,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+109,MARIO,Superentrenador,50,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+110,LUIGI,Superentrenador,50,Entrenador.ogg,,EncuentroDuro.ogg,Male,100
+111,LIDER8,Regente,150,nada.ogg,Victoria Importante.ogg,,Female,100
+112,RANGER,Ranger,50,Entrenador.ogg,,EncuentroJovial.ogg,Male,100
+113,RANGERA,Ranger,50,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+114,DUOMAGICO,Hermanas Misteriosas,80,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+115,TYRANITAR,Artificio,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+116,AZ3,Hombre Errante,150,Nada.ogg,VictoriaAZ.ogg,EncuentroNoble.ogg,Male,100
+117,MELIA5,Molinera,100,CombateMelia2.ogg,,,Male,100
+118,AURE1,Ser Antiguo,100,CombateAure.ogg,,,Male,100
+119,LIDER9,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+120,FANTASMA,Fantasma,150,CombateOscuro.ogg,,,Female,100
+121,LOTOFINAL,Papa,150,BatallaLoto.ogg,Victoria Importante.ogg,,Female,100
+122,RANGERS,Rangers,50,Entrenador.ogg,,EncuentroJovial.ogg,Male,100
+123,OLIVIER,Profesora,150,nada.ogg,Victoria Importante.ogg,,Female,100
+124,ELITEFRACTAL,Élite de Fractal,150,EntrenadorRev.ogg,,EncuentroNoble.ogg,Male,100
+125,DUOFRACTAL,Dúo de Fractal,150,EntrenadorRev.ogg,,EncuentroNoble.ogg,Male,100
+126,LIDER10,Regente,150,nada.ogg,Victoria Importante.ogg,,Female,100
+127,GUARDIANFORJA,Guardián,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+128,GINIA,Pintora,50,Entrenador.ogg,,EncuentroJovial.ogg,Female,100
+129,CARABINEROEN,Carabinero,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Male,100
+130,CARABINERAEN,Carabinera,50,EntrenadorRev.ogg,,EncuentroRev.ogg,Female,100
+131,ALCACADUCA,Entrenadora,50,Alca2.ogg,nada.ogg,EncuentroJovial.ogg,Female,100
+132,PRIMULATORNASOLA,Antiguas Reinas,50,CombateAntiguosReyes.ogg,nada.ogg,EncuentroJovial.ogg,Female,100
+133,CRISANTOALIADO3,Entrenador,100,Rival.ogg,,,Male,100
+134,CRISANTOALIADO4,Entrenador,100,Rival.ogg,,,Male,100
+135,CRISANTOALIADO5,Entrenador,100,Rival.ogg,,,Male,100
+136,PAYASO,Payaso,50,Entrenador.ogg,,EncuentroMisterioso.ogg,Male,100
+137,ARLEQUINA,Arlequina,50,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+138,PAYASOMECANICO,Payaso Mecánico,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+139,LIDER11,Regente,150,nada.ogg,Victoria Importante.ogg,,Female,100
+140,MELIAALIADA6,Entrenadora,100,Rival.ogg,,,Female,100
+141,MELIAALIADA7,Entrenadora,100,Rival.ogg,,,Female,100
+142,MELIAALIADA8,Entrenadora,100,Rival.ogg,,,Female,100
+143,YVELTAL,Leyenda,50,CombateYveltal.ogg,,EncuentroMisterioso.ogg,Female,100
+144,ANGELINE,Entrenadora,150,CombateAngeline.ogg,Victoria Importante.ogg,,Female,100
+145,ZYGARDE1,Pokémon,50,CombateZygarde.ogg,,EncuentroMisterioso.ogg,Male,100
+146,ZYGARDE2,Pokémon,50,CombateZygarde.ogg,,EncuentroMisterioso.ogg,Male,100
+147,MIRRA3,Clérigo,150,nada.ogg,,EncuentroNoble.ogg,Male,100
+148,MIRRA4,Mirra,150,nada.ogg,,EncuentroNoble.ogg,Male,100
+149,ZYGARDE3,Leyenda,50,CombateZygarde2.ogg,,EncuentroMisterioso.ogg,Male,100
+150,CRISANTOALIADO6,Entrenador,100,Rival.ogg,,,Male,100
+151,CRISANTOALIADO7,Entrenador,100,Rival.ogg,,,Male,100
+152,CRISANTOALIADO8,Entrenador,100,Rival.ogg,,,Male,100
+153,ESPECTRO,Espectro,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+154,ARIADOS,Ariados,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Female,100
+155,SPIDOPS,Spidops,50,CombateOscuro.ogg,,EncuentroMisterioso.ogg,Male,100
+156,LIDER12,Regente,150,nada.ogg,Victoria Importante.ogg,,Male,100
+157,RECLUTAFLARE,Recluta Flare,50,CombateAzoth.ogg,,EncuentroAzoth.ogg,Male,100
+158,LYSSON,Jefe Flare,50,CombateLysson.ogg,,EncuentroAzoth.ogg,Male,100
+159,XERNEAS,Leyenda,50,CombateXerneas.ogg,,EncuentroMisterioso.ogg,Male,100
+160,MONJE,Monje Yantra,20,Entrenador.ogg,,EncuentroNoble.ogg,Male,100
+161,MONJA,Monja Yantra,20,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+162,MONJES,Monjes Yantra,40,Entrenador.ogg,,EncuentroNoble.ogg,Female,100
+163,LIDER1R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Female,100
+164,LIDER2R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Male,100
+165,LIDER3R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Male,100
+166,LIDER4R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Female,100
+167,LIDER5R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Male,100
+168,LIDER6R,Regente,150,CombateLider.ogg,Victoria Importante.ogg,,Female,100
+169,LIDER7R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Male,100
+170,LIDER8R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Female,100
+171,LIDER9R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Male,100
+172,LIDER10R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Female,100
+173,LIDER11R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Female,100
+174,LIDER12R,Regente,150,CombateLider2.ogg,Victoria Importante.ogg,,Male,100
+175,TAROTISTA,Tarotista,50,Entrenador.ogg,,EncuentroMisterioso.ogg,Female,100
+176,VOLUS,Portador,150,CombateVolus.ogg,,EncuentroNoble.ogg,Male,100
+177,GRANMONJE,Maestro Monje,150,CombateComandante.ogg,,EncuentroNoble.ogg,Male,100
+178,OLIVIER2,Profesora,150,nada.ogg,Victoria Importante.ogg,,Female,100
+179,ELITEAZOTH,Élite Azoth,50,,,EncuentroAzoth.ogg,Female,100
+180,ELITEAZOTHA,Élite Azoth,50,,,EncuentroAzoth.ogg,Female,100
+181,MALVO1,Rey Sombrío,150,CombateAntiguosReyes.ogg,,EncuentroNoble.ogg,Male,100
+182,ROSMARINO,Campanero,20,CombateOlivier.ogg,,EncuentroNoble.ogg,Male,100
+183,URANO,Veterano,150,CombateUrano.ogg,VictoriaEntrenador.ogg,,Male,250,
+184,FLORARMA,Flor,50,,,EncuentroAzoth.ogg,Male,100
+185,CRISANTOFINAL,Entrenador,100,CombateFinalCrisanto.ogg,,,Male,100
+186,MELIAFINAL,Entrenadora,100,CombateMelia2.ogg,,,Male,100
+187,ERIC,Cuentacuentos,100,CombateMalvoFinal.ogg,,,Male,100
+188,ALTOMANDOF1,Reina Eterna,150,CombateAntiguosReyes.ogg,,EncuentroNoble.ogg,Female,100
+189,ALTOMANDOF2,Rey Eterno,150,CombateAntiguosReyes.ogg,,EncuentroNoble.ogg,Male,100
+190,ALTOMANDOF3,Reina Eterna,150,CombateAntiguosReyes.ogg,,EncuentroNoble.ogg,Female,100
+191,ALTOMANDOF4,Rey Eterno,150,CombateAntiguosReyes.ogg,,EncuentroNoble.ogg,Male,100
+192,MALVOFINAL,Malvo,150,nada.ogg,,EncuentroNoble.ogg,Male,100
+193,ALCAFINAL1,Entrenadora,50,CombateAlcaFinal1.ogg,jajaju.ogg,EncuentroRev.ogg,Female,100
+194,ALCAFINAL2,Alca,50,nada.ogg,jajaju.ogg,EncuentroRev.ogg,Female,100
+195,ALCAFINAL3,Entrenadora,50,nada.ogg,VictoriaVillano.ogg,EncuentroRev.ogg,Female,100
