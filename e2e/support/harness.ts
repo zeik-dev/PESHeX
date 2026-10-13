@@ -13,10 +13,21 @@ export interface Env {
   bridge: DriverBridge;
   workDir: string;
   savePath: string;
+  /** Deja salir el aviso de "agregar la carpeta del juego" al abrir (por defecto se silencia). */
+  gamePrompt: boolean;
 }
 
-/** Prepara la pagina con el puente al driver real y una COPIA del save (nunca se toca test_saves/). */
-export async function setup(page: Page, save = "Partida_2.rxdata"): Promise<Env> {
+/** Marca «No volver a preguntar» para `savePath` antes de cargar la app (el aviso no estorba a las pruebas que no lo ejercitan). */
+export async function silenceGamePrompt(page: Page, savePath: string) {
+  await page.addInitScript((p) => {
+    localStorage.setItem("peshex-settings", JSON.stringify({ state: { noGamePrompt: { [p]: true } }, version: 2 }));
+  }, savePath);
+}
+
+/** Prepara la pagina con el puente al driver real y una COPIA del save (nunca se toca test_saves/).
+ *  Por defecto se marca «No volver a preguntar» para esa partida: el aviso de "agregar la carpeta del juego" que sale
+ *  al abrir un save sin carpeta no estorba a las pruebas que no lo ejercitan (`gamePrompt: true` lo deja salir). */
+export async function setup(page: Page, save = "Partida_2.rxdata", opts: { gamePrompt?: boolean } = {}): Promise<Env> {
   fs.mkdirSync(SHOTS, { recursive: true });
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "peshex-e2e-"));
   const savePath = path.join(workDir, save);
@@ -26,7 +37,7 @@ export async function setup(page: Page, save = "Partida_2.rxdata"): Promise<Env>
   await page.exposeFunction("__pwInvoke", (cmd: string, args: Record<string, unknown>) => bridge.handle(cmd, args));
   await page.addInitScript(TAURI_MOCK);
   await page.addInitScript(() => localStorage.clear());
-  return { bridge, workDir, savePath };
+  return { bridge, workDir, savePath, gamePrompt: !!opts.gamePrompt };
 }
 
 export async function teardown(env: Env | undefined) {
@@ -40,6 +51,7 @@ export async function openSave(page: Page, env: Env, lang: "es" | "en" = "es", e
     Object.defineProperty(navigator, "languages", { get: () => [l === "es" ? "es-ES" : "en-US"] });
     Object.defineProperty(navigator, "language", { get: () => (l === "es" ? "es-ES" : "en-US") });
   }, lang);
+  if (!env.gamePrompt) await silenceGamePrompt(page, env.bridge.dialogPath);
   await page.goto("/");
   await page.getByRole("button", { name: lang === "es" ? "Abrir partida…" : "Open save…" }).click();
   await expect(page.getByText(expected).first()).toBeVisible({ timeout: 20_000 });

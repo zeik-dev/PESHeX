@@ -19,6 +19,8 @@ export class DriverBridge {
   /** Lo que devuelve el selector de carpetas (`directory: true`). */
   dialogDir = "";
   locale = "es-ES";
+  /** Retraso artificial (ms) de cada `game_link_step`: deja ver la barra de progreso en las pruebas. */
+  stepDelayMs = 0;
   /** Raiz de juego vinculada (la fija scan_game_folder, como AppState.game_root en Rust). */
   private gameRoot: string | null = null;
   /** Mapas manuales por raiz (en Rust: directorio de datos de la app). */
@@ -64,6 +66,7 @@ export class DriverBridge {
         await this.send("close");
         return { value: null };
       case "driver_call": {
+        if (this.stepDelayMs && args.cmd === "game_link_step") await new Promise((r) => setTimeout(r, this.stepDelayMs));
         const res = await this.send(String(args.cmd), (args.params as Json) ?? {});
         return this.wrap(res);
       }

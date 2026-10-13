@@ -677,7 +677,6 @@
     "choose": "Choose folder…",
     "change": "Change folder…",
     "unlink": "Unlink",
-    "linking": "Reading the game's data…",
     "dialogTitle": "Select the game folder",
     "pendingBlock": "Save or discard pending changes before changing the game folder.",
     "banner": "Link your game's folder to see real names and sprites.",
@@ -773,7 +772,27 @@
     },
     "gameTitle": "Game title",
     "encryptedTitle": "Packed game",
-    "bannerTitle": "No game folder"
+    "bannerTitle": "No game folder",
+    "step": {
+      "species": "Reading species…",
+      "moves": "Reading moves…",
+      "items": "Reading items…",
+      "abilities": "Reading abilities…",
+      "types": "Reading types…",
+      "extras": "Reading TMs and support data…",
+      "settings": "Reading the game's limits…",
+      "calibration": "Checking your save against the data…",
+      "graphics": "Indexing the graphics…",
+      "catalog": "Preparing the catalog…",
+      "assetmap": "Loading the image map…"
+    },
+    "prompt": {
+      "title": "Game folder",
+      "body": "This save has no game folder linked. Add it to see the real names, the game's sprites and searchable pickers. It is read-only: PESHeX never modifies that folder.",
+      "add": "Add game folder",
+      "cancel": "Cancel",
+      "dontAsk": "Don't ask again for this save"
+    }
   },
   "errors": {
     "title": "Something went wrong",

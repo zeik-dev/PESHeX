@@ -680,7 +680,6 @@
     "choose": "Elegir carpeta…",
     "change": "Cambiar carpeta…",
     "unlink": "Desvincular",
-    "linking": "Leyendo los datos del juego…",
     "dialogTitle": "Selecciona la carpeta del juego",
     "pendingBlock": "Guarda o descarta los cambios pendientes antes de cambiar la carpeta del juego.",
     "banner": "Vincula la carpeta de tu juego para ver los nombres reales y los sprites.",
@@ -776,7 +775,27 @@
     },
     "gameTitle": "Título del juego",
     "encryptedTitle": "Juego empaquetado",
-    "bannerTitle": "Sin carpeta del juego"
+    "bannerTitle": "Sin carpeta del juego",
+    "step": {
+      "species": "Leyendo especies…",
+      "moves": "Leyendo movimientos…",
+      "items": "Leyendo objetos…",
+      "abilities": "Leyendo habilidades…",
+      "types": "Leyendo tipos…",
+      "extras": "Leyendo MT y datos de apoyo…",
+      "settings": "Leyendo los límites del juego…",
+      "calibration": "Comprobando tu partida con los datos…",
+      "graphics": "Indexando los gráficos…",
+      "catalog": "Preparando el catálogo…",
+      "assetmap": "Cargando el mapa de imágenes…"
+    },
+    "prompt": {
+      "title": "Carpeta del juego",
+      "body": "Esta partida no tiene una carpeta de juego asociada. Si la agregas verás los nombres reales, los sprites del juego y los selectores con búsqueda. Solo se lee: PESHeX nunca modifica esa carpeta.",
+      "add": "Agregar directorio de juego",
+      "cancel": "Cancelar",
+      "dontAsk": "No volver a preguntar para esta partida"
+    }
   },
   "errors": {
     "title": "Algo salió mal",

@@ -7,8 +7,9 @@ import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { useSession } from "../../stores/session";
 import { useHexMode } from "../../stores/settings";
-import { Banner, Button, Card, Chip, PokeballSpinner } from "../../ui";
+import { Banner, Button, Card, Chip } from "../../ui";
 import shared from "../shared/shared.module.css";
+import { GameLinkProgress } from "./GameFolderPrompt";
 
 const TONE: Record<CalStatus, "good" | "bad" | "warn"> = { ok: "good", mismatch: "bad", unknown: "warn" };
 
@@ -44,7 +45,7 @@ export function GameFolderCard() {
       <div className={shared.stack}>
         <p className="muted">{t("game.intro")}</p>
 
-        {linking && <PokeballSpinner label={t("game.linking")} />}
+        {linking && <GameLinkProgress />}
 
         {!linking && !status.linked && (
           <div>

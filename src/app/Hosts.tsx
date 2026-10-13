@@ -5,6 +5,7 @@ import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 import { ConfirmDialog, Modal, Button, Banner, Chip } from "../ui";
 import { FlagList } from "../features/legality/FlagList";
+import { GameFolderPrompt } from "../features/settings/GameFolderPrompt";
 
 /** Aviso previo a activar HeX: depende de la carpeta del juego y puede equivocarse en algunos fangames. */
 function HexWarning() {
@@ -74,6 +75,7 @@ export function Hosts() {
   return (
     <>
       <HexWarning />
+      <GameFolderPrompt />
       <Modal
         open={!!rejected}
         title={rejected?.where === "save" ? t("mode.rejectedSaveTitle") : t("mode.rejectedTitle")}

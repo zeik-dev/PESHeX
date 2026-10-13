@@ -26,6 +26,8 @@ interface SettingsState {
   gameFolders: Record<string, string>;
   /** Juegos vinculados antes (el mas reciente primero). */
   recentGames: string[];
+  /** Partidas para las que el usuario pidio «No volver a preguntar» por la carpeta del juego. */
+  noGamePrompt: Record<string, true>;
   setLang: (lang: LangPref) => void;
   setTheme: (theme: ThemePref) => void;
   setBall: (ball: BallTheme) => void;
@@ -40,6 +42,7 @@ interface SettingsState {
   /** Registra la raiz de un juego vinculado (la asocia al save abierto). */
   rememberGame: (root: string, savePath?: string | null) => void;
   forgetGameFor: (savePath: string) => void;
+  setNoGamePrompt: (savePath: string, dontAsk: boolean) => void;
 }
 
 // localStorage puede faltar o lanzar (ventana privada, datos bloqueados):
@@ -90,6 +93,7 @@ export const useSettings = create<SettingsState>()(
       recent: [],
       gameFolders: {},
       recentGames: [],
+      noGamePrompt: {},
       setLang: (lang) => set({ lang }),
       setTheme: (theme) => set({ theme }),
       setBall: (ball) => set({ ball }),
@@ -107,6 +111,11 @@ export const useSettings = create<SettingsState>()(
           recentGames: [root, ...s.recentGames.filter((g) => g !== root)].slice(0, 8),
           gameFolders: savePath ? { ...s.gameFolders, [savePath]: root } : s.gameFolders,
         })),
+      setNoGamePrompt: (savePath, dontAsk) =>
+        set((s) => {
+          const { [savePath]: _gone, ...rest } = s.noGamePrompt;
+          return { noGamePrompt: dontAsk ? { ...rest, [savePath]: true } : rest };
+        }),
       forgetGameFor: (savePath) =>
         set((s) => {
           const { [savePath]: _gone, ...rest } = s.gameFolders;

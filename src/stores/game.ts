@@ -18,9 +18,26 @@ export type { CatalogIndex } from "../game/lookup";
 
 export const UNLINKED: GameStatus = { linked: false, legality: { level: "basic", reasons: ["no_game_folder"] } };
 
+/** Progreso de la carga de la carpeta del juego: pasos reales (Ruby, Rust y catalogo), no una animacion simulada. */
+export interface LinkProgress {
+  done: number;
+  total: number;
+  /** Id del paso en curso (clave i18n `game.step.<id>`). */
+  step: string;
+}
+
+/** Pasos que hace la UI tras `game_link_finish` (los de Ruby los lista el driver). */
+const CLIENT_STEPS = ["graphics", "catalog", "assetmap"] as const;
+
 interface GameState {
   status: GameStatus;
   linking: boolean;
+  progress: LinkProgress | null;
+  /** Ya se intento vincular sola la carpeta del juego tras abrir el save (recordada, reciente o sugerida). */
+  autoLinkDone: boolean;
+  /** Save para el que se ofrece vincular la carpeta del juego (modal de inicio), o null. */
+  prompt: string | null;
+  dismissPrompt: (dontAskAgain: boolean) => void;
   error: ApiError | null;
   index: AssetIndex | null;
   layout: Layout | null;
@@ -43,6 +60,9 @@ interface GameState {
 const blank = {
   status: UNLINKED,
   linking: false,
+  progress: null,
+  autoLinkDone: false,
+  prompt: null,
   error: null,
   index: null,
   layout: null,
@@ -71,30 +91,44 @@ export const useGame = create<GameState>((set, get) => ({
   ...blank,
 
   async link(path, source = "manual", savePath = null) {
-    set({ linking: true, error: null });
+    set({ linking: true, error: null, progress: { done: 0, total: 1, step: "species" } });
     try {
-      // 1. Datos (Ruby): nombres, limites, calibracion. Normaliza la raiz.
-      const status = await gameApi.setFolder(path, source);
+      // 1. Datos (Ruby) por pasos: especies, movimientos, objetos, habilidades, tipos, apoyo, limites y calibracion.
+      const begin = await gameApi.linkBegin(path, source);
+      const total = begin.steps.length + CLIENT_STEPS.length;
+      let done = 0;
+      const mark = (step: string) => set({ progress: { done, total, step } });
+      for (const id of begin.steps) {
+        mark(id);
+        await gameApi.linkStep(id);
+        done += 1;
+      }
+      const status = await gameApi.linkFinish();
       const root = status.root ?? path;
-      // 2. Graphics (Rust) y catalogo (Ruby) en paralelo.
-      const [scan, catalog, rawMap] = await Promise.all([
-        status.folder?.hasGraphics ? gameApi.scan(root) : Promise.resolve(null),
-        status.data && status.data.state !== "error" ? gameApi.catalog() : Promise.resolve(null),
-        gameApi.assetMapLoad(root).catch(() => null),
-      ]);
+      // 2. Graphics (Rust), catalogo (Ruby) y mapa manual de imagenes, uno tras otro para informar del avance.
+      mark("graphics");
+      const scan = status.folder?.hasGraphics ? await gameApi.scan(root) : null;
+      done += 1;
+      mark("catalog");
+      const catalog = status.data && status.data.state !== "error" ? await gameApi.catalog() : null;
+      done += 1;
+      mark("assetmap");
+      const rawMap = await gameApi.assetMapLoad(root).catch(() => null);
+      done += 1;
+      set({ progress: { done, total, step: "assetmap" } });
       clearAssetCache();
       const index = scan ? new AssetIndex(scan.files) : null;
       const layout = index ? detectLayout(index) : null;
       const map = normalizeMap(rawMap);
       set({
-        status, linking: false, index, layout, map, scanTruncated: !!scan?.truncated,
+        status, linking: false, progress: null, prompt: null, index, layout, map, scanTruncated: !!scan?.truncated,
         catalog, catalogIndex: catalog ? indexCatalog(catalog) : null, ctx: makeCtx(index, layout, map),
       });
       useSettings.getState().rememberGame(root, savePath);
       return true;
     } catch (e) {
       const err = toApiError(e);
-      set({ linking: false, error: err });
+      set({ linking: false, progress: null, error: err });
       useToasts.getState().push({ kind: "error", text: errorText(i18n.t.bind(i18n), err) });
       return false;
     }
@@ -116,17 +150,29 @@ export const useGame = create<GameState>((set, get) => ({
 
   async onSaveOpened(savePath, suggestion) {
     const settings = useSettings.getState();
+    const done = () => {
+      // Sin carpeta asociada: se ofrece vincularla (salvo que el usuario haya pedido no volver a preguntar).
+      const ask = !get().status.linked && !useSettings.getState().noGamePrompt[savePath];
+      set({ autoLinkDone: true, prompt: ask ? savePath : null });
+    };
     const remembered = settings.gameFolders[savePath];
     if (remembered) {
-      if (await get().link(remembered, "remembered", savePath)) return;
+      if (await get().link(remembered, "remembered", savePath)) return done();
       settings.forgetGameFor(savePath); // la carpeta ya no existe
     }
     // Juegos v19+: el save vive en %APPDATA%\<Juego>\ -> casar con un juego visto antes.
     const parent = parentName(savePath);
     const known = settings.recentGames.find((g) => parent && baseName(g) === parent);
-    if (known && (await get().link(known, "remembered", savePath))) return;
-    if (suggestion && (await get().link(suggestion, "auto", savePath))) return;
+    if (known && (await get().link(known, "remembered", savePath))) return done();
+    if (suggestion && (await get().link(suggestion, "auto", savePath))) return done();
     set({ ...blank });
+    done();
+  },
+
+  dismissPrompt(dontAskAgain) {
+    const savePath = get().prompt;
+    if (savePath && dontAskAgain) useSettings.getState().setNoGamePrompt(savePath, true);
+    set({ prompt: null });
   },
 
   async setMapping(kind, key, path) {

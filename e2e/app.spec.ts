@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DriverBridge, TAURI_MOCK } from "./support/bridge";
+import { silenceGamePrompt } from "./support/harness";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHOTS = path.join(ROOT, "e2e", "screenshots");
@@ -41,6 +42,8 @@ async function openSave(page: Page, lang: "es" | "en" = "es", expected = "Furiki
     Object.defineProperty(navigator, "languages", { get: () => [l === "es" ? "es-ES" : "en-US"] });
     Object.defineProperty(navigator, "language", { get: () => (l === "es" ? "es-ES" : "en-US") });
   }, lang);
+  // Sin carpeta de juego, al abrir un save sale el aviso de agregarla; estas pruebas lo omiten («No volver a preguntar»).
+  await silenceGamePrompt(page, bridge.dialogPath);
   await page.goto("/");
   await page.getByRole("button", { name: lang === "es" ? "Abrir partida…" : "Open save…" }).click();
   await expect(page.getByText(expected).first()).toBeVisible({ timeout: 20_000 });
@@ -223,6 +226,8 @@ test("la pestaña Pokédex sale siempre: con datos en el entrenador (base antigu
   bridge.dialogPath = noDex;
   await page.getByRole("button", { name: "Abrir partida…" }).click();
   await expect(page.getByText("Sparky").first()).toBeVisible();
+  // Otra partida (ruta distinta): su aviso de "agregar la carpeta del juego" sí sale; se cancela.
+  await page.getByRole("dialog", { name: "Carpeta del juego" }).getByRole("button", { name: "Cancelar" }).click();
   await page.getByRole("button", { name: "Pokédex", exact: true }).click();
   await expect(page.getByText(/No se encontró un Pokédex que se pueda editar/)).toBeVisible();
 });
