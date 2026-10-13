@@ -196,7 +196,7 @@ export interface SpeciesDetail {
 
 /** Dónde aparece una especie (encounters.txt) y su número en las Pokédex regionales. */
 export interface SpeciesExtras {
-  id: string;
+  species: string;
   encounters: { map: number; name: string | null; method: string; min: number | null; max: number | null; chance: number | null }[];
   regional: Record<string, number>;
   warnings?: string[];

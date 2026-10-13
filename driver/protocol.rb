@@ -22,6 +22,9 @@ class DriverError < StandardError
 end
 
 module Protocol
+  # Claves de la respuesta que pertenecen al protocolo: un comando no puede devolverlas (ver `ok_response`).
+  RESERVED_KEYS = %w[id ok].freeze
+
   module_function
 
   def write_json(obj)
@@ -29,10 +32,13 @@ module Protocol
     $stdout.write("\n")
   end
 
+  # `id` y `ok` mandan sobre lo que devuelva el comando: el `id` de la respuesta debe ser siempre el de la peticion (el
+  # cliente lo usa para detectar un stream desincronizado y, si no coincide, da de baja la sesion entera).
   def ok_response(id, data = {}, revision: nil)
     body = { id: id, ok: true }
     body[:revision] = revision unless revision.nil?
-    write_json(body.merge(data))
+    payload = data.reject { |k, _| RESERVED_KEYS.include?(k.to_s) }
+    write_json(body.merge(payload))
   end
 
   def err_response(id, type, message, params = nil)

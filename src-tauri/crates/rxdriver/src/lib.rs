@@ -187,7 +187,7 @@ impl DriverSession {
         let resp_id = response.get("id").and_then(Value::as_u64);
         if resp_id != Some(id) {
             return Err(DriverCallError::Fatal(format!(
-                "el proceso Ruby se desincronizo (esperaba id {id}, recibio {resp_id:?})"
+                "el proceso Ruby se desincronizo en '{cmd}' (esperaba id {id}, recibio {resp_id:?})"
             )));
         }
 

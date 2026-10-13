@@ -31,7 +31,13 @@ class Harness
   def call(cmd, params = {})
     req = JSON.parse(JSON.generate(params))
     data = Commands.dispatch(@ctx, cmd, req)
-    JSON.parse(JSON.generate(data))
+    out = JSON.parse(JSON.generate(data))
+    # `id` y `ok` son del protocolo: si un comando los devuelve pisan los de la respuesta (el crate Rust ve un `id` que no
+    # es el de su peticion, da la sesion por desincronizada y la da de baja: el save «se desconecta» de la app).
+    clobbered = Protocol::RESERVED_KEYS & out.keys
+    raise "el comando #{cmd} devuelve claves reservadas del protocolo: #{clobbered.inspect}" unless clobbered.empty?
+
+    out
   end
 
   def session
@@ -51,10 +57,14 @@ class DriverClient
     @id = 0
   end
 
+  # Igual que el crate Rust: la respuesta debe traer el `id` de la peticion (si no, la sesion se da por desincronizada).
   def call(cmd, **params)
     @id += 1
     @stdin.puts(JSON.generate(params.merge(id: @id, cmd: cmd)))
-    JSON.parse(@stdout.gets)
+    resp = JSON.parse(@stdout.gets)
+    raise "desincronizado en #{cmd}: esperaba id #{@id}, llego #{resp['id'].inspect}" unless resp['id'] == @id
+
+    resp
   end
 
   def close

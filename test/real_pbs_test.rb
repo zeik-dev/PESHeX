@@ -139,7 +139,8 @@ class RealCatalogTest < Minitest::Test
     h.open(save_path('Partida_2.rxdata'))
     h.session.game = real_store(:anil)
     out = h.call('get_species_extras', { 'species' => 'PIDGEY' })
-    assert_equal 'PIDGEY', out['id']
+    assert_equal 'PIDGEY', out['species']
+    refute out.key?('id'), '`id` es del protocolo: un comando no lo devuelve'
     assert_operator out['encounters'].size, :>, 0
     assert_equal 'Pueblo Paleta', out['encounters'].first['name']
     assert_kind_of Hash, out['regional']

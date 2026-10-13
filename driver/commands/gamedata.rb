@@ -143,7 +143,9 @@ Commands.register('get_species_extras') do |ctx, params|
   warnings = []
   encounters = Sem::GameData::Catalog.guard(warnings, 'encounters') { game.encounters_for(entry.species) } || []
   regional = Sem::GameData::Catalog.guard(warnings, 'regional') { game.regional_numbers(entry.species) } || {}
-  out = { id: entry.species, encounters: encounters, regional: regional }
+  # OJO: nada de `id:` aqui. Las claves `id` y `ok` son del protocolo (la respuesta se fusiona con los datos) y el crate Rust
+  # da de baja la sesion si el `id` que vuelve no es el de su peticion: era lo que desconectaba el save al abrir la 1.a ficha.
+  out = { species: entry.species, encounters: encounters, regional: regional }
   out[:warnings] = warnings unless warnings.empty?
   out
 end

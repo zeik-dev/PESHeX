@@ -25,6 +25,8 @@ export class DriverBridge {
   callDelayMs = 0;
   /** Comandos que fallan a propósito (prueba de errores): `cmd` → error lógico del driver, `times` veces (o siempre). */
   private failing = new Map<string, { kind: string; message: string; times: number }>();
+  /** Como `AppState.driver` en Rust: tras un error fatal (p. ej. una respuesta con otro `id`) la sesión se da de baja. */
+  private dead = false;
   /** Raiz de juego vinculada (la fija scan_game_folder, como AppState.game_root en Rust). */
   private gameRoot: string | null = null;
   /** Mapas manuales por raiz (en Rust: directorio de datos de la app). */
@@ -58,7 +60,13 @@ export class DriverBridge {
   private send(cmd: string, params: Json = {}): Promise<Json> {
     const id = this.nextId++;
     return new Promise((resolve) => {
-      const onLine = (line: string) => resolve(JSON.parse(line) as Json);
+      // Igual que el crate `rxdriver`: la respuesta debe traer el `id` de la petición; si no, se marca como fatal.
+      const onLine = (line: string) => {
+        const res = JSON.parse(line) as Json;
+        if (res.id !== id) {
+          resolve({ ok: false, fatal: true, error: { type: "Fatal", message: `el proceso Ruby se desincronizó (esperaba id ${id}, recibió ${JSON.stringify(res.id)})` } });
+        } else resolve(res);
+      };
       const queued = this.buffer.shift();
       if (queued !== undefined) onLine(queued);
       else this.pending.push(onLine);
@@ -72,6 +80,7 @@ export class DriverBridge {
     switch (cmd) {
       case "open_save": {
         await this.send("close");
+        this.dead = false;
         const res = await this.send("open", { path: args.path, autodetect: false });
         return this.wrap(res);
       }
@@ -86,7 +95,9 @@ export class DriverBridge {
           fail.times -= 1;
           return { error: { kind: fail.kind, message: fail.message, params: null, fatal: false } };
         }
+        if (this.dead) return { error: { kind: "NoSessionOpen", message: "No hay ningun archivo abierto. Abre un archivo primero.", params: null, fatal: false } };
         const res = await this.send(String(args.cmd), (args.params as Json) ?? {});
+        if (res.fatal) this.dead = true;
         return this.wrap(res);
       }
       case "plugin:dialog|open": {
@@ -133,7 +144,7 @@ export class DriverBridge {
   private wrap(res: Json): { value?: unknown; error?: unknown } {
     if (res.ok) return { value: res };
     const e = (res.error ?? {}) as Json;
-    return { error: { kind: e.type ?? "DriverError", message: e.message ?? "", params: e.params ?? null, fatal: false } };
+    return { error: { kind: e.type ?? "DriverError", message: e.message ?? "", params: e.params ?? null, fatal: res.fatal === true } };
   }
 
   async dispose() {

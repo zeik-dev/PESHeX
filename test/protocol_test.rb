@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'stringio'
 
 # Protocolo real (proceso hijo) + registro de comandos.
 class ProtocolTest < Minitest::Test
@@ -47,6 +48,49 @@ class ProtocolTest < Minitest::Test
       assert_kind_of Array, sp.dig('species', 'learnable')
       extras = client.call('get_species_extras', species: 'TORRACAT')
       assert extras['ok'], extras.inspect
+    ensure
+      client.close
+      FileUtils.rm_rf(dir)
+    end
+  end
+
+  # Regresion (1.1.0): get_species_extras devolvia `id` y pisaba el de la respuesta; el crate Rust lo toma por
+  # desincronizacion y da de baja la sesion («No save is open» y el resto de vistas sin datos tras abrir una ficha).
+  def test_la_respuesta_conserva_el_id_de_la_peticion_aunque_el_comando_devuelva_id_u_ok
+    out = StringIO.new
+    real = $stdout
+    $stdout = out
+    begin
+      Protocol.ok_response(7, { id: 'BULBASAUR', ok: false, 'id' => 99, extra: 1 }, revision: 3)
+    ensure
+      $stdout = real
+    end
+    resp = JSON.parse(out.string)
+    assert_equal 7, resp['id']
+    assert_equal true, resp['ok']
+    assert_equal 3, resp['revision']
+    assert_equal 1, resp['extra']
+  end
+
+  def test_los_comandos_de_la_ficha_responden_con_el_id_de_su_peticion_por_el_protocolo_real
+    require_relative 'fixtures/make_game_folder'
+    dir = Dir.mktmpdir('peshex_ids')
+    GameFixture.build(dir, from: save_path('Partida_2.rxdata'))
+    client = DriverClient.new # verifica el `id` de CADA respuesta
+    begin
+      assert client.call('open', path: save_path('Partida_2.rxdata'), autodetect: false)['ok']
+      begin_r = client.call('game_link_begin', path: dir)
+      begin_r['steps'].each { |step| client.call('game_link_step', step: step) }
+      client.call('game_link_finish')
+      sp = client.call('get_catalog')['catalog']['species']
+      first = sp.first
+      3.times do
+        assert client.call('get_species', species: first['species'], form: 0)['ok']
+        extras = client.call('get_species_extras', species: first['species'], form: 0)
+        assert extras['ok']
+        assert_equal first['species'], extras['species']
+      end
+      assert client.call('get_pokedex')['ok']
     ensure
       client.close
       FileUtils.rm_rf(dir)
