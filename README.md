@@ -41,11 +41,11 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
   <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres de tu juego" width="48%" />
+  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" /> 
   <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
+  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres de tu juego" width="48%" />
   <img src="docs/screenshots/palette.png" alt="Búsqueda global y comandos (Ctrl+K)" width="48%" />
 </p>
 <p align="center">
