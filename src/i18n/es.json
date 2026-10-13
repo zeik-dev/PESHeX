@@ -311,7 +311,9 @@
       "egg_only_party": "El equipo solo tiene huevos.",
       "dex_species_unknown": "La especie «{{subject}}» del Pokédex no existe en el juego.",
       "dex_owned_not_seen": "La especie «{{subject}}» figura como capturada pero no como vista."
-    }
+    },
+    "collapse": "Ocultar la legalidad",
+    "expand": "Mostrar la legalidad"
   },
   "mode": {
     "label": "Modo de edición",
@@ -611,7 +613,16 @@
     "noFile": "Abre una partida para ver la detección.",
     "gameFolder": "Carpeta del juego",
     "about": "Acerca de",
-    "version": "v{{version}}"
+    "version": "v{{version}}",
+    "zoom": {
+      "title": "Zoom de la aplicación",
+      "help": "Agranda o reduce toda la interfaz (50 %–200 %). Se aplica al instante y se recuerda; el valor por defecto es 100 %.",
+      "decrease": "Reducir el zoom",
+      "increase": "Aumentar el zoom",
+      "slider": "Zoom de la aplicación",
+      "value": "{{percent}} %",
+      "reset": "Restablecer ({{percent}} %)"
+    }
   },
   "game": {
     "title": "Carpeta del juego",

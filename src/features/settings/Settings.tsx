@@ -10,6 +10,7 @@ import { ProfileCard } from "../shared/ProfileCard";
 import { ModeSwitch } from "../../app/ModeSwitch";
 import { AssetsCard } from "./AssetsCard";
 import { GameFolderCard } from "./GameFolderCard";
+import { ZoomCard } from "./ZoomCard";
 import shared from "../shared/shared.module.css";
 
 const PROFILE_IDS = ["essentials_savedata", "essentials_legacy", "generic"] as const;
@@ -74,6 +75,8 @@ export function Settings() {
           {t("settings.backup")}
         </label>
       </Card>
+
+      <ZoomCard />
 
       <Card title={t("mode.title")}>
         <div className={shared.stack}>

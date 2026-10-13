@@ -100,9 +100,13 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   await shot(page, "102-legality-tab-es-light");
   await page.keyboard.press("Escape");
 
-  // Resumen: tarjeta de legalidad con el problema y enlace a verlo.
+  // En HaX el Resumen no muestra la tarjeta de legalidad: solo con HeX activo (lo que la partida ya traia no se bloquea)
   await page.getByRole("button", { name: "Resumen", exact: true }).click();
-  const card = page.getByText("Legalidad", { exact: true }).first();
+  await expect(page.getByRole("heading", { name: /^Legalidad/ })).toHaveCount(0);
+  await setMode(page, "hex");
+
+  // Resumen: tarjeta de legalidad con el problema y enlace a verlo.
+  const card = page.getByRole("heading", { name: /^Legalidad/ });
   await expect(card).toBeVisible();
   await expect(page.getByText("1 ilegal").first()).toBeVisible();
   await shot(page, "103-legality-card-es-light");
@@ -116,8 +120,7 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   await expect(page.getByTestId("pc-info").getByText("1 ilegal")).toBeVisible();
   await shot(page, "104-pc-illegal-filter-es-light");
 
-  // HeX rechaza otra ilegalidad en ese mismo Pokemon pero deja editar lo legal.
-  await setMode(page, "hex");
+  // HeX (ya activo) rechaza otra ilegalidad en ese mismo Pokemon pero deja editar lo legal.
   await page.getByRole("button", { name: "Equipo", exact: true }).click();
   await page.getByRole("button", { name: /^Trump/ }).click();
   await page.getByRole("button", { name: "Editar", exact: true }).click();
@@ -132,9 +135,52 @@ test("legalidad con la carpeta del juego: resumen, editor, insignias y filtro de
   await expect(page.getByText(/IV de PS = 99/)).toBeVisible();
 });
 
+test("la tarjeta «Legalidad» del Resumen solo existe en HeX y se despliega y pliega", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  await page.getByRole("button", { name: "Resumen", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Resumen", exact: true })).toBeVisible();
+
+  // HaX (por defecto): nada de legalidad en el Resumen
+  await expect(page.getByRole("heading", { name: /^Legalidad/ })).toHaveCount(0);
+
+  // HeX: aparece, desplegada
+  await setMode(page, "hex");
+  const toggle = page.getByRole("button", { name: /^Legalidad/, expanded: true });
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute("title", "Ocultar la legalidad");
+  const body = page.locator("#" + (await toggle.getAttribute("aria-controls")));
+  await expect(body.getByText("Legalidad completa")).toBeVisible();
+  await expect(body.getByText(/reglas comprobadas/)).toBeVisible();
+  await shot(page, "106-legality-collapsible-open-es-light");
+
+  // Plegar: el contenido se oculta y la cabecera conserva el resumen
+  await toggle.click();
+  const closed = page.getByRole("button", { name: /^Legalidad/, expanded: false });
+  await expect(closed).toBeVisible();
+  await expect(closed).toHaveAttribute("title", "Mostrar la legalidad");
+  await expect(body.getByText("Legalidad completa")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /^Legalidad/ }).getByText("Todo en regla")).toBeVisible();
+  await shot(page, "107-legality-collapsible-closed-es-light");
+
+  // Se recuerda al cambiar de vista y volver
+  await page.getByRole("button", { name: "Entrenador", exact: true }).click();
+  await page.getByRole("button", { name: "Resumen", exact: true }).click();
+  await expect(page.getByRole("button", { name: /^Legalidad/, expanded: false })).toBeVisible();
+  await page.getByRole("button", { name: /^Legalidad/, expanded: false }).click();
+  await expect(page.getByRole("button", { name: /^Legalidad/, expanded: true })).toBeVisible();
+
+  // Volver a HaX la quita otra vez
+  await setMode(page, "hax");
+  await expect(page.getByRole("heading", { name: /^Legalidad/ })).toHaveCount(0);
+});
+
 test("sin carpeta del juego la legalidad es básica y lo dice", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
+  await setMode(page, "hex");
   await page.getByRole("button", { name: "Resumen", exact: true }).click();
   await expect(page.getByText("Legalidad básica")).toBeVisible();
   await expect(page.getByText("No hay carpeta de juego vinculada.")).toBeVisible();

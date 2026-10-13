@@ -1,0 +1,32 @@
+.zoom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.zoomRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.zoomSlider {
+  flex: 1 1 220px;
+  min-width: 160px;
+  max-width: 420px;
+  accent-color: var(--accent);
+}
+.zoomValue {
+  min-width: 56px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

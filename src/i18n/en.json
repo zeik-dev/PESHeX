@@ -309,7 +309,9 @@
       "egg_only_party": "The party only has eggs.",
       "dex_species_unknown": "The Pokédex species “{{subject}}” does not exist in the game.",
       "dex_owned_not_seen": "The species “{{subject}}” is marked as caught but not as seen."
-    }
+    },
+    "collapse": "Hide legality",
+    "expand": "Show legality"
   },
   "mode": {
     "label": "Edit mode",
@@ -608,7 +610,16 @@
     "noFile": "Open a save to see the detection.",
     "gameFolder": "Game folder",
     "about": "About",
-    "version": "v{{version}}"
+    "version": "v{{version}}",
+    "zoom": {
+      "title": "App zoom",
+      "help": "Enlarges or shrinks the whole interface (50%–200%). It applies instantly and is remembered; the default is 100%.",
+      "decrease": "Zoom out",
+      "increase": "Zoom in",
+      "slider": "App zoom",
+      "value": "{{percent}}%",
+      "reset": "Reset ({{percent}}%)"
+    }
   },
   "game": {
     "title": "Game folder",

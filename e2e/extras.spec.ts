@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { suggestEvPreset } from "../src/features/pokemon/quick";
 import { buildFakeGame } from "./support/fakegame";
-import { openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
+import { openSave, ROOT, serveGameAssets, setMode, setup, shot, teardown, type Env } from "./support/harness";
 
 let env: Env | undefined;
 
@@ -319,6 +319,7 @@ for (const lang of ["es", "en"] as const) {
     await page.getByRole("button", { name: lang === "es" ? "Elegir carpeta…" : "Choose folder…" }).click();
     await expect(page.getByText(lang === "es" ? "Datos completos" : "Complete data")).toBeVisible({ timeout: 30_000 });
 
+    await setMode(page, "hex", lang); // con HeX el Resumen muestra la tarjeta de legalidad (plegable)
     const count = await navBar.getByRole("button").count();
     for (let i = 0; i < count; i++) {
       await navBar.getByRole("button").nth(i).click();
@@ -382,4 +383,48 @@ test("el preset de EV sugerido sale de los stats más altos de cada Pokémon y s
   await expect(drawer.getByRole("textbox", { name: "EV Def. Esp." })).toHaveValue("252");
   await expect(drawer.getByRole("textbox", { name: "EV Defensa" })).toHaveValue("4");
   await expect(drawer.getByTestId("ev-presets")).toBeVisible(); // también en la pestaña IV y EV
+});
+
+test("zoom de la app en Ajustes: 100 % por defecto, sube, baja, se restablece y se recuerda", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  await nav(page, "Ajustes");
+  const card = page.locator("section", { has: page.getByRole("heading", { name: "Zoom de la aplicación" }) });
+  const value = card.getByTestId("zoom-value");
+  await expect(value).toHaveText("100 %");
+  await expect(card.getByRole("button", { name: /^Restablecer/ })).toBeDisabled();
+
+  await card.getByRole("button", { name: "Aumentar el zoom" }).click();
+  await expect(value).toHaveText("110 %");
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(1.1);
+  await card.getByRole("button", { name: "Aumentar el zoom" }).click();
+  await expect(value).toHaveText("120 %");
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(1.2);
+
+  const slider = card.getByRole("slider", { name: "Zoom de la aplicación" });
+  await slider.fill("150");
+  await expect(value).toHaveText("150 %");
+  await expect(slider).toHaveAttribute("aria-valuetext", "150 %");
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(1.5);
+  await shot(page, "118-zoom-es-light");
+
+  await card.getByRole("button", { name: "Reducir el zoom" }).click();
+  await expect(value).toHaveText("140 %");
+  await slider.fill("200");
+  await expect(card.getByRole("button", { name: "Aumentar el zoom" })).toBeDisabled();
+  await slider.fill("50");
+  await expect(card.getByRole("button", { name: "Reducir el zoom" })).toBeDisabled();
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(0.5);
+
+  await card.getByRole("button", { name: "Restablecer (100 %)" }).click();
+  await expect(value).toHaveText("100 %");
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(1);
+
+  // se recuerda al cerrar y volver a abrir el archivo
+  await card.getByRole("button", { name: "Aumentar el zoom" }).click();
+  await page.getByRole("button", { name: "Cerrar archivo" }).click();
+  await page.getByRole("button", { name: "Abrir partida…" }).click();
+  await expect(page.getByText("Furikita").first()).toBeVisible();
+  await nav(page, "Ajustes");
+  await expect(page.getByTestId("zoom-value")).toHaveText("110 %");
 });

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { initI18n, resolveLang, setLanguage, systemLocales, type Lang, type LangPref } from "../i18n";
+import { applyZoom, clampZoom, ZOOM_DEFAULT } from "../lib/zoom";
 
 export type ThemePref = "auto" | "light" | "dark";
 export type BallTheme = "classic" | "great" | "ultra" | "master";
@@ -11,6 +12,10 @@ interface SettingsState {
   theme: ThemePref;
   ball: BallTheme;
   backup: boolean;
+  /** Zoom de la app en porcentaje (50-200, por defecto 100). */
+  zoom: number;
+  /** Tarjeta "Legalidad" del Resumen (solo existe en HeX): desplegada o plegada. */
+  legalityOpen: boolean;
   /** HaX = cualquier cambio (por defecto); HeX = solo cambios legales segun el juego, se activa a mano. */
   mode: EditMode;
   recent: string[];
@@ -22,6 +27,8 @@ interface SettingsState {
   setTheme: (theme: ThemePref) => void;
   setBall: (ball: BallTheme) => void;
   setBackup: (backup: boolean) => void;
+  setZoom: (zoom: number) => void;
+  setLegalityOpen: (open: boolean) => void;
   setMode: (mode: EditMode) => void;
   pushRecent: (path: string) => void;
   removeRecent: (path: string) => void;
@@ -70,6 +77,8 @@ export const useSettings = create<SettingsState>()(
       theme: "auto",
       ball: "classic",
       backup: true,
+      zoom: ZOOM_DEFAULT,
+      legalityOpen: true,
       mode: "hax",
       recent: [],
       gameFolders: {},
@@ -78,6 +87,8 @@ export const useSettings = create<SettingsState>()(
       setTheme: (theme) => set({ theme }),
       setBall: (ball) => set({ ball }),
       setBackup: (backup) => set({ backup }),
+      setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
+      setLegalityOpen: (legalityOpen) => set({ legalityOpen }),
       setMode: (mode) => set({ mode }),
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),
@@ -122,7 +133,9 @@ export function bootstrapSettings() {
   const s = useSettings.getState();
   initI18n(effectiveLang(s.lang));
   applyAppearance(s.theme, s.ball);
+  void applyZoom(s.zoom); // WebView2 no recuerda el zoom entre ejecuciones
   useSettings.subscribe((state, prev) => {
+    if (state.zoom !== prev.zoom) void applyZoom(state.zoom);
     if (state.lang !== prev.lang) setLanguage(effectiveLang(state.lang));
     if (state.theme !== prev.theme || state.ball !== prev.ball) applyAppearance(state.theme, state.ball);
   });

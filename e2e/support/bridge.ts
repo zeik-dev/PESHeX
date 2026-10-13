@@ -23,6 +23,8 @@ export class DriverBridge {
   private gameRoot: string | null = null;
   /** Mapas manuales por raiz (en Rust: directorio de datos de la app). */
   private assetMaps = new Map<string, unknown>();
+  /** Factores que la app pidio con `getCurrentWebview().setZoom(...)` (el zoom nativo del WebView). */
+  zoomCalls: number[] = [];
 
   constructor(repoRoot: string) {
     this.proc = spawn("ruby", ["-E", "UTF-8", path.join(repoRoot, "driver", "rxdata_driver.rb")], {
@@ -98,6 +100,9 @@ export class DriverBridge {
         return { value: null };
       case "plugin:event|listen":
         return { value: 1 };
+      case "plugin:webview|set_webview_zoom":
+        this.zoomCalls.push(Number(args.value));
+        return { value: null };
       default:
         return { value: null };
     }

@@ -4,6 +4,7 @@ import { useT } from "../../lib/useT";
 import { displayName, genderSymbol } from "../../lib/pokemon";
 import { formatDateTime, formatDuration, formatMoney, formatNumber } from "../../lib/format";
 import { useSession } from "../../stores/session";
+import { useSettings } from "../../stores/settings";
 import { Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Sprite, Chip } from "../../ui";
 import { ProfileCard } from "../shared/ProfileCard";
 import shared from "../shared/shared.module.css";
@@ -14,6 +15,7 @@ import styles from "./overview.module.css";
 export function Overview() {
   const { t, locale } = useT();
   const profile = useSession((s) => s.profile);
+  const mode = useSettings((s) => s.mode);
   const roundtrip = useSession((s) => s.roundtrip);
   const setView = useSession((s) => s.setView);
   const openEditor = useSession((s) => s.openEditor);
@@ -125,7 +127,8 @@ export function Overview() {
         )}
       </Card>
 
-      <LegalityCard />
+      {/* La legalidad solo se comprueba y se muestra con HeX activo */}
+      {mode === "hex" && <LegalityCard />}
 
       <div className={shared.grid2}>
         {profile && <ProfileCard profile={profile} compact />}

@@ -43,7 +43,21 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await card.scrollIntoViewIfNeeded();
   await card.screenshot({ path: path.join(OUT, "settings-game.png") });
 
+  // Zoom de la app
+  const zoomCard = page.locator("section", { has: page.getByRole("heading", { name: "Zoom de la aplicación" }) });
+  await zoomCard.scrollIntoViewIfNeeded();
+  await zoomCard.screenshot({ path: path.join(OUT, "settings-zoom.png") });
+
+  // HeX: aviso previo (con la carpeta ya vinculada) y, al aceptar, la tarjeta de legalidad del Resumen
+  await page.getByRole("radio", { name: "HeX" }).first().click();
+  const warning = page.getByRole("dialog", { name: "Activar el modo HeX" });
+  await expect(warning.getByText("Carpeta del juego vinculada")).toBeVisible();
+  await page.waitForTimeout(600); // fin de la animacion del dialogo
+  await shot("hex-warning");
+  await warning.getByRole("button", { name: "Activar HeX" }).click();
+
   await nav("Resumen");
+  await expect(page.getByRole("button", { name: /^Legalidad/, expanded: true })).toBeVisible();
   await expect(page.getByText("Legalidad completa").first()).toBeVisible();
   await page.waitForTimeout(400);
   await shot("overview");
@@ -63,13 +77,6 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await expect(page.getByText("Medalla 1")).toBeVisible();
   await page.waitForTimeout(300);
   await shot("world");
-
-  // HeX: aviso previo, con la carpeta ya vinculada
-  await page.getByRole("radio", { name: "HeX" }).first().click();
-  await expect(page.getByRole("dialog", { name: "Activar el modo HeX" }).getByText("Carpeta del juego vinculada")).toBeVisible();
-  await page.waitForTimeout(600); // fin de la animacion del dialogo
-  await shot("hex-warning");
-  await page.getByRole("dialog", { name: "Activar el modo HeX" }).getByRole("button", { name: "Cancelar" }).click();
 
   // Ctrl+K
   await page.keyboard.press("Control+k");

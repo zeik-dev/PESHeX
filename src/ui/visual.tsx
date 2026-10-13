@@ -1,5 +1,6 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { ReactNode } from "react";
 import styles from "./ui.module.css";
 import { cx } from "./cx";
 import { hueFromString } from "../lib/format";
@@ -79,17 +80,65 @@ export function PageTitle({ icon, title, subtitle }: { icon?: ReactNode; title: 
   );
 }
 
-export function Card({ title, icon, actions, children, className }: { title?: string; icon?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string }) {
+export interface CardCollapse {
+  open: boolean;
+  onToggle: () => void;
+  /** Texto accesible/visible del boton segun el estado ("Mostrar" / "Ocultar"). */
+  toggleLabel: string;
+  /** Se muestra en la cabecera cuando esta plegada (p. ej. un resumen en chips). */
+  summary?: ReactNode;
+}
+
+/** `collapse` hace la tarjeta desplegable (patron acordeon: el titulo es un boton con `aria-expanded`). */
+export function Card({
+  title,
+  icon,
+  actions,
+  children,
+  className,
+  collapse,
+}: {
+  title?: string;
+  icon?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  collapse?: CardCollapse;
+}) {
+  const contentId = useId();
+  const open = collapse ? collapse.open : true;
   return (
     <section className={cx(styles.card, className)}>
       {(title || actions) && (
-        <h2 className={styles.cardTitle}>
+        <h2 className={cx(styles.cardTitle, collapse && !open && styles.cardTitleClosed)}>
           {icon}
-          <span style={{ flex: 1 }}>{title}</span>
+          {collapse ? (
+            <button
+              type="button"
+              className={styles.cardToggle}
+              aria-expanded={open}
+              aria-controls={contentId}
+              title={collapse.toggleLabel}
+              onClick={collapse.onToggle}
+            >
+              {open ? <ChevronDown size={18} aria-hidden="true" /> : <ChevronRight size={18} aria-hidden="true" />}
+              <span>{title}</span>
+            </button>
+          ) : (
+            <span style={{ flex: 1 }}>{title}</span>
+          )}
+          {collapse && !open && collapse.summary}
+          {collapse && <span style={{ flex: 1 }} />}
           {actions}
         </h2>
       )}
-      {children}
+      {collapse ? (
+        <div id={contentId} hidden={!open}>
+          {open && children}
+        </div>
+      ) : (
+        children
+      )}
     </section>
   );
 }
