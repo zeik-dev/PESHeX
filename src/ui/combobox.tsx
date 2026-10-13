@@ -28,6 +28,7 @@ export function ComboBox({
   allowCustom,
   nullable,
   mono,
+  limit = MAX_RESULTS,
 }: {
   id?: string;
   value: string | null | undefined;
@@ -40,6 +41,8 @@ export function ComboBox({
   /** Permite vaciar el campo (confirma `null`). */
   nullable?: boolean;
   mono?: boolean;
+  /** Máximo de resultados que lista el desplegable (60 por defecto; `Infinity` = todos, para movimientos y habilidades). */
+  limit?: number;
 }) {
   const autoId = useId();
   const listId = `${autoId}-list`;
@@ -56,11 +59,20 @@ export function ComboBox({
   }, [shown, open]);
 
   const results = useMemo(
-    () => (open ? rankSearch(options, text === shown ? "" : text, (o) => [o.label, o.id, o.sub], MAX_RESULTS) : []),
-    [open, options, text, shown],
+    () => (open ? rankSearch(options, text === shown ? "" : text, (o) => [o.label, o.id, o.sub], limit) : []),
+    [open, options, text, shown, limit],
   );
 
-  useEffect(() => setActive(0), [text, open]);
+  // Al abrir sin escribir, la opción activa es la del valor actual (en listas largas queda a la vista); al escribir, la primera.
+  useEffect(() => {
+    const selected = open && text === shown ? results.findIndex((o) => o.id === value) : -1;
+    setActive(selected > 0 ? selected : 0);
+  }, [text, open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Con listas largas (todos los movimientos) la opción activa se mantiene a la vista al navegar con el teclado.
+  useEffect(() => {
+    if (open) document.getElementById(`${autoId}-opt-${active}`)?.scrollIntoView?.({ block: "nearest" });
+  }, [open, active, autoId, results]);
 
   useLayoutEffect(() => {
     if (!open) return;

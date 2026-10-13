@@ -53,7 +53,7 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
               <Field label={t("pokemon.moves.slot", { n: m.slot + 1 })}>
                 {(id) =>
                   moveOptions ? (
-                    <ComboBox id={id} value={value} options={moveOptions} allowCustom={!filter}
+                    <ComboBox id={id} value={value} options={moveOptions} allowCustom={!filter} limit={Infinity}
                       disabled={!editable} onChange={(v) => v && patch({ moves: [{ slot: m.slot, id: v }] })} />
                   ) : (
                     <TextField id={id} mono value={m.id == null ? "" : String(m.id)} disabled={!editable || typeof m.id === "number"}
@@ -93,7 +93,7 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
           <Field label={t("pokemon.moves.id")}>
             {(id) =>
               moveOptions ? (
-                <ComboBox id={id} value={newId} options={moveOptions} allowCustom={!filter} placeholder="TACKLE" onChange={setNewId} />
+                <ComboBox id={id} value={newId} options={moveOptions} allowCustom={!filter} limit={Infinity} placeholder="TACKLE" onChange={setNewId} />
               ) : (
                 <TextField id={id} mono live value={newId ?? ""} placeholder="TACKLE" onCommit={(v) => setNewId(v ? v.toUpperCase() : null)} />
               )

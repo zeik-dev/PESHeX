@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { buildFakeGame } from "./support/fakegame";
 import { openSave, ROOT, serveGameAssets, setMode, setup, shot, teardown, type Env } from "./support/harness";
+import { realGame } from "./support/realgames";
 
 let env: Env | undefined;
 
@@ -179,4 +180,53 @@ test("naturaleza por menta (Pokémon Añil): se lee, se cambia y la original no 
   await expect(drawer.getByLabel("Naturaleza", { exact: true })).toHaveValue("MODEST");
   await mint.selectOption("");
   await expect(drawer.getByTestId("nature-effective")).toContainText(/Modesta|Modest/);
+});
+
+test("con el filtro por especie apagado, los selectores de habilidades y movimientos listan TODAS las opciones del juego", async ({ page }) => {
+  test.setTimeout(120_000);
+  env = await setup(page); // Partida_2 = Pokémon Añil (v21)
+  const root = realGame("anil", env.workDir);
+  test.skip(!root, "falta test_pbs/PBS_POKEMON_ANIL");
+  env.bridge.dialogDir = root!;
+  await openSave(page, env);
+  await page.getByRole("button", { name: "Ajustes", exact: true }).click();
+  await page.getByRole("button", { name: "Elegir carpeta…" }).click();
+  await expect(page.getByText("Datos completos")).toBeVisible({ timeout: 60_000 });
+
+  const cat = (await env.bridge.handle("driver_call", { cmd: "get_catalog", params: { kinds: ["moves", "abilities"] } })) as {
+    value: { catalog: { moves: unknown[]; abilities: unknown[] } };
+  };
+  const totalMoves = cat.value.catalog.moves.length;
+  const totalAbilities = cat.value.catalog.abilities.length;
+  expect(totalMoves).toBeGreaterThan(800);
+  expect(totalAbilities).toBeGreaterThan(300);
+
+  const drawer = await openEditor(page);
+  const count = async (combo: ReturnType<typeof drawer.getByRole>) => {
+    await combo.click();
+    const n = await page.getByRole("listbox").getByRole("option").count();
+    await page.keyboard.press("Escape");
+    return n;
+  };
+
+  // Habilidades: filtro encendido -> las de la especie; apagado -> todas (sin el tope de 60)
+  const ability = drawer.getByRole("combobox", { name: "Habilidad" });
+  const abilitySwitch = drawer.getByRole("switch", { name: "Mostrar solo habilidades de la Especie" });
+  expect(await count(ability)).toBeLessThan(10);
+  await abilitySwitch.click();
+  expect(await count(ability)).toBe(totalAbilities);
+
+  // Movimientos: igual
+  await drawer.getByRole("tab", { name: /Movimientos/ }).click();
+  const slot = drawer.getByRole("combobox", { name: /Movimiento 1/ });
+  const moveSwitch = drawer.getByRole("switch", { name: "Mostrar solo movimientos aprendidos por la especie" });
+  expect(await count(slot)).toBeLessThan(totalMoves);
+  await moveSwitch.click();
+  expect(await count(slot)).toBe(totalMoves);
+
+  // Se puede llegar a una opción del final de la lista (teclado y scroll) y elegirla.
+  await slot.click();
+  await slot.fill("Z");
+  expect(await page.getByRole("listbox").getByRole("option").count()).toBeGreaterThan(60);
+  await page.keyboard.press("Escape");
 });

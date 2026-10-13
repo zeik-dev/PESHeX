@@ -130,7 +130,7 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
         <Field label={t("pokemon.ability")}>
           {(id) =>
             abilityOptions ? (
-              <ComboBox id={id} value={pk.ability ? String(pk.ability.id) : ""} options={abilityOptions} allowCustom={!filter}
+              <ComboBox id={id} value={pk.ability ? String(pk.ability.id) : ""} options={abilityOptions} allowCustom={!filter} limit={Infinity}
                 disabled={!editable} onChange={(v) => v && patch({ ability: v })} />
             ) : (
               <TextField id={id} mono value={pk.ability ? String(pk.ability.id) : ""} disabled={!editable}
