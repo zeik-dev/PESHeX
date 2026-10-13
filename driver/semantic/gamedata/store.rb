@@ -183,6 +183,7 @@ module Sem
                 when :item then item(id)
                 when :ability then ability(id)
                 when :type then table(:types)[id.to_s]
+                when :ribbon then ribbons.find { |r| r.id.to_s == id.to_s }
                 end
         entry&.name unless entry&.name.to_s.empty?
       end

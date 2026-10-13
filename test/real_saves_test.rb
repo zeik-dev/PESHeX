@@ -134,6 +134,18 @@ class RealSavesTest < Minitest::Test
     end
   end
 
+  def test_anil_las_cintas_se_leen_como_lista_y_el_pbs_las_nombra
+    open_anil do
+      d = pokemon('party/0')
+      assert_equal [], d['ribbons'], 'el save trae @ribbons vacio'
+      # Con una cinta en el save, el PBS (ribbons.txt) le pone nombre.
+      pk = Sem::Api.model(@h.ctx).resolve_pokemon('party/0')[:node]
+      Sem::Tree.ivar(pk, '@ribbons').items << Sem::RX::RxSym.new('HOENNCOOL')
+      dto = Sem::Api.model(@h.ctx).pokemon_detail('party/0')
+      assert_equal [{ id: 'HOENNCOOL', name: 'Cinta Carisma' }], dto[:ribbons]
+    end
+  end
+
   def test_anil_exporta_e_importa_la_naturaleza_por_menta
     open_anil do
       exp = @h.call('export_pokemon', ref: 'party/0')

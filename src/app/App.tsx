@@ -40,8 +40,8 @@ function CurrentView() {
   }
 }
 
-/** Equipo y PC ocupan todo el alto: la pagina no scrollea, solo el panel de datos del Pokémon. */
-const FILL_VIEWS = new Set(["party", "boxes"]);
+/** Equipo, PC y Pokédex ocupan todo el alto: la pagina no scrollea, solo el panel de datos / la lista / la ficha. */
+const FILL_VIEWS = new Set(["party", "boxes", "pokedex"]);
 
 export default function App() {
   const filePath = useSession((s) => s.filePath);

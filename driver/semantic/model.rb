@@ -285,6 +285,17 @@ module Sem
       end
     end
 
+    # Cintas (v19+: simbolos en @ribbons; ribbons.txt las nombra). nil si el Pokemon no tiene ese campo.
+    def ribbon_dtos(pk)
+      arr = Tree.ivar(pk, '@ribbons')
+      return nil unless Tree.array?(arr)
+
+      arr.items.filter_map do |r|
+        id = Ids.of(r)
+        id.nil? || id == '' ? nil : { id: id, name: name_of(:ribbon, id) }
+      end
+    end
+
     # Detalle completo de un Pokemon.
     def pokemon_detail(ref)
       found = resolve_pokemon(ref)
@@ -318,7 +329,7 @@ module Sem
         iv: StatMap.read(iv), ev: evs, evTotal: evs.values.compact.sum,
         ivLayout: StatMap.layout(iv)&.to_s, evLayout: StatMap.layout(ev)&.to_s,
         stats: stats_info(pk, cached), growth: growth_info(pk),
-        moves: move_dtos(pk), owner: owner_dto(pk),
+        moves: move_dtos(pk), owner: owner_dto(pk), ribbons: ribbon_dtos(pk),
         personalId: Tree.int_value(first_value(pk, %w[@personalID @personal_id])),
         extras: extras_for(pk, Vanilla::POKEMON_DISPLAYED, Vanilla::POKEMON_OTHER, path),
         limits: limits

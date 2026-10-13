@@ -45,6 +45,9 @@ test("la hoja de edición es ancha, muestra los stats base del juego y la pesta�
   }
   await expect(drawer.getByRole("tab", { name: /Legalidad/ })).toHaveCount(0);
   await shot(page, "120-editor-wide-es-light");
+  // Información: las cintas del Pokémon (Partida_2 las trae vacías) salen en su fila.
+  await drawer.getByRole("tab", { name: "Información" }).click();
+  await expect(drawer.getByTestId("pokemon-ribbons")).toHaveText("—");
   await page.keyboard.press("Escape");
 
   await setMode(page, "hex");

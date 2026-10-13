@@ -10,7 +10,7 @@ import { useGame } from "../../stores/game";
 import { useSession } from "../../stores/session";
 import { Banner, Button, Card, Chip, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, SelectField, Switch } from "../../ui";
 import { useSemanticQuery } from "../queries";
-import shared from "../shared/shared.module.css";
+import { SpeciesSheet } from "./SpeciesSheet";
 import styles from "./pokedex.module.css";
 
 type Filter = "all" | "seen" | "owned" | "unseen" | "seenOnly";
@@ -20,6 +20,8 @@ interface Row {
   key: string;
   name: string;
   number: number | null;
+  /** Posicion en el listado nacional (los PBS de v19+ no numeran las especies). */
+  order: number | null;
   species: string;
   seen: boolean;
   owned: boolean;
@@ -36,6 +38,7 @@ export function Pokedex() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [shown, setShown] = useState(PAGE);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const dex = q.data;
   const array = dex?.layout === "array";
@@ -50,14 +53,14 @@ export function Pokedex() {
     for (const s of catalog?.species ?? []) {
       if (s.form !== 0) continue;
       const key = keyOf(s.species, s.number);
-      out.set(key, { key, name: s.name ?? prettyId(s.species), number: s.number, species: s.species, seen: seen.has(key), owned: owned.has(key), caught: dex.caught?.[key] });
+      out.set(key, { key, name: s.name ?? prettyId(s.species), number: s.number, order: s.order ?? s.number, species: s.species, seen: seen.has(key), owned: owned.has(key), caught: dex.caught?.[key] });
     }
     for (const id of dex.ids ?? []) {
       if (out.has(id)) continue;
-      out.set(id, { key: id, name: array ? `#${id}` : prettyId(id), number: array ? Number(id) : null, species: id, seen: seen.has(id), owned: owned.has(id), caught: dex.caught?.[id] });
+      out.set(id, { key: id, name: array ? `#${id}` : prettyId(id), number: array ? Number(id) : null, order: array ? Number(id) : null, species: id, seen: seen.has(id), owned: owned.has(id), caught: dex.caught?.[id] });
     }
     const list = [...out.values()];
-    list.sort((a, b) => (a.number ?? 1e9) - (b.number ?? 1e9) || a.name.localeCompare(b.name));
+    list.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || a.name.localeCompare(b.name));
     return list;
   }, [dex, catalog, array]);
 
@@ -86,59 +89,73 @@ export function Pokedex() {
     if (ids.length) void apply([{ op: "pokedex.bulk", mode, ids }]);
   };
 
+  const sheetOpen = !!catalog && selected != null;
+
   return (
-    <div className={shared.stack}>
-      <PageTitle icon={<BookOpen />} title={t("pokedex.title")} subtitle={t("pokedex.counts", { seen: counts.seen, owned: counts.owned, total: counts.total })} />
+    <div className={styles.root}>
+      <PageTitle icon={<BookOpen />} title={t("pokedex.title")} />
       {!catalog && <Banner tone="info" title={t("pokedex.noCatalogTitle")}>{t("pokedex.noCatalog")}</Banner>}
 
-      <Card>
-        <div className={styles.toolbar}>
-          <input className={styles.search} aria-label={t("pokedex.search")} placeholder={t("pokedex.search")} value={search}
-            onChange={(e) => { setSearch(e.target.value); setShown(PAGE); }} />
-          <SelectField<Filter> ariaLabel={t("pokedex.filter")} value={filter} onChange={(f) => { setFilter(f); setShown(PAGE); }}
-            options={(["all", "seen", "owned", "unseen", "seenOnly"] as Filter[]).map((f) => ({ value: f, label: dyn(`pokedex.filters.${f}`) }))} />
-          <Chip tone="info">{t("pokedex.shown", { count: filtered.length })}</Chip>
-        </div>
-        <div className={styles.bulk} role="group" aria-label={t("pokedex.bulkTitle")}>
-          <span className="muted">{t("pokedex.bulkOn", { count: filtered.length })}</span>
-          <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("seen_all")}><Eye size={14} /> {t("pokedex.markSeen")}</Button>
-          <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("owned_all")}>{t("pokedex.markOwned")}</Button>
-          <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("unown_all")}>{t("pokedex.unmarkOwned")}</Button>
-          <Button size="sm" variant="ghost" disabled={off || filtered.length === 0} onClick={() => bulk("clear_all")}><EyeOff size={14} /> {t("pokedex.clear")}</Button>
+      <div className={styles.split} data-open={sheetOpen}>
+        <div className={styles.listCol}>
+          <Card>
+            <div className={styles.toolbar}>
+              <input className={styles.search} aria-label={t("pokedex.search")} placeholder={t("pokedex.search")} value={search}
+                onChange={(e) => { setSearch(e.target.value); setShown(PAGE); }} />
+              <SelectField<Filter> ariaLabel={t("pokedex.filter")} value={filter} onChange={(f) => { setFilter(f); setShown(PAGE); }}
+                options={(["all", "seen", "owned", "unseen", "seenOnly"] as Filter[]).map((f) => ({ value: f, label: dyn(`pokedex.filters.${f}`) }))} />
+              <Chip tone="info">{t("pokedex.shown", { count: filtered.length })}</Chip>
+              <Chip>{t("pokedex.counts", { seen: counts.seen, owned: counts.owned, total: counts.total })}</Chip>
+            </div>
+            <div className={styles.bulk} role="group" aria-label={t("pokedex.bulkTitle")}>
+              <span className="muted">{t("pokedex.bulkOn", { count: filtered.length })}</span>
+              <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("seen_all")}><Eye size={14} /> {t("pokedex.markSeen")}</Button>
+              <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("owned_all")}>{t("pokedex.markOwned")}</Button>
+              <Button size="sm" disabled={off || filtered.length === 0} onClick={() => bulk("unown_all")}>{t("pokedex.unmarkOwned")}</Button>
+              <Button size="sm" variant="ghost" disabled={off || filtered.length === 0} onClick={() => bulk("clear_all")}><EyeOff size={14} /> {t("pokedex.clear")}</Button>
+            </div>
+          </Card>
+
+          <div className={styles.scroll}>
+            {filtered.length === 0 ? (
+              <EmptyState>{t("pokedex.noMatches")}</EmptyState>
+            ) : (
+              <ul className={styles.list} aria-label={t("pokedex.title")}>
+                {filtered.slice(0, shown).map((r) => (
+                  <li key={r.key} className={styles.row} data-seen={r.seen} data-owned={r.owned} data-selected={sheetOpen && selected === r.species}>
+                    <button type="button" className={styles.rowBtn} disabled={!catalog} aria-pressed={sheetOpen && selected === r.species}
+                      aria-label={catalog ? t("pokedex.sheet.open", { name: r.name }) : r.name} onClick={() => setSelected(r.species)}>
+                      <span className={styles.icon}>
+                        <PokemonIcon name={r.name} species={r.species} number={r.number ?? undefined} size={40} />
+                      </span>
+                      <span className={styles.num}>{r.order != null ? String(r.order).padStart(3, "0") : ""}</span>
+                      <span className={styles.name}>{r.seen ? r.name : <span className="muted">{r.name}</span>}</span>
+                    </button>
+                    {r.caught != null && r.caught > 0 && <span className="muted mono" style={{ fontSize: 11 }}>×{r.caught}</span>}
+                    <label className={styles.toggle}>
+                      <Switch checked={r.seen} disabled={off} label={`${r.name} — ${t("pokedex.seen")}`}
+                        onChange={(v) => void apply([{ op: "pokedex.set", id: r.key, seen: v }])} />
+                      <span>{t("pokedex.seen")}</span>
+                    </label>
+                    <label className={styles.toggle}>
+                      <Switch checked={r.owned} disabled={off} label={`${r.name} — ${t("pokedex.owned")}`}
+                        onChange={(v) => void apply([{ op: "pokedex.set", id: r.key, owned: v }])} />
+                      <span>{t("pokedex.owned")}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {filtered.length > shown && (
+              <div style={{ textAlign: "center", marginTop: 12 }}>
+                <Button onClick={() => setShown((n) => n + PAGE)}>{t("pokedex.more", { count: filtered.length - shown })}</Button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {filtered.length === 0 ? (
-          <EmptyState>{t("pokedex.noMatches")}</EmptyState>
-        ) : (
-          <ul className={styles.list} aria-label={t("pokedex.title")}>
-            {filtered.slice(0, shown).map((r) => (
-              <li key={r.key} className={styles.row} data-seen={r.seen} data-owned={r.owned}>
-                <span className={styles.icon}>
-                  <PokemonIcon name={r.name} species={r.species} number={r.number ?? undefined} size={40} />
-                </span>
-                <span className={styles.num}>{r.number != null ? String(r.number).padStart(3, "0") : ""}</span>
-                <span className={styles.name}>{r.seen ? r.name : <span className="muted">{r.name}</span>}</span>
-                {r.caught != null && r.caught > 0 && <span className="muted mono" style={{ fontSize: 11 }}>×{r.caught}</span>}
-                <label className={styles.toggle}>
-                  <Switch checked={r.seen} disabled={off} label={`${r.name} — ${t("pokedex.seen")}`}
-                    onChange={(v) => void apply([{ op: "pokedex.set", id: r.key, seen: v }])} />
-                  <span>{t("pokedex.seen")}</span>
-                </label>
-                <label className={styles.toggle}>
-                  <Switch checked={r.owned} disabled={off} label={`${r.name} — ${t("pokedex.owned")}`}
-                    onChange={(v) => void apply([{ op: "pokedex.set", id: r.key, owned: v }])} />
-                  <span>{t("pokedex.owned")}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        )}
-        {filtered.length > shown && (
-          <div style={{ textAlign: "center", marginTop: 12 }}>
-            <Button onClick={() => setShown((n) => n + PAGE)}>{t("pokedex.more", { count: filtered.length - shown })}</Button>
-          </div>
-        )}
-      </Card>
+        {sheetOpen && <SpeciesSheet key={selected} speciesId={selected} onSelect={setSelected} onClose={() => setSelected(null)} />}
+      </div>
     </div>
   );
 }

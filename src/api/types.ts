@@ -168,6 +168,8 @@ export interface PokemonDetail extends PokemonSummary {
   natureForStats: IdRef | null;
   /** Que admite la base de este Pokémon (la naturaleza por menta solo existe en v20+). */
   capabilities?: { natureForStats: boolean };
+  /** Cintas del Pokémon (v19+); null si la base no las guarda en el Pokémon. */
+  ribbons?: IdRef[] | null;
   ability: IdRef | null;
   abilityIndex: number | null;
   statusCount: number | null;

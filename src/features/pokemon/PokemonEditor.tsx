@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { semantic } from "../../api/semantic";
 import type { PokemonDetail } from "../../api/types";
 import { useT } from "../../lib/useT";
+import { useGame } from "../../stores/game";
 import { useSession } from "../../stores/session";
 import { useHexMode } from "../../stores/settings";
-import { Banner, Drawer, EmptyState, PokeballSpinner, Tabs } from "../../ui";
+import { Banner, Chip, Drawer, EmptyState, PokeballSpinner, Tabs } from "../../ui";
 import { FlagList } from "../legality/FlagList";
 import { LegalityBadge } from "../legality/LegalityBadge";
 import { ExtrasList } from "../shared/ExtrasList";
@@ -89,6 +90,7 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
 
 function Info({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
   const { t } = useT();
+  const ribbonInfo = useGame((s) => s.catalog?.ribbons);
   const vanilla = pk.extras.filter((e) => !e.custom);
   const custom = pk.extras.filter((e) => e.custom);
   return (
@@ -98,6 +100,22 @@ function Info({ pk, editable }: { pk: PokemonDetail; editable: boolean }) {
         <span className={shared.kvValue}>{pk.owner?.name ?? "—"}{pk.owner?.id != null ? ` (${pk.owner.id})` : ""}</span>
         <span className={shared.kvLabel}>{t("pokemon.info.personalId")}</span>
         <span className={shared.kvValue}>{pk.personalId ?? "—"}</span>
+        {pk.ribbons != null && (
+          <>
+            <span className={shared.kvLabel}>{t("pokemon.info.ribbons")}</span>
+            <span className={shared.kvValue} data-testid="pokemon-ribbons">
+              {pk.ribbons.length === 0 ? "—" : (
+                <span style={{ display: "inline-flex", gap: 6, flexWrap: "wrap" }}>
+                  {pk.ribbons.map((r) => (
+                    <Chip key={String(r.id)} tone="info" title={ribbonInfo?.find((x) => x.id === String(r.id))?.description ?? undefined}>
+                      {r.name ?? String(r.id)}
+                    </Chip>
+                  ))}
+                </span>
+              )}
+            </span>
+          </>
+        )}
         <span className={shared.kvLabel}>{t("pokemon.info.path")}</span>
         <span className={shared.kvValue + " mono"}>{pk.fieldPath}</span>
       </div>
