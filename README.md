@@ -33,58 +33,36 @@ y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
 > antivirus puede dar un falso positivo. Comprueba el zip con `SHA256SUMS.txt`
 > (`Get-FileHash`). `LEEME.txt`, dentro del zip, lo explica paso a paso.
 
-<p align="center">
-  <img src="docs/screenshots/settings-game.png" alt="Carpeta del juego analizada: datos, límites y calibración" width="96%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/pc.png" alt="El PC como en los juegos: equipo, caja y panel de datos compacto" width="48%" />
-  <img src="docs/screenshots/pc-acciones.png" alt="Acciones rápidas desplegadas hacia la izquierda" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/editor.png" alt="Hoja de edición ancha: stats base, deslizadores, Poder oculto y estadísticas" width="48%" />
-  <img src="docs/screenshots/pokedex-ficha.png" alt="Ficha de especie de la Pokédex con los datos de tu PBS" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/bag.png" alt="Agregar objeto: búsqueda por nombre, icono e id, con las MT nombradas" width="48%" />
-  <img src="docs/screenshots/overview.png" alt="Resumen con la legalidad comprobada contra tu juego (modo HeX)" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/hex-warning.png" alt="Aviso al activar el modo HeX" width="48%" />
-  <img src="docs/screenshots/pokedex.png" alt="Pokédex con los nombres y los iconos de tu juego" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/world.png" alt="Interruptores y variables con nombre" width="48%" />
-  <img src="docs/screenshots/palette.png" alt="Búsqueda global y comandos (Ctrl+K)" width="48%" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/diff.png" alt="Comparación entre una copia y la partida actual" width="48%" />
-</p>
-
-<sub>Capturas con una partida y una carpeta de juego **reales** de *Pokémon Z* (un fangame de
-Essentials v16–v18), ya vinculada y analizada: los gráficos son los del propio juego del
-autor. PESHeX **no incluye ni distribuye** gráficos oficiales; usa los de tu juego. Se
-regeneran con `npm run docs:shots` (`PESHEX_DOCS_GAME=synthetic` usa una carpeta sintética
-de círculos de colores cuando no hay `test_pbs/`).</sub>
-
 ## Qué hace
 
-| Pestaña | Contenido |
-|---|---|
-| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), base detectada y cobertura de clasificación; con el modo **HeX** activo, además, una tarjeta de **legalidad desplegable** |
-| **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
-| **Equipo** y **PC** | Los Pokémon **como en las cajas de los juegos**, a todo el alto de la ventana: equipo, caja de 6×5 con el fondo y los iconos de *tu* juego y un panel de datos compacto (**lo único que hace scroll**). Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre cajas y equipo. **Clic derecho**: en un Pokémon, *Editar · Clonar · Exportar · Eliminar*; en una casilla vacía, **Agregar Pokémon** por especie (con búsqueda por nombre y número). El panel lleva *Editar · Clonar · Liberar* y un único botón **Acciones rápidas** que despliega, hacia la izquierda, curar, IV al máximo, recalcular, presets de EV y exportar |
-| **Mochila** | Bolsillos, búsqueda, cantidades y favoritos. **Agregar objeto** está arriba del todo: busca por nombre, icono o id, lo manda a *su* bolsillo según el PBS y nombra las MT/MO con su movimiento (*MT01 · Ventisca*); el bolsillo 6 se llama **Megapiedras** |
-| **Pokédex** | Vistas y capturadas por especie, filtros y acciones sobre toda la lista (siempre visible; si tu base no lo guarda como esperamos, explica qué buscó). Con la carpeta del juego, cada especie abre una **ficha** con los datos de *tu* juego: texto de la Pokédex, altura, peso, género, grupos huevo, captura, EV que otorga, **stats base**, habilidades, **debilidades y resistencias** por tipo (de `types.txt`), cadena evolutiva y formas (Mega con su piedra), movimientos por nivel/MT/tutor/huevo, **dónde encontrarla** (`encounters.txt`) y su **numeración regional** |
-| **Mundo** | Interruptores y variables (con sus nombres), estadísticas y Salón de la Fama |
-| **Todo detectado** | Lista completa de lo que contiene la partida y cómo se clasificó (*clasificado · personalizado · mundo y motor · sin clasificar*). Nada se pierde |
-| **Cambios** | Cambios sin guardar, con deshacer/rehacer |
-| **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
-| **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego (con **barra de progreso**), modo HaX/HeX y detección de la base |
+PESHeX reparte la partida en pestañas (*Resumen, Entrenador, Equipo, PC, Mochila,
+Pokédex, Mundo, Todo detectado, Cambios, Copias, Avanzado y Ajustes*). No hay
+títulos de página: la pestaña activa ya dice dónde estás. Estas son las funciones
+principales; la tabla del final resume el resto.
 
-No hay títulos de página: la pestaña activa ya dice dónde estás.
+### Equipo y PC como en los juegos
+
+<p align="center">
+  <img src="docs/screenshots/pc-acciones.png" alt="Equipo, caja del PC con los iconos de tu juego y el panel de datos con Acciones rápidas desplegado hacia la izquierda" width="100%" />
+</p>
+
+- Equipo y caja de 6×5 con el fondo y los iconos de *tu* juego, a todo el alto de la
+  ventana. El panel de datos es compacto y **lo único que hace scroll**.
+- Arrastra (o usa la barra espaciadora) para mover, intercambiar o pasar Pokémon entre
+  cajas y equipo.
+- **Clic derecho**: en un Pokémon, *Editar · Clonar · Exportar · Eliminar*; en una casilla
+  vacía, **Agregar Pokémon** por especie (con búsqueda por nombre y número).
+- El panel lleva *Editar · Clonar · Liberar* y un único botón **Acciones rápidas** que
+  despliega, hacia la izquierda, curar, IV al máximo, recalcular, exportar y siete presets
+  de EV (físico, especial, Bulky Physical, Bulky Special, Tank Defense, Tank Sp. Defense),
+  con el sugerido según los stats más altos del Pokémon.
+- Debajo del equipo: el total de Pokémon y, en HeX, el filtro *Solo ilegales*.
 
 ### Editar un Pokémon
+
+<p align="center">
+  <img src="docs/screenshots/editor.png" alt="Hoja de edición ancha con los stats base de la especie, deslizadores de IV y Poder oculto" width="100%" />
+</p>
 
 La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
 **General · IV y EV · Movimientos · Información** (más **Legalidad** en HeX):
@@ -100,13 +78,53 @@ La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
 - **Objeto equipado** con el mismo selector de la mochila (nombre, icono e id) y **bola** usada.
 - **Información**: entrenador original, ID personal y **cintas** con su nombre (`ribbons.txt`).
 
+### Mochila
 
-Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y`,
-**acciones rápidas** (curar, IV al máximo, recalcular estadísticas, subir de nivel
-con su experiencia y siete presets de EV —físico, especial, Bulky Physical, Bulky
-Special, Tank Defense, Tank Sp. Defense— con el sugerido según los stats más altos
-del Pokémon) y **clonar / importar /
-exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
+<p align="center">
+  <img src="docs/screenshots/bag.png" alt="Agregar objeto arriba del todo: búsqueda por nombre, icono e id, con las MT nombradas por su movimiento" width="100%" />
+</p>
+
+- **Agregar objeto** está arriba del todo: busca por nombre, icono o id y lo manda a *su*
+  bolsillo según el PBS.
+- Las MT/MO se nombran con su movimiento (*MT01 · Ventisca*) y el bolsillo 6 se llama
+  **Megapiedras**.
+- Bolsillos, búsqueda, cantidades y favoritos.
+
+### Pokédex con ficha de especie
+
+<p align="center">
+  <img src="docs/screenshots/pokedex-ficha.png" alt="Lista de la Pokédex y ficha de una especie con stats base, habilidades y debilidades por tipo" width="100%" />
+</p>
+
+- Vistas y capturadas por especie, filtros y acciones sobre toda la lista. La pestaña
+  siempre está visible; si tu base no guarda la Pokédex como esperamos, explica qué buscó.
+- Con la carpeta del juego, cada especie abre una **ficha** con los datos de *tu* juego:
+  texto de la Pokédex, altura, peso, género, grupos huevo, captura, EV que otorga,
+  **stats base**, habilidades, **debilidades y resistencias** por tipo (de `types.txt`),
+  cadena evolutiva y formas (Mega con su piedra), movimientos por nivel/MT/tutor/huevo,
+  **dónde encontrarla** (`encounters.txt`) y su **numeración regional**.
+
+### Resto de pestañas
+
+| Pestaña | Contenido |
+|---|---|
+| **Resumen** | Entrenador, dinero, medallas, tiempo de juego, equipo, cifras (PC, Pokédex…), base detectada y cobertura de clasificación; con el modo **HeX** activo, además, una tarjeta de **legalidad desplegable** |
+| **Entrenador** | Nombre, dinero, fichas, puntos de combate, hollín, medallas y datos extra de la base |
+| **Mundo** | Interruptores y variables (con sus nombres), estadísticas y Salón de la Fama |
+| **Todo detectado** | Lista completa de lo que contiene la partida y cómo se clasificó (*clasificado · personalizado · mundo y motor · sin clasificar*). Nada se pierde |
+| **Cambios** | Cambios sin guardar, con deshacer/rehacer |
+| **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
+| **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
+| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego (con **barra de progreso**), modo HaX/HeX y detección de la base |
+
+Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y` y
+**clonar / importar / exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
+
+<sub>Capturas con una partida y una carpeta de juego **reales** de *Pokémon Z* (un fangame de
+Essentials v16–v18), ya vinculada y analizada: los gráficos son los del propio juego del
+autor. PESHeX **no incluye ni distribuye** gráficos oficiales; usa los de tu juego. Se
+regeneran con `npm run docs:shots` (`PESHEX_DOCS_GAME=synthetic` usa una carpeta sintética
+de círculos de colores cuando no hay `test_pbs/`).</sub>
 
 ### Modos HaX y HeX
 
