@@ -103,6 +103,18 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.keyboard.press("Escape");
 
+  // Movimientos: íconos de categoría (los de la carpeta del juego) y el selector con TODOS los movimientos (en HaX el
+  // filtro por especie es un interruptor; en HeX es obligatorio y no se muestra).
+  await page.getByRole("radio", { name: "HaX" }).first().click();
+  await info.getByRole("button", { name: "Editar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("tab", { name: /Movimientos/ }).click();
+  await page.getByRole("dialog").getByRole("switch", { name: "Mostrar solo movimientos aprendidos por la especie" }).click();
+  await page.getByRole("dialog").getByRole("combobox", { name: /Movimiento 1/ }).click();
+  await expect(page.getByRole("listbox").getByRole("option").first()).toBeVisible();
+  await shot("editor-movimientos");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+
   // Mochila: «Agregar objeto» arriba con el selector (nombre, icono e id)
   await nav("Mochila");
   const picker = page.getByRole("combobox", { name: "Objeto" }).first();

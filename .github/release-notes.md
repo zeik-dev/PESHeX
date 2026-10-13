@@ -2,6 +2,11 @@
 
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
+### Correcciones de la 1.1.0
+- **Pokédex**: la ficha de especie ya no se queda en «Cargando la ficha…»: si el motor tarda o falla, muestra el motivo y un botón para **reintentar**; las zonas y la numeración regional se piden aparte y nunca bloquean la ficha, y un dato raro de una parte opcional ya no la tumba.
+- **Selectores de habilidades y movimientos**: con el interruptor «Mostrar solo … de la especie» apagado listan **todas** las opciones del juego (antes se cortaban a 60); al abrirlos se ve la opción actual.
+- **Íconos de categoría** (Físico, Especial, Estado) en los movimientos: se leen de `Graphics/Pictures/category.png` de tu carpeta de juego y, si no lo trae, se usan íconos propios (no se incluye arte oficial).
+
 ### Novedades de la 1.1.0
 - **Equipo y PC a todo el alto**, sin títulos de página: solo el panel de datos hace scroll. Un único botón **Acciones rápidas** (se abre hacia la izquierda) y **clic derecho** en cada casilla: *Editar · Clonar · Exportar · Eliminar* o, en una casilla vacía, **Agregar Pokémon** por especie.
 - **La legalidad solo se muestra en HeX**: en HaX no hay interruptores, insignias, pestañas ni tarjetas de legalidad.

@@ -22,6 +22,11 @@ ficha de especie en la Pokedex (tipos, evoluciones, movimientos, zonas) y lectur
 Essentials v16 a v21. Al abrir una partida sin carpeta de juego, PESHeX te ofrece agregarla (con
 barra de progreso).
 
+Correcciones posteriores: la ficha de la Pokedex ya no se queda cargando (si algo falla muestra el motivo y un
+boton para reintentar), los selectores de habilidades y movimientos listan TODAS las opciones cuando el filtro
+"solo de la especie" esta apagado, y los movimientos muestran el icono de su categoria (Fisico, Especial, Estado)
+tomado de la carpeta de tu juego, o un icono propio si el juego no lo trae.
+
 Ademas: Pokedex, interruptores y variables del juego, copias de seguridad con comparacion y
 restauracion, busqueda global (Ctrl+K), atajos (Ctrl+S / Ctrl+Z / Ctrl+Y), acciones rapidas
 (curar, IV al maximo, presets de EV segun los stats mas altos del Pokemon, recalcular

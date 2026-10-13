@@ -63,6 +63,9 @@ principales; la tabla del final resume el resto.
 <p align="center">
   <img src="docs/screenshots/editor.png" alt="Hoja de edición ancha con los stats base de la especie, deslizadores de IV y Poder oculto" width="100%" />
 </p>
+<p align="center">
+  <img src="docs/screenshots/editor-movimientos.png" alt="Selector de movimientos con todos los movimientos del juego, su tipo, potencia, PP e ícono de categoría" width="100%" />
+</p>
 
 La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
 **General · IV y EV · Movimientos · Información** (más **Legalidad** en HeX):
@@ -74,7 +77,10 @@ La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
 - **Naturaleza** (la original no se toca) y **naturaleza por menta** (`nature_for_stats`, en bases v20+).
 - **Habilidad** y **movimientos** con interruptores *«Mostrar solo habilidades de la especie»* y
   *«Mostrar solo movimientos aprendidos por la especie»* (activados por defecto y apagables en
-  HaX; en HeX el filtro es obligatorio). Los movimientos muestran su tipo, categoría, poder y PP.
+  HaX; en HeX el filtro es obligatorio). Con el filtro **apagado** el selector lista **todas** las habilidades y
+  movimientos del juego. Los movimientos muestran su tipo, potencia, PP y el **ícono de su categoría**
+  (Físico, Especial, Estado), que sale de la carpeta de *tu* juego (`Graphics/Pictures/category.png`); si no lo
+  trae, PESHeX usa tres íconos propios.
 - **Objeto equipado** con el mismo selector de la mochila (nombre, icono e id) y **bola** usada.
 - **Información**: entrenador original, ID personal y **cintas** con su nombre (`ribbons.txt`).
 
@@ -102,7 +108,8 @@ La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
   texto de la Pokédex, altura, peso, género, grupos huevo, captura, EV que otorga,
   **stats base**, habilidades, **debilidades y resistencias** por tipo (de `types.txt`),
   cadena evolutiva y formas (Mega con su piedra), movimientos por nivel/MT/tutor/huevo,
-  **dónde encontrarla** (`encounters.txt`) y su **numeración regional**.
+  **dónde encontrarla** (`encounters.txt`) y su **numeración regional**. Si algún dato no se puede leer, la ficha
+  lo dice (con el motivo y un botón para reintentar) en vez de quedarse cargando.
 
 ### Resto de pestañas
 
