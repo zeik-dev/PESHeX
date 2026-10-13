@@ -167,7 +167,7 @@ test("atajos: Ctrl+S guarda, Ctrl+Z deshace y Ctrl+Y rehace", async ({ page }) =
   await pending(page, 1);
 
   // dentro del campo, Ctrl+Z es del texto; fuera, de la partida
-  await page.getByRole("heading", { name: "Entrenador", exact: true }).click();
+  await page.locator("main").click({ position: { x: 4, y: 4 } }); // zona vacía: saca el foco del campo
   await page.keyboard.press("Control+z");
   await noPending(page);
   await page.keyboard.press("Control+y");
@@ -205,14 +205,19 @@ test("acciones rápidas: curar, IV al máximo, clonar y exportar un Pokémon", a
   await expect(info).toContainText("Grillita");
   await shot(page, "115-pc-quick-actions-es-light");
 
-  await info.getByRole("button", { name: "IV al máximo" }).click();
+  // Curar, IV al máximo, recalcular y exportar viven en el desplegable «Acciones rápidas»; Clonar es un botón principal.
+  const quick = page.getByRole("dialog", { name: "Acciones rápidas" });
+  await info.getByRole("button", { name: /Acciones rápidas/ }).click();
+  await quick.getByRole("button", { name: "IV al máximo" }).click();
   await pending(page, 1);
-  await info.getByRole("button", { name: "Curar", exact: true }).click();
+  await quick.getByRole("button", { name: "Curar", exact: true }).click();
+  await page.keyboard.press("Escape");
 
   await info.getByRole("button", { name: "Clonar" }).click();
   await expect(page.getByText("Pokémon clonado en la primera casilla libre del PC.")).toBeVisible();
 
-  await info.getByRole("button", { name: "Exportar…" }).click();
+  await info.getByRole("button", { name: /Acciones rápidas/ }).click();
+  await quick.getByRole("button", { name: "Exportar…" }).click();
   const dlg = page.getByRole("dialog", { name: "Exportar Pokémon" });
   const text = dlg.getByLabel("Texto exportado");
   await expect(text).toHaveValue(/Grillita \(TORRACAT\)|Grillita \(Torracat\)/);
@@ -356,26 +361,33 @@ test("el preset de EV sugerido sale de los stats más altos de cada Pokémon y s
     expect(expected).toBeTruthy();
     seen.add(expected!);
     await page.locator(`[data-cell="party/${i}"]`).click();
-    const advice = page.getByTestId("pc-info").getByTestId("ev-presets");
+    await page.getByTestId("pc-info").getByRole("button", { name: /Acciones rápidas/ }).click();
+    const advice = page.getByRole("dialog", { name: "Acciones rápidas" }).getByTestId("ev-presets");
     await expect(advice.locator(`[data-preset="${expected}"]`)).toBeVisible();
     await expect(advice.getByText(/Por sus stats más altos: .+ y .+ \(stats guardados en la partida\)/)).toBeVisible();
+    await page.keyboard.press("Escape");
   }
   // Aplicar el sugerido deja los EV del preset (una sola acción que se deshace)
   await page.locator('[data-cell="party/1"]').click();
   const info = page.getByTestId("pc-info");
-  await info.getByTestId("ev-presets").getByRole("button", { name: /^Preset de EV sugerido/ }).click();
+  const quick = page.getByRole("dialog", { name: "Acciones rápidas" });
+  await info.getByRole("button", { name: /Acciones rápidas/ }).click();
+  await quick.getByTestId("ev-presets").getByRole("button", { name: /^Preset de EV sugerido/ }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
   await shot(page, "117-ev-preset-es-light");
   await page.keyboard.press("Control+z");
   await expect(page.getByRole("button", { name: /^Cambios \d/ })).toHaveCount(0);
 
   // El desplegable ofrece los presets nuevos
-  const select = info.getByLabel("Otros presets de EV");
+  await info.getByRole("button", { name: /Acciones rápidas/ }).click();
+  const select = quick.getByLabel("Otros presets de EV");
   for (const label of ["Bulky Physical (PS + Ataque)", "Bulky Special (PS + At. Esp.)", "Tank Defense (PS + Defensa)", "Tank Sp. Defense (PS + Def. Esp.)"]) {
     await expect(select.locator("option", { hasText: label })).toHaveCount(1);
   }
   await select.selectOption({ label: "Tank Sp. Defense (PS + Def. Esp.)" });
   await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await info.getByRole("button", { name: "Editar", exact: true }).click();
   const drawer = page.getByRole("dialog");
   await drawer.getByRole("tab", { name: "IV y EV" }).click();

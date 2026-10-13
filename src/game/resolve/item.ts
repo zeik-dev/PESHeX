@@ -43,7 +43,7 @@ export function resolveItemIcon(ctx: ResolveCtx, k: ItemKey): Resolved | null {
 
 /** Icono de la Poké Ball en las pantallas de resumen (icon_ball_<ID>); si el juego
  *  no lo trae, el icono de objeto de esa ball. */
-export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number): Resolved | null {
+export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number, number?: number | null): Resolved | null {
   const { index, layout } = ctx;
   const id = String(ballId).toLowerCase();
   const mapped = lookup(ctx.map, "balls", String(ballId));
@@ -51,7 +51,7 @@ export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number): Resol
   if (mappedEntry) return resolved(mappedEntry, "map");
   const hit = firstHit(index, layout.summary, [`icon_ball_${id}`]);
   if (hit) return resolved(hit.entry, "exact");
-  return resolveItemIcon(ctx, { id: ballId });
+  return resolveItemIcon(ctx, { id: ballId, number });
 }
 
 /** Marca de "lleva objeto" de las pantallas de equipo/PC. */

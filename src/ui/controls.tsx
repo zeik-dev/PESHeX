@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useId, useState, type ButtonHTMLAttributes, type ReactNode, type Ref } from "react";
 import styles from "./ui.module.css";
 import { cx } from "./cx";
 
@@ -10,10 +10,12 @@ export function Button({
   icon,
   className,
   children,
+  ref,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md"; icon?: boolean }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md"; icon?: boolean; ref?: Ref<HTMLButtonElement> }) {
   return (
     <button
+      ref={ref}
       type="button"
       className={cx(styles.btn, styles[variant], size === "sm" && styles.sm, icon && styles.iconOnly, className)}
       {...rest}
@@ -120,6 +122,7 @@ export function TextField({
   nullable,
   ariaLabel,
   mono,
+  live,
 }: {
   id?: string;
   value: string | null | undefined;
@@ -130,6 +133,8 @@ export function TextField({
   nullable?: boolean;
   ariaLabel?: string;
   mono?: boolean;
+  /** Confirma en cada pulsacion (campos que alimentan un boton, no una edicion del save). */
+  live?: boolean;
 }) {
   const shown = value ?? "";
   const [text, setText] = useState(shown);
@@ -152,8 +157,11 @@ export function TextField({
       placeholder={placeholder}
       disabled={disabled}
       aria-label={ariaLabel}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={commit}
+      onChange={(e) => {
+        setText(e.target.value);
+        if (live) onCommit(e.target.value === "" ? null : e.target.value);
+      }}
+      onBlur={live ? undefined : commit}
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         if (e.key === "Escape") setText(shown);

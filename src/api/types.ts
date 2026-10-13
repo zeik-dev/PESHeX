@@ -141,7 +141,10 @@ export interface PokemonSummary {
   totalHp: number | null;
   item: IdRef | null;
   status: string | number | null;
+  /** Valor guardado: id del objeto (v19+) o indice de $BallTypes (v16-18). */
   ball: string | number | null;
+  /** La bola como objeto del juego (resuelta por el driver, tambien en bases antiguas). */
+  ballItem?: IdRef | null;
 }
 
 export type StatId = "HP" | "ATTACK" | "DEFENSE" | "SPECIAL_ATTACK" | "SPECIAL_DEFENSE" | "SPEED";
@@ -163,6 +166,8 @@ export interface PokemonDetail extends PokemonSummary {
   superShiny: boolean;
   nature: IdRef | null;
   natureForStats: IdRef | null;
+  /** Que admite la base de este Pokémon (la naturaleza por menta solo existe en v20+). */
+  capabilities?: { natureForStats: boolean };
   ability: IdRef | null;
   abilityIndex: number | null;
   statusCount: number | null;

@@ -200,6 +200,28 @@
   margin: 0 auto;
 }
 
+/* Equipo y PC: alto completo, sin scroll de pagina (solo scrollea el panel de datos del Pokémon). */
+.mainFill {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px 20px;
+}
+.contentFill {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1320px;
+  display: flex;
+  flex-direction: column;
+}
+@media (max-width: 980px) {
+  /* ventana estrecha: vuelve el scroll de pagina para que nada quede recortado */
+  .mainFill {
+    overflow: auto;
+  }
+}
+
 /* ── Pantalla de apertura ──────────────────────────────────────────────── */
 .openPage {
   min-height: 100%;

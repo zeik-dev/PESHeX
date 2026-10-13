@@ -68,13 +68,12 @@ export function HpBar({ hp, total }: { hp: number | null; total: number | null }
   );
 }
 
-export function PageTitle({ icon, title, subtitle }: { icon?: ReactNode; title: string; subtitle?: string }) {
+/** El titulo de cada vista ya lo indica la pestana activa: aqui solo queda un `h1` oculto (lectores de pantalla y
+ *  estructura del documento) y, si lo hay, el texto de ayuda de la vista. */
+export function PageTitle({ title, subtitle }: { icon?: ReactNode; title: string; subtitle?: string }) {
   return (
     <>
-      <h1 className={styles.pageTitle}>
-        {icon}
-        {title}
-      </h1>
+      <h1 className="sr-only">{title}</h1>
       {subtitle && <p className={styles.pageSubtitle}>{subtitle}</p>}
     </>
   );

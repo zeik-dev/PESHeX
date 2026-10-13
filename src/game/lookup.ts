@@ -68,3 +68,16 @@ export function itemDisplayName(item: CatItem, index: CatalogIndex | null | unde
   const moveName = move?.name ?? null;
   return moveName ? `${name} · ${moveName}` : name;
 }
+
+/** Entrada de especie para el id del save (interno o numero de bases <= v18) y su forma; las formas con datos
+ *  propios (Mega, regionales) se resuelven como "ESPECIE_N" y, si no los hay, cae a la especie base. */
+export function speciesEntry(
+  index: CatalogIndex | null | undefined,
+  id: string | number | null | undefined,
+  form?: number | null,
+): CatSpecies | undefined {
+  const base = catEntry(index, "species", id);
+  if (!base || !form || form <= 0) return base;
+  return index?.species.get(`${base.species}_${form}`) ?? base;
+}
+

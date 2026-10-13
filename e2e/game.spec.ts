@@ -31,7 +31,8 @@ test("vincular la carpeta del juego: nombres reales, sprites y selectores con b�
 
   await linkFromSettings(page);
   await expect(page.getByText(/Especies: \d+ · Data\/\*\.dat/)).toBeVisible();
-  await expect(page.getByText("Legalidad completa")).toBeVisible();
+  // La legalidad solo existe en HeX: en HaX (por defecto) la tarjeta de la carpeta no la menciona.
+  await expect(page.getByText("Legalidad completa")).toHaveCount(0);
   await expect(page.getByText(/imágenes indexadas/)).toBeVisible();
   await shot(page, "80-game-settings-es-light");
 

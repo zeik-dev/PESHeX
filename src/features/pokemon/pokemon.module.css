@@ -22,12 +22,6 @@
 .statName {
   font-weight: 600;
 }
-.quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 8px 0 16px;
-}
 .cached {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -74,6 +68,28 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+.quickList {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.quickList button {
+  justify-content: flex-start;
+}
+.quickTrigger {
+  flex: 1;
+  justify-content: center;
+}
+/* Desplegable «Acciones rápidas» del panel de datos: sin marco propio (el popover ya lo trae). */
+.quickPopover {
+  width: 300px;
+}
+.quickPopover .quick {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .evPresets {

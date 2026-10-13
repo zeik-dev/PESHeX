@@ -6,6 +6,7 @@ import type { CalStatus } from "../../game/types";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
 import { useSession } from "../../stores/session";
+import { useHexMode } from "../../stores/settings";
 import { Banner, Button, Card, Chip, PokeballSpinner } from "../../ui";
 import shared from "../shared/shared.module.css";
 
@@ -17,6 +18,7 @@ export function GameFolderCard() {
   const game = useGame();
   const filePath = useSession((s) => s.filePath);
   const pending = useSession((s) => s.pendingCount);
+  const hex = useHexMode();
   const { status, linking, ctx, catalog, scanTruncated } = game;
 
   const icons = useMemo(() => {
@@ -132,7 +134,7 @@ export function GameFolderCard() {
               </div>
             )}
 
-            <LegalityBlock />
+            {hex && <LegalityBlock />}
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Button disabled={pending > 0} onClick={() => void choose()}>

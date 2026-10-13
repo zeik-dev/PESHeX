@@ -33,7 +33,7 @@ export const useEdit = create<EditState>((set) => ({
         useSession.getState().setCounts(r.pendingCount, 0);
       }
       const bad = (r.newFlags ?? []).filter((f) => f.severity !== "info");
-      if (r.applied && bad.length > 0) {
+      if (r.applied && bad.length > 0 && useSettings.getState().mode === "hex") {
         useToasts.getState().push({ kind: "warning", text: i18n.t("mode.haxApplied", { count: bad.length }) });
       }
       return r;

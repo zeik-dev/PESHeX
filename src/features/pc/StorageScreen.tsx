@@ -1,11 +1,12 @@
 import { HeartPulse, Monitor, Upload, Users } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { semantic } from "../../api/semantic";
 import { displayName } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
 import { usePc } from "../../stores/pc";
+import { useHexMode } from "../../stores/settings";
 import { useSession } from "../../stores/session";
 import { useUi } from "../../stores/ui";
 import { Banner, Button, ConfirmDialog, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Switch } from "../../ui";
@@ -22,8 +23,8 @@ import styles from "./pc.module.css";
 /** PC (caja + equipo + datos) y Equipo (rejilla grande + datos): la misma pantalla con dos disposiciones. */
 export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
   const { t } = useT();
-  const root = useRef<HTMLDivElement>(null);
-  const scale = usePcScale(root);
+  // La escala de la caja se mide sobre el area de la rejilla (no sobre la pantalla entera: el aviso de arriba resta alto).
+  const { scale, ref: layoutRef } = usePcScale();
   const apply = useEdit((s) => s.apply);
   const openEditor = useSession((s) => s.openEditor);
   const profile = useSession((s) => s.profile);
@@ -34,8 +35,10 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
 
   const storageQ = useSemanticQuery("storage", semantic.storage);
   const partyQ = useSemanticQuery("party", semantic.party);
-  const legalityQ = useLegality();
-  const report = legalityQ.data;
+  // La legalidad solo existe en HeX: en HaX ni se consulta ni se muestra nada de ella.
+  const hex = useHexMode();
+  const legalityQ = useLegality(hex);
+  const report = hex ? legalityQ.data : undefined;
   const storage = storageQ.data;
   const party = useMemo(() => partyQ.data ?? [], [partyQ.data]);
   const editable = profile?.editable ?? false;
@@ -114,7 +117,7 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
       illegalPerBox[b] = (illegalPerBox[b] ?? 0) + 1;
     }
   }
-  const isDim = (ref: string | null) => onlyIllegal && (ref == null || flags[ref] !== "illegal");
+  const isDim = (ref: string | null) => hex && onlyIllegal && (ref == null || flags[ref] !== "illegal");
   const emptySelected = !!selected && !selectedPk && /^(party|box)\//.test(selected);
   const infoRef = selectedPk ? selectedPk.ref : null;
   const releaseTarget = releasing ? all.get(releasing) : null;
@@ -122,49 +125,53 @@ export function StorageScreen({ mode }: { mode: "pc" | "party" }) {
   const ghostPk = dnd.drag ? all.get(dnd.drag.ref) : null;
 
   return (
-    <div ref={root} className={styles.screen}>
-      <PageTitle
-        icon={mode === "pc" ? <Monitor /> : <Users />}
-        title={mode === "pc" ? t("boxes.title") : t("party.title")}
-        subtitle={mode === "pc" && storage ? t("boxes.total", { count: storage.total }) : undefined}
-      />
+    <div className={styles.screen}>
+      <PageTitle icon={mode === "pc" ? <Monitor /> : <Users />} title={mode === "pc" ? t("boxes.title") : t("party.title")} />
       {!linked && (
         <Banner tone="info" title={t("game.bannerTitle")} action={<Button size="sm" onClick={() => useSession.getState().setView("settings")}>{t("game.bannerAction")}</Button>}>
           {t("game.banner")}
         </Banner>
       )}
-      <div className={styles.filterBar}>
-        <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }} title={t("legality.onlyIllegalHint")}>
-          <Switch checked={onlyIllegal} onChange={setOnlyIllegal} label={t("legality.onlyIllegal")} />
-          {t("legality.onlyIllegal")}
-        </label>
-        {report && report.summary.illegal > 0 && <span className="muted">{t("legality.illegal", { count: report.summary.illegal })}</span>}
-        <span style={{ flex: 1 }} />
-        <Button size="sm" disabled={!editable || party.length === 0} onClick={() => void apply(healOps(party.map((p) => p.ref)))}>
-          <HeartPulse size={14} /> {t("quick.healParty")}
-        </Button>
-        <Button size="sm" disabled={!editable} onClick={() => useUi.getState().setImportOpen(true)}>
-          <Upload size={14} /> {t("transfer.import")}
-        </Button>
-      </div>
       {dnd.grab && <div role="status" className={styles.grabHint}>{t("pc.grabHint")}</div>}
-      <div className={styles.layout} data-mode={mode}>
-        <PartyTray
-          party={party}
-          limit={limit}
-          variant={mode === "pc" ? "tray" : "grid"}
-          cell={mode === "pc" ? 72 : 0}
-          selected={selected}
-          over={dnd.drag?.over ?? null}
-          grabRef={dnd.grab ?? dnd.drag?.ref ?? null}
-          flags={flags}
-          isDim={isDim}
-          onSelect={select}
-          onOpen={openEditor}
-          dragProps={dnd.dragProps}
-          onCellKey={onCellKey}
-          wasDragged={dnd.wasDragged}
-        />
+      <div ref={layoutRef} className={styles.layout} data-mode={mode}>
+        <div className={styles.side} data-mode={mode}>
+          <PartyTray
+            party={party}
+            limit={limit}
+            variant={mode === "pc" ? "tray" : "grid"}
+            cell={mode === "pc" ? 72 : 0}
+            selected={selected}
+            over={dnd.drag?.over ?? null}
+            grabRef={dnd.grab ?? dnd.drag?.ref ?? null}
+            flags={flags}
+            isDim={isDim}
+            onSelect={select}
+            onOpen={openEditor}
+            dragProps={dnd.dragProps}
+            onCellKey={onCellKey}
+            wasDragged={dnd.wasDragged}
+          />
+          <div className={styles.sideTools}>
+            {mode === "pc" && storage && <div className="muted" data-testid="pc-total">{t("boxes.total", { count: storage.total })}</div>}
+            {hex && (
+              <div className={styles.sideRow}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }} title={t("legality.onlyIllegalHint")}>
+                  <Switch checked={onlyIllegal} onChange={setOnlyIllegal} label={t("legality.onlyIllegal")} />
+                  {t("legality.onlyIllegal")}
+                </label>
+                {report && report.summary.illegal > 0 && <span className="muted">{t("legality.illegal", { count: report.summary.illegal })}</span>}
+              </div>
+            )}
+            <div className={styles.sideRow}>
+              <Button size="sm" disabled={!editable || party.length === 0} onClick={() => void apply(healOps(party.map((p) => p.ref)))}>
+                <HeartPulse size={14} /> {t("quick.healParty")}
+              </Button>
+              <Button size="sm" disabled={!editable} onClick={() => useUi.getState().setImportOpen(true)}>
+                <Upload size={14} /> {t("transfer.import")}
+              </Button>
+            </div>
+          </div>
+        </div>
         {mode === "pc" && storage && (
           <BoxPanel
             box={storage.boxes[boxIndex]}

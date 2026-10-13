@@ -140,3 +140,9 @@ export function bootstrapSettings() {
     if (state.theme !== prev.theme || state.ball !== prev.ball) applyAppearance(state.theme, state.ball);
   });
 }
+
+/** ¿Está activo el modo HeX? Todo lo relativo a legalidad (tarjetas, insignias, interruptores, pestañas, avisos)
+ *  solo existe con HeX activo; en HaX la interfaz no muestra nada de legalidad. */
+export function useHexMode(): boolean {
+  return useSettings((s) => s.mode === "hex");
+}

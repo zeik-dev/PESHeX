@@ -100,17 +100,28 @@ export function ItemIcon({ item, size = 24, className }: { item: ItemKey; size?:
   const catalog = useGame((s) => s.catalogIndex);
   const resolved = useMemo<Resolved | null>(() => {
     if (!ctx) return null;
-    const cat = catalog?.items.get(String(item.id));
+    const cat = typeof item.id === "number" ? catalog?.itemsByNumber.get(item.id) : catalog?.items.get(item.id);
     const moveType = cat?.move ? catalog?.moves.get(cat.move)?.type ?? null : null;
-    return resolveItemIcon(ctx, { ...item, machineType: item.machineType ?? moveType, fieldUse: item.fieldUse ?? cat?.fieldUse });
+    return resolveItemIcon(ctx, {
+      ...item,
+      number: item.number ?? cat?.number,
+      machineType: item.machineType ?? moveType,
+      fieldUse: item.fieldUse ?? cat?.fieldUse,
+    });
   }, [ctx, catalog, item]);
   if (!resolved) return null;
   return <GameImage rel={resolved.path} size={size} className={className} />;
 }
 
+/** `ball` es el id del OBJETO-bola ("GREATBALL"; el driver ya lo resuelve en bases antiguas con `ballItem`). */
 export function BallIcon({ ball, size = 24, className }: { ball: string | number; size?: number; className?: string }) {
   const ctx = useGame((s) => s.ctx);
-  const resolved = useMemo(() => (ctx ? resolveBallIcon(ctx, ball) : null), [ctx, ball]);
+  const catalog = useGame((s) => s.catalogIndex);
+  const resolved = useMemo(() => {
+    if (!ctx) return null;
+    const number = typeof ball === "string" ? catalog?.items.get(ball)?.number : null;
+    return resolveBallIcon(ctx, ball, number);
+  }, [ctx, ball, catalog]);
   if (!resolved) return null;
   return <GameImage rel={resolved.path} size={size} className={className} />;
 }

@@ -128,7 +128,8 @@ test("HeX rechaza un valor ilegal y HaX lo permite", async ({ page }) => {
   await money.fill("99999999");
   await money.press("Enter");
   await expect(page.getByLabel("Dinero")).toHaveValue("99999999");
-  await expect(page.getByText(/Cambio aplicado con 1 aviso de legalidad/)).toBeVisible();
+  // En HaX la interfaz no muestra nada de legalidad: ni siquiera un aviso tras aplicar el cambio.
+  await expect(page.getByText(/legalidad/i)).toHaveCount(0);
 });
 
 test("editor de Pokémon: IV perfectos, movimientos y guardado real", async ({ page }) => {
@@ -166,8 +167,8 @@ test("mochila: añadir un objeto y ver el PC", async ({ page }) => {
   await openSave(page);
   await page.getByRole("button", { name: "Mochila", exact: true }).click();
   await page.getByRole("tab", { name: /Poké Balls/ }).click();
-  await page.getByLabel("ID interno del objeto").fill("ultraball");
-  await page.getByRole("button", { name: "Añadir", exact: true }).click();
+  await page.getByLabel("Objeto (nombre o ID)").fill("ultraball");
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
   await expect(page.getByText("Ultraball").first()).toBeVisible();
   await shot(page, "50-bag-es-light");
   await page.getByRole("button", { name: "PC", exact: true }).click();

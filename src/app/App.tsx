@@ -1,5 +1,5 @@
 import { useSession } from "../stores/session";
-import { Toasts } from "../ui";
+import { Toasts, cx } from "../ui";
 import { Advanced } from "../features/advanced/Advanced";
 import { Bag } from "../features/bag/Bag";
 import { Backups } from "../features/backups/Backups";
@@ -40,15 +40,19 @@ function CurrentView() {
   }
 }
 
+/** Equipo y PC ocupan todo el alto: la pagina no scrollea, solo el panel de datos del Pokémon. */
+const FILL_VIEWS = new Set(["party", "boxes"]);
+
 export default function App() {
   const filePath = useSession((s) => s.filePath);
+  const fill = useSession((s) => FILL_VIEWS.has(s.view));
   return (
     <>
       {filePath ? (
         <div className={styles.shell}>
           <PokeHeader />
-          <main className={styles.main}>
-            <div className={styles.content}>
+          <main className={cx(styles.main, fill && styles.mainFill)}>
+            <div className={cx(styles.content, fill && styles.contentFill)}>
               <CurrentView />
             </div>
           </main>
