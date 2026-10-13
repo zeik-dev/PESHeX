@@ -1040,7 +1040,13 @@
       "map": "Map {{n}}",
       "levels": "Lv. {{range}}",
       "regional": "Regional numbering",
-      "regionalDex": "Regional Pokédex {{n}}"
+      "regionalDex": "Regional Pokédex {{n}}",
+      "error": "The sheet could not be read",
+      "retry": "Retry",
+      "slow": "The sheet is taking longer than usual",
+      "slowBody": "The data engine has not answered yet. You can wait or retry.",
+      "extrasError": "The locations could not be read",
+      "partial": "Some data of this sheet could not be read."
     },
     "growth": {
       "Erratic": "Erratic",

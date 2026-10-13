@@ -1,32 +1,41 @@
 import { X } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { gameApi } from "../../api/game";
+import { toApiError } from "../../api/tauri";
 import { STAT_IDS } from "../../api/types";
 import { norm } from "../../game/normalize";
 import type { SpeciesDetail, SpeciesEvolution, SpeciesExtras } from "../../game/types";
 import { prettyId } from "../../game/useCatalog";
+import { errorText } from "../../lib/errors";
 import { evoParamKind, groupEncounters, humanizeMethod, levelRange } from "../../lib/evolution";
 import { genderLabel, statTotal } from "../../lib/speciesInfo";
 import { typeMatchups } from "../../lib/typeChart";
 import { useT } from "../../lib/useT";
 import { useGame } from "../../stores/game";
-import { Button, Chip, ItemIcon, PokemonIcon, PokeballSpinner, StatBar, Tabs, TypeChip } from "../../ui";
+import { Banner, Button, Chip, ItemIcon, PokemonIcon, PokeballSpinner, StatBar, Tabs, TypeChip } from "../../ui";
 import { useSemanticQuery } from "../queries";
 import styles from "./pokedex.module.css";
 
 type MoveTab = "level" | "tm" | "tutor" | "egg";
 
-/** Consulta de la ficha (comparte clave con la del editor de Pokémon): sin datos mientras llega otra especie. */
+/** Consulta de la ficha (comparte clave con la del editor de Pokémon): sin datos mientras llega otra especie. Un fallo se
+ *  muestra (con «Reintentar») en vez de dejar el spinner para siempre. */
 function useSpecies(id: string, form: number) {
-  const q = useSemanticQuery<SpeciesDetail>(["species", id, form], () => gameApi.species(id, form));
-  return q.isPlaceholderData ? undefined : q.data;
+  const q = useSemanticQuery<SpeciesDetail>(["species", id, form], () => gameApi.species(id, form), true, { retry: 1 });
+  return { data: q.isPlaceholderData ? undefined : q.data, error: q.isError ? toApiError(q.error) : null, refetch: q.refetch };
 }
 
-function useExtras(id: string, form: number) {
-  const q = useSemanticQuery<SpeciesExtras>(["species-extras", id, form], () => gameApi.speciesExtras(id, form));
-  return q.isPlaceholderData ? undefined : q.data;
+/** Zonas y numeración regional: se piden DESPUÉS de la ficha y con la especie estable (`enabled`): el driver Ruby atiende
+ *  una petición cada vez y un extras lento no debe retrasar la ficha de la siguiente especie. */
+function useExtras(id: string, form: number, enabled: boolean) {
+  const q = useSemanticQuery<SpeciesExtras>(["species-extras", id, form], () => gameApi.speciesExtras(id, form), enabled, { retry: 1 });
+  return { data: q.isPlaceholderData ? undefined : q.data, error: q.isError ? toApiError(q.error) : null, refetch: q.refetch };
 }
+
+/** Espera de cortesía antes de pedir los extras tras abrir una ficha (ms) y aviso de lentitud (ms). */
+const EXTRAS_SETTLE_MS = 250;
+const SLOW_MS = 8_000;
 
 function Section({ title, children, testId }: { title: string; children: ReactNode; testId?: string }) {
   return (
@@ -46,8 +55,24 @@ export function SpeciesSheet({ speciesId, onSelect, onClose }: { speciesId: stri
   const [form, setForm] = useState(0);
   const [moveTab, setMoveTab] = useState<MoveTab>("level");
   const [moveFilter, setMoveFilter] = useState("");
-  const detail = useSpecies(speciesId, form);
-  const extras = useExtras(speciesId, form);
+  const detailQ = useSpecies(speciesId, form);
+  const detail = detailQ.data;
+  const [settled, setSettled] = useState(false);
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSettled(false);
+    if (!detail) return;
+    const timer = setTimeout(() => setSettled(true), EXTRAS_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [detail?.id, detail?.form]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setSlow(false);
+    if (detail || detailQ.error) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_MS);
+    return () => clearTimeout(timer);
+  }, [speciesId, form, detail, detailQ.error]);
+  const extrasQ = useExtras(speciesId, form, !!detail && settled);
+  const extras = extrasQ.data;
   const num = (n: number) => n.toLocaleString(locale, { maximumFractionDigits: 1 });
   const has = (key: string) => i18n.exists(key);
   /** Traducción por clave con respaldo (los valores del PBS son enums en inglés: se traducen los conocidos). */
@@ -58,12 +83,25 @@ export function SpeciesSheet({ speciesId, onSelect, onClose }: { speciesId: stri
 
   if (!detail) {
     return (
-      <aside className={styles.sheet} aria-label={t("pokedex.sheet.label")}>
+      <aside className={styles.sheet} aria-label={t("pokedex.sheet.label")} data-testid="species-sheet" data-state={detailQ.error ? "error" : "loading"}>
         <div className={styles.sheetHead}>
           <strong>{name}</strong>
           <Button variant="ghost" size="sm" icon onClick={onClose} aria-label={t("pokedex.sheet.close")} title={t("pokedex.sheet.close")}><X size={16} /></Button>
         </div>
-        <PokeballSpinner label={t("pokedex.sheet.loading")} />
+        {detailQ.error ? (
+          <Banner tone="bad" title={t("pokedex.sheet.error")} action={<Button size="sm" onClick={() => void detailQ.refetch()}>{t("pokedex.sheet.retry")}</Button>}>
+            <span data-testid="sheet-error">{errorText(t, detailQ.error)}</span>
+          </Banner>
+        ) : (
+          <>
+            <PokeballSpinner label={t("pokedex.sheet.loading")} />
+            {slow && (
+              <Banner tone="warn" title={t("pokedex.sheet.slow")} action={<Button size="sm" onClick={() => void detailQ.refetch()}>{t("pokedex.sheet.retry")}</Button>}>
+                {t("pokedex.sheet.slowBody")}
+              </Banner>
+            )}
+          </>
+        )}
       </aside>
     );
   }
@@ -137,6 +175,12 @@ export function SpeciesSheet({ speciesId, onSelect, onClose }: { speciesId: stri
             </button>
           ))}
         </div>
+      )}
+
+      {detail.warnings && detail.warnings.length > 0 && (
+        <p className="muted" style={{ fontSize: 12, margin: 0 }} title={detail.warnings.join("\n")} data-testid="sheet-warnings">
+          {t("pokedex.sheet.partial")}
+        </p>
       )}
 
       {info.pokedex && <p className={styles.entry}>{info.pokedex}</p>}
@@ -272,7 +316,14 @@ export function SpeciesSheet({ speciesId, onSelect, onClose }: { speciesId: stri
 
       <Section title={t("pokedex.sheet.encounters")} testId="sheet-encounters">
         {groups.length === 0 ? (
-          <p className="muted">{extras ? t("pokedex.sheet.noEncounters") : t("pokedex.sheet.loading")}</p>
+          extrasQ.error ? (
+            <p className="muted" data-testid="sheet-extras-error">
+              {t("pokedex.sheet.extrasError")}: {errorText(t, extrasQ.error)}{" "}
+              <Button size="sm" onClick={() => void extrasQ.refetch()}>{t("pokedex.sheet.retry")}</Button>
+            </p>
+          ) : (
+            <p className="muted">{extras ? t("pokedex.sheet.noEncounters") : t("pokedex.sheet.loading")}</p>
+          )
         ) : (
           <ul className={styles.plain}>
             {groups.map((g) => (

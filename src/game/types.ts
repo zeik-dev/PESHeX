@@ -190,6 +190,8 @@ export interface SpeciesDetail {
   mega?: SpeciesMega | null;
   region?: string | null;
   forms?: SpeciesForm[];
+  /** Bloques opcionales que no se pudieron leer (la ficha llega igual, sin ellos). */
+  warnings?: string[];
 }
 
 /** Dónde aparece una especie (encounters.txt) y su número en las Pokédex regionales. */
@@ -197,6 +199,7 @@ export interface SpeciesExtras {
   id: string;
   encounters: { map: number; name: string | null; method: string; min: number | null; max: number | null; chance: number | null }[];
   regional: Record<string, number>;
+  warnings?: string[];
 }
 
 // ── Escaneo de Graphics/ (src-tauri/src/game.rs) ────────────────────────────

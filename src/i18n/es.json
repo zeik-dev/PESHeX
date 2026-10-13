@@ -1043,7 +1043,13 @@
       "map": "Mapa {{n}}",
       "levels": "Nv. {{range}}",
       "regional": "Numeración regional",
-      "regionalDex": "Pokédex regional {{n}}"
+      "regionalDex": "Pokédex regional {{n}}",
+      "error": "No se pudo leer la ficha",
+      "retry": "Reintentar",
+      "slow": "La ficha tarda más de lo normal",
+      "slowBody": "El motor de datos no responde todavía. Puedes esperar o reintentar.",
+      "extrasError": "No se pudieron leer las zonas",
+      "partial": "Algunos datos de esta ficha no se pudieron leer."
     },
     "growth": {
       "Erratic": "Errático",

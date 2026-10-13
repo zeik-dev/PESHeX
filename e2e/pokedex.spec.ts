@@ -143,3 +143,41 @@ test("Pokédex: con latencia y clics rápidos entre especies, la última elegida
   await expect(sheet.getByTestId("sheet-stats")).toBeVisible({ timeout: 15_000 });
   await expect(sheet).toContainText(last);
 });
+
+test("Pokédex: si la ficha falla se ve el motivo y «Reintentar» la recupera (no hay spinner eterno)", async ({ page }) => {
+  test.setTimeout(120_000);
+  test.skip(!(await openDexWith(page, "anil", (e) => e.bridge.failCommand("get_species", "se rompió algo en el driver"))), "falta test_pbs/ o el save de prueba");
+  await dexRows(page).nth(1).click();
+  const sheet = page.getByTestId("species-sheet");
+  await expect(sheet.getByTestId("sheet-error")).toContainText("se rompió algo en el driver", { timeout: 15_000 });
+  await expect(page.getByText("No se pudo leer la ficha")).toBeVisible();
+  await expect(page.getByText("Cargando la ficha…")).toHaveCount(0);
+  // El motor se recupera: «Reintentar» carga la ficha.
+  env!.bridge.clearFailures();
+  await sheet.getByRole("button", { name: "Reintentar" }).click();
+  await expect(sheet.getByTestId("sheet-stats")).toBeVisible({ timeout: 10_000 });
+});
+
+test("Pokédex: un fallo al leer las zonas no bloquea la ficha y se puede reintentar", async ({ page }) => {
+  test.setTimeout(120_000);
+  test.skip(!(await openDexWith(page, "anil", (e) => e.bridge.failCommand("get_species_extras", "zonas ilegibles"))), "falta test_pbs/ o el save de prueba");
+  await dexRows(page).nth(1).click();
+  const sheet = page.getByTestId("species-sheet");
+  await expect(sheet.getByTestId("sheet-stats")).toBeVisible({ timeout: 10_000 });
+  await expect(sheet.getByTestId("sheet-extras-error")).toContainText("zonas ilegibles", { timeout: 15_000 });
+  // Otra especie sigue abriendo su ficha aunque las zonas fallen.
+  await dexRows(page).nth(2).click();
+  await expect(sheet.getByTestId("sheet-stats")).toBeVisible({ timeout: 10_000 });
+  await expect(sheet.getByTestId("sheet-extras-error")).toContainText("zonas ilegibles", { timeout: 15_000 });
+  env!.bridge.clearFailures();
+  await sheet.getByTestId("sheet-extras-error").getByRole("button", { name: "Reintentar" }).click();
+  await expect(sheet.getByTestId("sheet-regional")).toBeVisible({ timeout: 10_000 });
+});
+
+test("Pokédex: si el motor tarda, la ficha avisa de la lentitud y ofrece reintentar", async ({ page }) => {
+  test.setTimeout(120_000);
+  test.skip(!(await openDexWith(page, "anil", (e) => { e.bridge.callDelayMs = 9_500; })), "falta test_pbs/ o el save de prueba");
+  await dexRows(page).nth(1).click();
+  await expect(page.getByText("La ficha tarda más de lo normal")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("species-sheet").getByTestId("sheet-stats")).toBeVisible({ timeout: 30_000 });
+});
