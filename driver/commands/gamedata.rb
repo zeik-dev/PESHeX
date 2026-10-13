@@ -102,7 +102,7 @@ Commands.register('game_link_begin', bumps: true) do |ctx, params|
 end
 
 Commands.register('game_link_step') do |ctx, params|
-  Sem::GameApi.link_step!(ctx.session, params['id'])
+  Sem::GameApi.link_step!(ctx.session, params['step'])
 end
 
 Commands.register('game_link_finish', bumps: true) do |ctx, _p|
@@ -119,20 +119,24 @@ Commands.register('get_catalog') do |ctx, params|
   { catalog: Sem::GameData::Catalog.build(game, params['kinds']), state: game.state }
 end
 
+# OJO: la clave `id` de la peticion es el numero de peticion del protocolo (la UI no puede usarla para otra cosa): la
+# especie viaja en `species` (id interno, o numero en bases <= v18). `id` solo se acepta como respaldo en pruebas en proceso.
 Commands.register('get_species') do |ctx, params|
   game = Sem::GameApi.game!(ctx.session)
-  detail = Sem::GameData::Catalog.species_detail(game, params['id'], params['form'].to_i)
-  raise DriverError.new('SpeciesNotFound', "especie desconocida: #{params['id']}", { id: params['id'] }) unless detail
+  species = params.key?('species') ? params['species'] : params['id']
+  detail = Sem::GameData::Catalog.species_detail(game, species, params['form'].to_i)
+  raise DriverError.new('SpeciesNotFound', "especie desconocida: #{species}", { id: species }) unless detail
 
   { species: detail }
 end
 
 # Datos de apoyo de una especie que no cuestan nada hasta que se piden (Pokedex): donde aparece y su numero en las
-# Pokedex regionales. { id } -> { encounters: [...], regional: { indice => posicion } }
+# Pokedex regionales. { species } -> { encounters: [...], regional: { indice => posicion } }
 Commands.register('get_species_extras') do |ctx, params|
   game = Sem::GameApi.game!(ctx.session)
-  entry = game.species_entry(params['id'], params['form'].to_i)
-  raise DriverError.new('SpeciesNotFound', "especie desconocida: #{params['id']}", { id: params['id'] }) unless entry
+  species = params.key?('species') ? params['species'] : params['id']
+  entry = game.species_entry(species, params['form'].to_i)
+  raise DriverError.new('SpeciesNotFound', "especie desconocida: #{species}", { id: species }) unless entry
 
   { id: entry.species, encounters: game.encounters_for(entry.species), regional: game.regional_numbers(entry.species) }
 end

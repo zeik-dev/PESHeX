@@ -25,7 +25,7 @@ class GameLinkStepsTest < Minitest::Test
     out = @h.call('game_link_begin', path: self.class.fixture_dir)
     assert_equal %w[species moves items abilities types extras settings calibration], out['steps']
     refute linked?, 'mientras carga no esta vinculada'
-    out['steps'].each { |id| assert_equal id, @h.call('game_link_step', id: id)['step'] }
+    out['steps'].each { |id| assert_equal id, @h.call('game_link_step', step: id)['step'] }
     refute linked?, 'faltaba el finish'
     st = @h.call('game_link_finish')['game']
     assert st['linked']
@@ -35,7 +35,7 @@ class GameLinkStepsTest < Minitest::Test
 
   def test_el_resultado_es_el_mismo_que_con_set_game_folder
     @h.call('game_link_begin', path: self.class.fixture_dir)
-    %w[species moves items abilities types extras settings calibration].each { |id| @h.call('game_link_step', id: id) }
+    %w[species moves items abilities types extras settings calibration].each { |id| @h.call('game_link_step', step: id) }
     stepped = @h.call('game_link_finish')['game']
     direct = @h.call('set_game_folder', path: self.class.fixture_dir)['game']
     assert_equal direct['data']['domains'], stepped['data']['domains']
@@ -44,12 +44,12 @@ class GameLinkStepsTest < Minitest::Test
   end
 
   def test_errores_claros_sin_begin_con_pasos_incompletos_y_pasos_desconocidos
-    err = assert_raises(DriverError) { @h.call('game_link_step', id: 'species') }
+    err = assert_raises(DriverError) { @h.call('game_link_step', step: 'species') }
     assert_equal 'NoPendingGameLink', err.error_type
     @h.call('game_link_begin', path: self.class.fixture_dir)
     err = assert_raises(DriverError) { @h.call('game_link_finish') }
     assert_equal 'GameLinkIncomplete', err.error_type
-    err = assert_raises(DriverError) { @h.call('game_link_step', id: 'nope') }
+    err = assert_raises(DriverError) { @h.call('game_link_step', step: 'nope') }
     assert_equal 'unknown_step', err.params[:code]
   end
 
@@ -63,7 +63,7 @@ class GameLinkStepsTest < Minitest::Test
 
   def test_un_begin_nuevo_descarta_la_carga_anterior
     @h.call('game_link_begin', path: self.class.fixture_dir)
-    @h.call('game_link_step', id: 'species')
+    @h.call('game_link_step', step: 'species')
     @h.call('game_link_begin', path: self.class.fixture_dir)
     err = assert_raises(DriverError) { @h.call('game_link_finish') }
     assert_equal 'GameLinkIncomplete', err.error_type, 'empieza de cero'
@@ -74,7 +74,7 @@ class GameLinkStepsTest < Minitest::Test
     z = Harness.new
     z.open(real_save(:z))
     out = z.call('game_link_begin', path: root)
-    out['steps'].each { |id| z.call('game_link_step', id: id) }
+    out['steps'].each { |id| z.call('game_link_step', step: id) }
     st = z.call('game_link_finish')['game']
     assert_equal 1018, st['data']['domains']['species']['count']
     assert_equal 36, st['limits']['boxCount'], 'STORAGEBOXES de los scripts de Z'

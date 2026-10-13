@@ -227,11 +227,11 @@ class GameDataTest < Minitest::Test
     only = @h.call('get_catalog', kinds: %w[moves])['catalog']
     assert_equal ['moves'], only.keys
 
-    sp = @h.call('get_species', id: 'TORRACAT')['species']
+    sp = @h.call('get_species', species: 'TORRACAT')['species']
     assert_equal 6, sp['baseStats'].size
     assert_equal 'Gatito Fuego', sp['name']
     assert_includes sp['hiddenAbilities'], 'FIXTUREHIDDEN'
-    err = assert_raises(DriverError) { @h.call('get_species', id: 'NOEXISTE') }
+    err = assert_raises(DriverError) { @h.call('get_species', species: 'NOEXISTE') }
     assert_equal 'SpeciesNotFound', err.error_type
   end
 

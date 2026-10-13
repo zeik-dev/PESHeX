@@ -138,10 +138,25 @@ class RealCatalogTest < Minitest::Test
     h = Harness.new
     h.open(save_path('Partida_2.rxdata'))
     h.session.game = real_store(:anil)
-    out = h.call('get_species_extras', { 'id' => 'PIDGEY' })
+    out = h.call('get_species_extras', { 'species' => 'PIDGEY' })
     assert_equal 'PIDGEY', out['id']
     assert_operator out['encounters'].size, :>, 0
     assert_equal 'Pueblo Paleta', out['encounters'].first['name']
     assert_kind_of Hash, out['regional']
+  end
+end
+
+class RealLearnableTest < Minitest::Test
+  include RealGames
+
+  def test_learnable_incluye_nivel_tutor_mt_huevo_y_preevoluciones
+    anil = Sem::GameData::Catalog.species_detail(real_store(:anil), 'IVYSAUR', 0)
+    assert_includes anil[:learnable], 'VINEWHIP'      # nivel
+    assert_includes anil[:learnable], 'AMNESIA'       # tutor / huevo
+    assert_includes anil[:learnable], 'TACKLE'        # de su preevolución
+    refute_includes anil[:learnable], 'SPLASH'
+    z = Sem::GameData::Catalog.species_detail(real_store(:z), 2, 0)
+    assert_includes z[:learnable], 'VENOSHOCK', 'MT de tm.txt'
+    assert_includes z[:learnable], 'TACKLE'
   end
 end

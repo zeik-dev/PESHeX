@@ -21,13 +21,13 @@ export const gameApi = {
   /** Carga por pasos (progreso real): begin devuelve los pasos; cada `linkStep` carga uno; `linkFinish` vincula. */
   linkBegin: (path: string | null, source: GameSource = "manual") =>
     driverCall<{ root: string | null; steps: string[] }>("game_link_begin", { path, source }),
-  linkStep: (id: string) => driverCall<{ step: string }>("game_link_step", { id }),
+  linkStep: (step: string) => driverCall<{ step: string }>("game_link_step", { step }),
   linkFinish: async () => (await driverCall<{ game: GameStatus }>("game_link_finish")).game,
   status: async () => (await driverCall<{ game: GameStatus }>("get_game_status")).game,
   catalog: async (kinds?: string[]) => (await driverCall<{ catalog: Catalog }>("get_catalog", { kinds })).catalog,
-  species: async (id: string, form = 0) =>
-    (await driverCall<{ species: SpeciesDetail }>("get_species", { id, form })).species,
-  speciesExtras: (id: string, form = 0) => driverCall<SpeciesExtras>("get_species_extras", { id, form }),
+  species: async (id: string | number, form = 0) =>
+    (await driverCall<{ species: SpeciesDetail }>("get_species", { species: id, form })).species,
+  speciesExtras: (id: string, form = 0) => driverCall<SpeciesExtras>("get_species_extras", { species: id, form }),
   calcStats: (params: Record<string, unknown>) =>
     driverCall<{
       stats: Record<string, number>; cached?: Record<string, number | null>; match?: boolean; trusted: boolean;
