@@ -26,7 +26,7 @@ export function GameFolderCard() {
     if (!ctx || !catalog) return null;
     const base = catalog.species.filter((s) => s.form === 0);
     const found = base.filter((s) => {
-      const r = resolvePokemonIcon(ctx, { species: s.id });
+      const r = resolvePokemonIcon(ctx, { species: s.id, number: s.number ?? undefined });
       return r != null && r.via !== "generic";
     }).length;
     return { found, total: base.length };
@@ -68,7 +68,7 @@ export function GameFolderCard() {
               )}
               <span className={shared.kvLabel}>{t("game.version")}</span>
               <span className={shared.kvValue}>
-                {status.data?.version ?? "—"} · {status.source ? t(`game.source.${status.source}`) : ""}
+                {status.data?.version === "pbs" ? t("game.domainSource.pbs") : (status.data?.version ?? "—")} · {status.source ? t(`game.source.${status.source}`) : ""}
               </span>
             </div>
 
