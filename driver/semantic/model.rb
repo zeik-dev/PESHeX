@@ -266,8 +266,12 @@ module Sem
         next nil unless m
 
         id_node = Tree.object?(m) ? Tree.ivar(m, '@id') : m
+        mid = Ids.of(id_node)
+        # Hueco libre de las bases <= v18 (PBMove con id 0): la UI lo trata como un slot vacio.
+        next({ slot: i, id: nil, name: nil, empty: true, pp: nil, ppUps: nil }) if mid == 0 || mid == ''
+
         {
-          slot: i, id: Ids.of(id_node), name: name_of(:move, Ids.of(id_node)),
+          slot: i, id: mid, name: name_of(:move, mid),
           pp: Tree.int_value(Tree.object?(m) ? Tree.ivar(m, '@pp') : nil),
           ppUps: Tree.int_value(Tree.object?(m) ? first_value(m, %w[@ppup @ppUp]) : nil)
         }

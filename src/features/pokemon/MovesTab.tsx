@@ -22,17 +22,21 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
   const setOnlyMoves = useSettings((s) => s.setOnlySpeciesMoves);
   const [newId, setNewId] = useState<string | null>(null);
 
+  // Los huecos libres de las bases viejas (id 0) no son movimientos: no se listan y se reutilizan al añadir.
+  const moves = pk.moves.filter((m) => !m.empty);
+  const freeSlot = pk.moves.find((m) => m.empty)?.slot ?? pk.moves.length;
+
   const learnable = species?.learnable;
   const canFilter = !!learnable?.length;
   const filter = canFilter && (hex || onlyMoves);
   // Los movimientos que ya tiene siempre se ofrecen (si no, el selector enseñaría su id en bruto).
   const allowed = useMemo(() => {
     if (!filter || !learnable) return null;
-    const own = pk.moves.map((m) => internalId(index, "moves", m.id)).filter((x): x is string => !!x);
+    const own = moves.map((m) => internalId(index, "moves", m.id)).filter((x): x is string => !!x);
     return new Set([...learnable, ...own]);
-  }, [filter, learnable, pk.moves, index]);
+  }, [filter, learnable, moves, index]);
   const moveOptions = useMoveOptions(allowed);
-  const canAdd = editable && pk.moves.length < pk.limits.maxMoves;
+  const canAdd = editable && moves.length < pk.limits.maxMoves;
 
   return (
     <div>
@@ -42,8 +46,8 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
           {t("pokemon.onlySpeciesMoves")}
         </label>
       )}
-      {pk.moves.length === 0 && <EmptyState>{t("pokemon.moves.empty")}</EmptyState>}
-      {pk.moves.map((m) => {
+      {moves.length === 0 && <EmptyState>{t("pokemon.moves.empty")}</EmptyState>}
+      {moves.map((m) => {
         const entry = catEntry(index, "moves", m.id);
         const value = internalId(index, "moves", m.id);
         return (
@@ -98,7 +102,7 @@ export function MovesTab({ pk, editable, species }: { pk: PokemonDetail; editabl
               )
             }
           </Field>
-          <Button variant="primary" disabled={!newId?.trim()} onClick={() => { patch({ moves: [{ slot: pk.moves.length, id: newId!.trim() }] }); setNewId(null); }}>
+          <Button variant="primary" disabled={!newId?.trim()} onClick={() => { patch({ moves: [{ slot: freeSlot, id: newId!.trim() }] }); setNewId(null); }}>
             <Plus size={16} /> {t("pokemon.moves.add")}
           </Button>
         </div>

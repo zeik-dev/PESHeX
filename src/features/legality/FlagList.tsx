@@ -16,10 +16,12 @@ export function SeverityIcon({ severity, size = 15 }: { severity: Flag["severity
 /** Nombres del juego para los sujetos de las flags (movimientos, objetos, habilidades). */
 export function useNameLookup(): NameLookup {
   const idx = useGame((s) => s.catalogIndex);
+  // Las bases <= v18 guardan ids enteros: el sujeto de la flag llega como "501" y se nombra por su numero.
+  const num = (id: string) => (/^\d+$/.test(id) ? Number(id) : null);
   return {
-    move: (id) => idx?.moves.get(id)?.name ?? undefined,
-    item: (id) => idx?.items.get(id)?.name ?? undefined,
-    ability: (id) => idx?.abilities.get(id)?.name ?? undefined,
+    move: (id) => (idx?.moves.get(id) ?? (num(id) != null ? idx?.movesByNumber.get(num(id)!) : undefined))?.name ?? undefined,
+    item: (id) => (idx?.items.get(id) ?? (num(id) != null ? idx?.itemsByNumber.get(num(id)!) : undefined))?.name ?? undefined,
+    ability: (id) => (idx?.abilities.get(id) ?? (num(id) != null ? idx?.abilitiesByNumber.get(num(id)!) : undefined))?.name ?? undefined,
   };
 }
 

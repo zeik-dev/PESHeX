@@ -56,7 +56,7 @@ module Sem
       if dto[:hp] && dto[:totalHp] && dto[:hp] > dto[:totalHp]
         out << issue(:warning, 'hp_over_total', { hp: dto[:hp], totalHp: dto[:totalHp] }, ref)
       end
-      ids = dto[:moves].map { |m| m[:id] }
+      ids = dto[:moves].reject { |m| m[:empty] }.map { |m| m[:id] }
       dup = ids.group_by(&:itself).select { |_, v| v.size > 1 }.keys
       out << issue(:warning, 'moves_duplicate', { moves: dup }, ref) unless dup.empty?
       out << issue(:error, 'moves_count', { count: ids.size, max: 4 }, ref) if ids.size > 4

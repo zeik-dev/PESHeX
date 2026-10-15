@@ -71,7 +71,11 @@ module Sem
         next nil unless m
 
         id_node = Tree.object?(m) ? Tree.ivar(m, '@id') : m
-        { id: Ids.of(id_node), pp: Tree.int_value(Tree.object?(m) ? Tree.ivar(m, '@pp') : nil),
+        id = Ids.of(id_node)
+        # Las bases <= v18 guardan el hueco libre como un PBMove con id 0: no es un movimiento.
+        next nil if id.nil? || id == 0 || id == ''
+
+        { id: id, pp: Tree.int_value(Tree.object?(m) ? Tree.ivar(m, '@pp') : nil),
           ppup: Tree.int_value(Tree.object?(m) ? first(m, %w[@ppup @ppUp]) : nil) }
       end
     end

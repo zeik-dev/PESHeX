@@ -157,6 +157,8 @@ export interface MoveDto {
   name: string | null;
   pp: number | null;
   ppUps: number | null;
+  /** Hueco libre de las bases <= v18 (un PBMove con id 0): no es un movimiento. */
+  empty?: boolean;
 }
 
 export interface PokemonDetail extends PokemonSummary {

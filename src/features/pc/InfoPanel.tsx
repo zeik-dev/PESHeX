@@ -100,7 +100,7 @@ export function InfoPanel({ pokemonRef, emptySlot, emptyRef, editable, partial, 
 
       <div className={styles.sectionLabel}>{t("pokemon.tabs.moves")}</div>
       <ul className={styles.moves}>
-        {pk.moves.map((m) => {
+        {pk.moves.filter((m) => !m.empty).map((m) => {
           const mv = catEntry(catalog, "moves", m.id);
           return (
             <li key={m.slot}>

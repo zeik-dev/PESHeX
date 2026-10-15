@@ -144,6 +144,28 @@ module Sem
         e && (e.form.zero? ? e : table(:species)[e.species])
       end
 
+      # Todas las entradas (forma 0 y formas) de una especie base, por su id interno.
+      def species_forms(species)
+        @forms_by_species ||= table(:species).each_value.group_by(&:species)
+        @forms_by_species[species.to_s] || []
+      end
+
+      # ¿Es valida la forma `form` de la especie? Que no exista la entrada `ESPECIE_N` no basta para decir que no:
+      # en v20/v21 hay formas por defecto (`Flags = DefaultForm_N`, p. ej. MR. RIME 1), huecos entre las formas definidas
+      # (formas cosmeticas, p. ej. MINIOR) y especies cuyas formas no estan en el PBS (se fijan por scripts).
+      def form_exists?(id, form)
+        form = form.to_i
+        return true if form <= 0
+
+        base = base_species(id)
+        return true if base.nil?
+        return true if table(:species)["#{base.species}_#{form}"]
+        return true if base.flags.map { |f| f.to_s.downcase }.include?("defaultform_#{form}")
+
+        defined = species_forms(base.species).select { |e| e.form.positive? }.map(&:form)
+        defined.empty? || form < defined.max
+      end
+
       # Id interno de una especie (acepta numeros de bases <= v18).
       def species_key(id)
         id.is_a?(Integer) ? (by_number(:species, id)&.species || id.to_s) : id.to_s
@@ -434,17 +456,19 @@ module Sem
 
       def build_prevo_index
         idx = {}
+        # Tambien las formas: una evolucion puede existir solo desde una forma (SNEASEL de Hisui -> SNEASLER).
         table(:species).each_value do |sp|
-          next unless sp.form.zero?
-
-          sp.evolutions.each { |e| idx[e[:species]] ||= sp.id unless e[:prevo] }
+          sp.evolutions.each { |e| idx[e[:species]] ||= sp.species unless e[:prevo] }
         end
         idx
       end
 
       def build_profile(id, form)
         entries = [species_entry(id, form), base_species(id)].compact.uniq
-        chain = ([id.to_s] + prevos(id)).filter_map { |s| base_species(s) }
+        # De las preevoluciones cuentan TODAS sus formas: el indice de forma puede cambiar al evolucionar
+        # (ARCANINE de Hisui hereda los movimientos huevo de GROWLITHE de Hisui) y un falso "no puede aprenderlo"
+        # es peor que un falso "si puede".
+        chain = prevos(id).flat_map { |s| species_forms(s) }
         min = {}
         always = Set.new
         (entries + chain).uniq.each do |e|

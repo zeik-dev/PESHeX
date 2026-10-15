@@ -68,7 +68,7 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
           tabs={[
             { id: "general", label: t("pokemon.tabs.general") },
             { id: "stats", label: t("pokemon.tabs.stats") },
-            { id: "moves", label: t("pokemon.tabs.moves"), badge: pk.moves.length },
+            { id: "moves", label: t("pokemon.tabs.moves"), badge: pk.moves.filter((m) => !m.empty).length },
             ...(hex ? [{ id: "legality" as const, label: t("legality.tab"), badge: pk.flags.filter((f) => f.severity !== "info").length || undefined }] : []),
             { id: "info", label: t("pokemon.tabs.info") },
           ]}

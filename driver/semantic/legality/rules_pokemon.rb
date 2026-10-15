@@ -55,7 +55,7 @@ module Sem
           base = c.game.base_species(f.species)
           next unless base
 
-          [warn('form_unknown', f.form, species: base.species.to_s, form: f.form)] unless c.game.table(:species)["#{base.species}_#{f.form}"]
+          [warn('form_unknown', f.form, species: base.species.to_s, form: f.form)] unless c.game.form_exists?(f.species, f.form)
         }),
         Rule.new('level_range', :basic, lambda { |c, f|
           next if f.level.nil?

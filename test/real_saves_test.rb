@@ -113,6 +113,21 @@ class RealSavesTest < Minitest::Test
     end
   end
 
+  def test_z_un_slot_de_movimiento_vacio_no_es_un_falso_positivo
+    open_z do
+      # En v16-18 el hueco libre es un PBMove con id 0: no es un movimiento y le puede pasar a cualquier Pokémon.
+      r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { moves: [{ slot: 2, id: 0 }, { slot: 3, id: 0 }] } }])
+      assert r['applied'], r.inspect
+      assert_equal [], r['newFlags'], r['newFlags'].inspect
+      d = pokemon('party/0')
+      codes = d['flags'].map { |f| f['code'] }
+      refute_includes codes, 'move_unknown'
+      refute_includes codes, 'moves_duplicate'
+      assert_equal [true, true], d['moves'].values_at(2, 3).map { |m| m['empty'] }
+      assert_equal 'ok', @h.session.game_calibration[:moves][:status], 'los huecos no estropean la calibracion'
+    end
+  end
+
   # ── Pokémon Añil (v21) ───────────────────────────────────────────────────
   def open_anil
     with_save_copy('Partida.rxdata') do |path|
@@ -147,9 +162,54 @@ class RealSavesTest < Minitest::Test
   def test_anil_una_forma_inexistente_si_se_avisa
     open_anil do
       assert_equal false, Sem::Api.model(@h.ctx).then { |m| @h.session.game.forms_scripted? }
-      r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { form: 99 } }])
+      r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { species: 'VENUSAUR', form: 99 } }])
       assert r['applied'], r.inspect
       assert_includes pokemon('party/0')['flags'].map { |f| f['code'] }, 'form_unknown'
+    end
+  end
+
+  def form_flags_for(species, form)
+    r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { species: species, form: form } }])
+    assert r['applied'], r.inspect
+    pokemon('party/0')['flags'].map { |f| f['code'] }
+  end
+
+  def test_anil_las_formas_por_defecto_y_cosmeticas_no_son_falsos_positivos
+    open_anil do
+      # MR. RIME no tiene entrada [MRRIME,1]: la forma 1 viene de `Flags = DefaultForm_1` (evolucion de MR. MIME de Galar).
+      refute_includes form_flags_for('MRRIME', 1), 'form_unknown'
+      # MINIOR define las formas 7-13; las 1-6 son colores del meteorito (sin entrada propia).
+      refute_includes form_flags_for('MINIOR', 5), 'form_unknown'
+      # LECHONK no declara ninguna forma: la forma 1 la fija el juego, no el PBS.
+      refute_includes form_flags_for('LECHONK', 1), 'form_unknown'
+      # Pero una forma que de verdad no existe sigue avisando.
+      assert_includes form_flags_for('MINIOR', 99), 'form_unknown'
+      assert_includes form_flags_for('PIKACHU', 99), 'form_unknown'
+    end
+  end
+
+  def test_anil_form_exists_en_el_almacen
+    store = real_store(:anil)
+    assert store.form_exists?('MRRIME', 1)
+    assert store.form_exists?('MRRIME', 0)
+    assert store.form_exists?('ARCANINE', 1), 'forma regional definida en pokemon_forms.txt'
+    refute store.form_exists?('VENUSAUR', 99)
+  end
+
+  def test_anil_arcanine_de_hisui_aprende_testarazo_por_su_preevolucion
+    store = real_store(:anil)
+    assert store.move_learnable?('ARCANINE', 1, 100, 'HEADSMASH'), 'movimiento huevo de GROWLITHE de Hisui'
+    assert_includes store.prevos('SNEASLER'), 'SNEASEL', 'la evolucion existe solo desde una forma'
+    assert_includes store.prevos('OBSTAGOON'), 'LINOONE'
+    refute store.move_learnable?('ARCANINE', 1, 100, 'SPLASH'), 'lo que no aprende nadie de la linea sigue siendo ilegal'
+    open_anil do
+      r = apply([{ op: 'pokemon.patch', ref: 'party/0', patch: { species: 'ARCANINE', form: 1, level: 100,
+                                                                 moves: [{ slot: 0, id: 'HEADSMASH' }] } }])
+      assert r['applied'], r.inspect
+      # Los otros tres movimientos son del INCINEROAR original y sí se marcan; Testarazo ya no.
+      subjects = pokemon('party/0')['flags'].select { |f| f['code'] == 'move_not_learnable' }.map { |f| f['subject'] }
+      refute_includes subjects, 'HEADSMASH'
+      assert_includes subjects, 'PARTINGSHOT'
     end
   end
 
