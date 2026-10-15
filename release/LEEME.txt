@@ -15,6 +15,10 @@ La escala de la aplicacion es automatica (se ajusta a la ventana); en Ajustes pu
 relativo a la legalidad (insignias, tarjeta del Resumen, pestana Legalidad, filtro "Solo ilegales")
 solo aparece con el modo HeX activo.
 
+Novedades de la 1.2.1: la pantalla de inicio ya no hace scroll: "Mis juegos" pasa a un tab ("Juegos
+guardados") junto a "Partidas recientes", y cada tab se desplaza por dentro si tiene muchos elementos.
+Ademas, cada actualizacion deja un registro (updater.log) para saber que paso si algo falla.
+
 Novedades de la 1.2.0: espanol por defecto con asistente de primer arranque; biblioteca "Mis juegos"
 con Save Scan (encuentra donde guarda las partidas cada juego, o eliges la carpeta a mano), precarga
 de los datos del juego y copias .bak con el nombre de cada partida; escala automatica (todas las
@@ -87,6 +91,10 @@ de cada archivo (CONTENIDO.sha256). Al pulsar "Instalar y reiniciar", PESHeX se 
 actualizador (PESHeX-Updater.exe, incluido en esta carpeta) reemplaza los archivos guardando
 los antiguos y restaurandolos si algo falla, y vuelve a abrir PESHeX. Tus ajustes y tus partidas
 no se tocan.
+
+Si una actualizacion falla, el aviso trae el boton "Mostrar el registro": abre la carpeta con updater.log
+(%APPDATA%\com.zeik.peshex\updates\). Envialo si pides ayuda. La carpeta de PESHeX queda como estaba
+(los archivos antiguos se restauran).
 
 Requisitos: la carpeta de PESHeX debe poder escribirse (no la pongas en "Archivos de programa") y
 PESHeX.exe no debe estar abierto mas que una vez. La comprobacion detecta descargas corruptas,

@@ -172,7 +172,9 @@ comprobar. Si te estorba, vuelve a HaX en cualquier momento.
 
 ### Mis juegos y Save Scan
 
-PESHeX recuerda tus fangames en una biblioteca (*Mis juegos*, en la pantalla de inicio y en Ajustes):
+La pantalla de inicio no hace scroll: una sola tarjeta con el botón de abrir, la zona de soltar y dos tabs —**Partidas
+recientes** y **Juegos guardados**— cuyo panel se desplaza por dentro si hay muchos elementos. PESHeX recuerda tus fangames en
+una biblioteca (*Mis juegos*, en el tab *Juegos guardados* y en Ajustes):
 
 - **Agregar directorio de juego** valida que sea un juego de Essentials (`Game.ini`, `Data`, `Graphics`) y lo
   guarda con su título. Al abrir una partida de un juego registrado, se vincula **sin preguntar**.
@@ -203,6 +205,10 @@ como mucho una vez al día, o a mano en **Ajustes → Actualizaciones**) y te av
   falla**— y vuelve a abrir la app.
 - *Recordármelo luego* y *Omitir esta versión* están disponibles; el interruptor *Buscar actualizaciones al iniciar*
   lo apaga.
+
+- Cada actualización deja un registro, `updater.log` (`%APPDATA%\com.zeik.peshex\updates\`); si falla, el aviso trae
+  **Mostrar el registro**. `PESHeX-Updater.exe apply-local --zip <zip> --app-dir <carpeta>` instala un zip ya descargado
+  (recuperación a mano y pruebas).
 
 > **Límite honesto:** la comprobación detecta descargas corruptas o incompletas, pero como el ejecutable **no está
 > firmado** no prueba quién publicó el Release: confía en el repositorio `zeik-dev/PESHeX`. La carpeta de PESHeX debe
@@ -374,6 +380,9 @@ publica el Release con `SHA256SUMS.txt`.
   con estadísticas actuales por colores, selectores con íconos (tipo, categoría, objeto, bola, género) y naturalezas con su
   efecto, sprites de especie en evoluciones y *Agregar Pokémon*, imagen del entrenador y medallas del juego, corrección de
   falsos positivos de legalidad y de la naturaleza en bases antiguas, y **actualizaciones automáticas** desde GitHub Releases.
+- **Hecho en la 1.2.1:** pantalla de inicio sin scroll con los tabs *Partidas recientes* / *Juegos guardados* (el panel
+  desplaza por dentro), registro `updater.log` del actualizador con botón para mostrarlo, `PESHeX-Updater apply-local` y
+  prueba de una actualización completa con los binarios reales en el build de Windows.
 - **Pendiente / ideas:** firma de código del ejecutable (el flujo ya la admite
   con los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`), perfiles
   afinados con más saves reales de otras bases (Reborn, Rejuvenation, v16–v18…)

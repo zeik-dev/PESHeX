@@ -2,6 +2,11 @@
 
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
+### Novedades de la 1.2.1
+- **Pantalla de inicio sin scroll**: «Mis juegos» ya no queda debajo de la tarjeta. Ahora la tarjeta lleva dos tabs, **«Partidas recientes»** y **«Juegos guardados»**, y es el panel de cada tab el que se desplaza por dentro cuando hay muchos elementos: la página nunca hace scroll, a ningún tamaño de ventana. Recuerda el último tab elegido y, la primera vez, abre el de recientes (o el de juegos si todavía no has abierto nada). Los tabs se manejan también con el teclado (flechas, Inicio y Fin).
+- **Actualizador más fácil de diagnosticar**: cada actualización deja un registro, `updater.log` (en `%APPDATA%\com.zeik.peshex\updates\`), con lo que hizo y por qué falló si falla; el aviso de error trae el botón **«Mostrar el registro»**. El instalador de actualizaciones también puede aplicar un zip ya descargado (`PESHeX-Updater.exe apply-local`), y el build de Windows prueba ahora una actualización completa con los ejecutables reales —con el `.exe` en uso, rutas con espacios y `ñ`, y retirada de los archivos que ya no existen— antes de publicar el Release.
+- *La 1.2.1 es la primera que se puede instalar desde la 1.2.0 con la actualización automática.*
+
 ### Novedades de la 1.2.0
 - **Actualizaciones automáticas**: PESHeX busca en GitHub Releases (al iniciar, como mucho una vez al día, o a mano en *Ajustes → Actualizaciones*) y avisa con las notas; **descarga con barra de progreso, pausar, reanudar y cancelar**, comprueba el **SHA-256** y reemplaza los archivos con un proceso aparte (`PESHeX-Updater.exe`) que **restaura la versión anterior si algo falla**. La 1.2.0 es la primera que lo incluye: desde la 1.1.0 hay que bajarla a mano una vez. *Limitación: el ejecutable no está firmado, así que la comprobación detecta descargas corruptas pero no demuestra la autoría.*
 - **Mis juegos**: biblioteca de fangames en la pantalla de inicio y en Ajustes, con **Save Scan** (encuentra dónde guarda las partidas cada juego, sin copias `.bak`; o eliges la carpeta de guardados a mano), **precarga** con caché de los datos del juego y apertura de partidas con un clic. Las copias de seguridad se nombran con el nombre de cada partida (`Game.rxdata.<fecha>.bak`).
