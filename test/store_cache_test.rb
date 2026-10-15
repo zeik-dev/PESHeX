@@ -24,7 +24,12 @@ class StoreCacheTest < Minitest::Test
   end
 
   def cache_files
-    Dir.glob(File.join(@cache, 'store-*.bin'))
+    Dir.children(@cache).select { |n| n.match?(/\Astore-.*\.bin\z/) }.map { |n| File.join(@cache, n) }
+  end
+
+  # Para los mensajes de las aserciones: que hay de verdad en la carpeta de cache (diagnostico en otros sistemas).
+  def listing
+    "carpeta #{@cache.inspect}: #{Dir.children(@cache).inspect}"
   end
 
   def test_la_cache_da_ida_y_vuelta_el_mismo_store
@@ -32,7 +37,7 @@ class StoreCacheTest < Minitest::Test
     store = Sem::GameData::Store.load(root, source: 'manual')
     fp = Sem::GameData::StoreCache.write(@cache, store)
     assert_match(/\A\h{32}\z/, fp)
-    assert_equal 1, cache_files.size
+    assert_equal 1, cache_files.size, listing
 
     back = Sem::GameData::StoreCache.read(@cache, root, 'auto')
     assert back&.loaded?, 'se hidrata ya cargado'
@@ -53,7 +58,7 @@ class StoreCacheTest < Minitest::Test
     root = own_game
     store = Sem::GameData::Store.load(root)
     Sem::GameData::StoreCache.write(@cache, store)
-    assert Sem::GameData::StoreCache.valid?(@cache, root)
+    assert Sem::GameData::StoreCache.valid?(@cache, root), listing
     before = Sem::GameData::StoreCache.fingerprint(root)
 
     File.open(File.join(root, 'PBS', 'moves.txt'), 'a') { |f| f.write("\n# edicion\n") }
@@ -106,7 +111,7 @@ class StoreCacheTest < Minitest::Test
       root = own_game
       first = link_with_cache(path, root)
       assert_equal false, first[:cached]
-      assert_equal 1, cache_files.size, 'al terminar de vincular se escribe la cache'
+      assert_equal 1, cache_files.size, "al terminar de vincular se escribe la cache; #{listing}"
 
       second = link_with_cache(path, root)
       assert_equal true, second[:cached]

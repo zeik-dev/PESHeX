@@ -88,10 +88,23 @@ module Sem
         tmp = "#{path}.tmp-#{Process.pid}"
         File.binwrite(tmp, Marshal.dump({ magic: MAGIC, format: FORMAT, fingerprint: fp, data: store.to_cache_hash }))
         File.rename(tmp, path)
-        Dir.glob(File.join(cache_dir, 'store-*.bin')).each { |old| FileUtils.rm_f(old) unless old == path }
+        prune_old(cache_dir, File.basename(path))
         fp
       rescue StandardError
         FileUtils.rm_f(tmp) if tmp
+        nil
+      end
+
+      # Borra las caches de otras huellas del mismo juego. Se compara por NOMBRE de archivo (no por la ruta completa, que en
+      # Windows puede escribirse de varias formas: barras, nombres cortos 8.3, mayusculas) y sin `Dir.glob` (las barras
+      # invertidas y los corchetes de una ruta de Windows son caracteres especiales de un patron).
+      def prune_old(cache_dir, keep_name)
+        Dir.children(cache_dir).each do |name|
+          next unless name.start_with?('store-') && name.end_with?('.bin') && name != keep_name
+
+          FileUtils.rm_f(File.join(cache_dir, name))
+        end
+      rescue StandardError
         nil
       end
     end
