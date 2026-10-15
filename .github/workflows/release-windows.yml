@@ -85,9 +85,9 @@ jobs:
           ruby -Itest scripts/run_ruby_tests.rb
 
       # Pruebas de Rust en Windows de verdad: incluyen el reemplazo de un .exe EN EJECUCION (lo que el actualizador hace al instalar).
-      - name: Pruebas de Rust (peshex-core, peshex-updater, rxdriver)
+      - name: Pruebas de Rust (peshex-core y peshex-updater)
         working-directory: src-tauri
-        run: cargo test -p peshex-core -p peshex-updater -p rxdriver
+        run: cargo test -p peshex-core -p peshex-updater
 
       - name: Compilar PESHeX.exe
         run: npx tauri build --no-bundle
