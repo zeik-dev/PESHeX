@@ -9,7 +9,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = [".", "crates/rxdriver"]
+members = [".", "crates/rxdriver", "crates/peshex-core"]
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
@@ -32,6 +32,7 @@ tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 rxdriver = { path = "crates/rxdriver" }
+peshex-core = { path = "crates/peshex-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["process", "io-util", "sync", "time", "rt", "macros"] }

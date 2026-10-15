@@ -1,0 +1,11 @@
+[package]
+name = "peshex-core"
+version = "1.1.0"
+description = "Logica de PESHeX sin dependencia de Tauri: estado de la ventana, biblioteca de juegos y Save Scan."
+license = "MIT"
+authors = ["zeik-dev"]
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
