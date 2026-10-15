@@ -205,6 +205,15 @@ fn flujo_completo_descarga_verifica_prepara_y_reemplaza() {
     let res: serde_json::Value = serde_json::from_str(&read(&f.work.join(session::RESULT_FILE))).unwrap();
     assert_eq!(res["ok"], true);
     assert_eq!(res["version"], "1.2.0");
+
+    // El registro de diagnostico cuenta todo el camino (para poder saber que paso si falla en otro equipo)
+    let log = read(&f.work.join(session::LOG_FILE));
+    for needle in ["inicio: PESHeX-Updater", "estado: downloading", "huella esperada", "huella SHA-256 verificada", "estado: extracting", "paquete preparado y validado", "estado: ready", "estado: applying", "esperando a que", "reemplazando:", "instalacion completada", "terminada"] {
+        assert!(log.contains(needle), "falta «{needle}» en el registro:\n{log}");
+    }
+    assert!(log.lines().all(|l| l.contains("[updater]") && l.len() > 25), "{log}");
+    assert!(log.contains("descarga:"), "el progreso se anota (de 10 en 10 %)");
+    assert!(log.lines().filter(|l| l.contains("descarga:")).count() <= 12, "pero no cada 150 ms:\n{log}");
 }
 
 #[test]
@@ -214,6 +223,7 @@ fn una_huella_distinta_se_rechaza_y_no_se_instala_nada() {
     let (code, events) = run.finish();
     assert_eq!(code, 1);
     assert_eq!(error_code(&events).as_deref(), Some("hash_mismatch"));
+    assert!(read(&f.work.join(session::LOG_FILE)).contains("ERROR [updater] hash_mismatch"), "el error queda en el registro");
     assert!(!events.iter().any(|e| matches!(e, Event::Verified { .. })));
     assert!(!f.work.join(ZIP_NAME).exists(), "el zip corrupto se borra");
     assert_eq!(read(&f.app.join("PESHeX.exe")), "exe 1.1.0");
@@ -280,7 +290,10 @@ fn cancelar_en_plena_descarga_borra_todo() {
     let (code, events) = run.finish();
     assert_eq!(code, 0);
     assert!(matches!(events.last(), Some(Event::State { state }) if state == "cancelled"));
-    assert!(fs::read_dir(&f.work).map(|mut d| d.next().is_none()).unwrap_or(true), "no queda nada en la carpeta de descargas");
+    // (salvo el registro de diagnostico, que se conserva a proposito)
+    let left: Vec<_> = fs::read_dir(&f.work).map(|d| d.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).filter(|n| n != session::LOG_FILE).collect()).unwrap_or_default();
+    assert!(left.is_empty(), "no queda nada en la carpeta de descargas: {left:?}");
+    assert!(read(&f.work.join(session::LOG_FILE)).contains("cancelado por el usuario"));
     assert_eq!(read(&f.app.join("PESHeX.exe")), "exe 1.1.0");
 }
 
@@ -362,6 +375,8 @@ fn si_el_reemplazo_falla_queda_la_version_anterior_y_un_aviso() {
     assert!(error_code(&events).is_some());
     assert_eq!(apply::list_files(&f.app).unwrap(), before, "la instalacion queda como estaba");
     assert_eq!(read(&f.app.join("PESHeX.exe")), "exe 1.1.0");
+    let log = read(&f.work.join(session::LOG_FILE));
+    assert!(log.contains("ERROR [updater] la instalacion fallo"), "el fallo del reemplazo queda en el registro:\n{log}");
     let res: serde_json::Value = serde_json::from_str(&read(&f.work.join(session::RESULT_FILE))).unwrap();
     assert_eq!(res["ok"], false, "la app que arranque despues lo mostrara");
     assert!(res["message"].as_str().unwrap().len() > 3);

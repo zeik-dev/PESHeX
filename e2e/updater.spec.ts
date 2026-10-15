@@ -154,6 +154,10 @@ test("un error del actualizador se explica en español y se puede reintentar", a
   await expect(d.getByText(/no coincide con su huella SHA-256/)).toBeVisible();
   await expect(d.getByText("la huella SHA-256 no coincide")).toBeVisible(); // el detalle tecnico, aparte
   await shot(page, "173-update-error-es-light");
+  // El registro de diagnóstico: aviso y botón que abre su carpeta (updater.log)
+  await expect(d.getByText(/envía el archivo updater\.log/)).toBeVisible();
+  await d.getByRole("button", { name: "Mostrar el registro" }).click();
+  await expect.poll(() => env!.bridge.updater.revealed).toEqual(["C:\\Users\\Alex\\AppData\\Roaming\\com.zeik.peshex\\updates\\updater.log"]);
   env!.bridge.updater.calls.length = 0;
   await d.getByRole("button", { name: "Reintentar" }).click();
   expect(env!.bridge.updater.calls).toEqual(["start"]);

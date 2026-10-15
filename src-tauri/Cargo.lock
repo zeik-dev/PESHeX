@@ -2490,6 +2490,7 @@ dependencies = [
 name = "peshex-updater"
 version = "1.2.0"
 dependencies = [
+ "peshex-core",
  "serde",
  "serde_json",
  "sha2",

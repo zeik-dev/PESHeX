@@ -67,6 +67,8 @@ export const updaterApi = {
   /** Cierra el driver, ordena instalar y sale: el actualizador reemplaza los archivos y vuelve a abrir PESHeX. */
   apply: () => rust<void>("update_apply"),
   lastResult: () => rust<UpdateResult | null>("update_last_result"),
+  /** Ruta del registro de diagnóstico de las actualizaciones (`updater.log`). */
+  logPath: () => rust<string>("update_log_path"),
 };
 
 /** Escucha los eventos del actualizador. Devuelve la funcion para dejar de escuchar (no hace nada fuera de Tauri). */

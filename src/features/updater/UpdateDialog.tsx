@@ -1,5 +1,7 @@
-import { ExternalLink } from "lucide-react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { ExternalLink, FileText } from "lucide-react";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
+import { updaterApi } from "../../api/updater";
+import { useToasts } from "../../stores/toasts";
 import { useT } from "../../lib/useT";
 import { formatBytes, formatDuration } from "../../lib/format";
 import { isBusy, useUpdater } from "../../stores/updater";
@@ -14,6 +16,15 @@ export function useUpdateErrorText() {
     const key = `updater.error.${code}`;
     return dyn(key) === key ? dyn("updater.error.default") : dyn(key);
   };
+}
+
+/** Abre la carpeta del registro de diagnóstico (`updater.log`) con el archivo seleccionado. */
+async function showLog(failedText: string) {
+  try {
+    await revealItemInDir(await updaterApi.logPath());
+  } catch {
+    useToasts.getState().push({ kind: "error", text: failedText });
+  }
 }
 
 export function UpdateProgressView() {
@@ -66,6 +77,10 @@ export function UpdateDialog() {
       <Banner tone="bad" title={t("updater.failed")}>
         {errText(u.error?.code ?? "default")}
         {u.error?.message && <p className={`muted mono ${styles.detail}`}>{u.error.message}</p>}
+        <p className={`muted ${styles.detail}`}>{t("updater.logHint")}</p>
+        <Button size="sm" onClick={() => void showLog(t("updater.logFailed"))}>
+          <FileText size={14} /> {t("updater.showLog")}
+        </Button>
       </Banner>
     );
   } else if (u.phase === "available" && rel) {

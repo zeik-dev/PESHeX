@@ -1472,6 +1472,9 @@
       "default": "The update could not be completed."
     },
     "badge": "Update available: {{version}}",
-    "badgeReady": "Update {{version}} ready to install"
+    "badgeReady": "Update {{version}} ready to install",
+    "showLog": "Show the log",
+    "logHint": "If the problem persists, send the updater.log file: this button opens its folder.",
+    "logFailed": "The log could not be opened (it doesn't exist yet or access was denied)."
   }
 }

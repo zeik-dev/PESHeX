@@ -27,6 +27,8 @@ use crate::state::AppState;
 const EVENT: &str = "updater://event";
 const UPDATER_EXE: &str = "PESHeX-Updater.exe";
 const RESULT_FILE: &str = "update-result.json";
+/// Registro de diagnostico compartido con el actualizador (`<datos de la app>/updates/updater.log`).
+const LOG_FILE: &str = "updater.log";
 const CHECK_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Default)]
@@ -69,6 +71,13 @@ fn work_dir(app: &AppHandle) -> Result<PathBuf, DriverErrorDto> {
         .app_data_dir()
         .map(|d| d.join("updates"))
         .map_err(|e| err("AppDataDir", format!("no se pudo resolver el directorio de datos: {e}")))
+}
+
+/// Anota en el registro de diagnostico (`[app] ...`). Nunca falla.
+fn log(app: &AppHandle, level: &str, msg: &str) {
+    if let Ok(dir) = work_dir(app) {
+        peshex_core::logfile::append(&dir.join(LOG_FILE), level, &format!("[app] {msg}"));
+    }
 }
 
 fn configure(cmd: &mut Command) {
@@ -116,11 +125,20 @@ pub async fn update_check(app: AppHandle) -> Result<Value, DriverErrorDto> {
     let current = app.package_info().version.to_string();
     let mut cmd = Command::new(exe);
     cmd.args(["check", "--current", &current]).stdin(Stdio::null()).stderr(Stdio::null()).kill_on_drop(true);
+    if let Ok(dir) = work_dir(&app) {
+        cmd.arg("--log").arg(dir.join(LOG_FILE)); // el actualizador anota el resultado de la consulta
+    }
     configure(&mut cmd);
     let out = match tokio::time::timeout(CHECK_TIMEOUT, cmd.output()).await {
         Ok(Ok(out)) => out,
-        Ok(Err(e)) => return Ok(json!({ "status": "error", "code": "updater_failed", "message": e.to_string() })),
-        Err(_) => return Ok(json!({ "status": "error", "code": "network", "message": "tiempo de espera agotado" })),
+        Ok(Err(e)) => {
+            log(&app, "ERROR", &format!("no se pudo ejecutar la consulta de actualizaciones: {e}"));
+            return Ok(json!({ "status": "error", "code": "updater_failed", "message": e.to_string() }));
+        }
+        Err(_) => {
+            log(&app, "ERROR", "la consulta de actualizaciones no respondio en 30 s");
+            return Ok(json!({ "status": "error", "code": "network", "message": "tiempo de espera agotado" }));
+        }
     };
     Ok(last_json_line(&String::from_utf8_lossy(&out.stdout)).unwrap_or_else(|| json!({ "status": "error", "code": "updater_failed", "message": "respuesta ilegible" })))
 }
@@ -132,15 +150,19 @@ pub async fn update_start(app: AppHandle, state: State<'_, UpdaterState>, releas
     if slot.is_some() {
         return Err(err("UpdateBusy", "ya hay una actualización en curso"));
     }
-    let copy = copy_to_temp(&updater_path()?)?;
+    let copy = copy_to_temp(&updater_path()?).inspect_err(|e| log(&app, "ERROR", &format!("no se pudo copiar el actualizador a %TEMP%: {}", e.message)))?;
     let app_dir = exe_dir()?;
     let work = work_dir(&app)?;
+    log(&app, "INFO", &format!("actualizacion a la {}: actualizador copiado a {}", release["version"].as_str().unwrap_or("?"), copy.display()));
 
     let mut cmd = Command::new(&copy);
     // OJO: sin `kill_on_drop`: al instalar, la app se cierra y el actualizador debe seguir vivo.
     cmd.arg("run").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null());
     configure(&mut cmd);
-    let mut child = cmd.spawn().map_err(|e| err("SpawnFailed", format!("no se pudo iniciar el actualizador: {e}")))?;
+    let mut child = cmd.spawn().map_err(|e| {
+        log(&app, "ERROR", &format!("no se pudo iniciar el actualizador {}: {e}", copy.display()));
+        err("SpawnFailed", format!("no se pudo iniciar el actualizador: {e}"))
+    })?;
     let (Some(mut stdin), Some(stdout)) = (child.stdin.take(), child.stdout.take()) else {
         return Err(err("SpawnFailed", "el actualizador no abrió sus tuberías"));
     };
@@ -163,6 +185,7 @@ pub async fn update_start(app: AppHandle, state: State<'_, UpdaterState>, releas
             let _ = app2.emit(EVENT, &v);
         }
         let code = child.wait().await.ok().and_then(|s| s.code());
+        log(&app2, "INFO", &format!("el proceso del actualizador termino (codigo {})", code.map_or("?".to_string(), |c| c.to_string())));
         if let Some(st) = app2.try_state::<UpdaterState>() {
             *st.run.lock().await = None;
         }
@@ -202,11 +225,18 @@ pub async fn update_apply(app: AppHandle, state: State<'_, UpdaterState>, app_st
     run.stdin.write_all(b"{\"cmd\":\"apply\"}\n").await.map_err(|e| err("Io", e.to_string()))?;
     run.stdin.flush().await.map_err(|e| err("Io", e.to_string()))?;
     drop(slot);
+    log(&app, "INFO", "driver Ruby cerrado, orden de instalar enviada: PESHeX se cierra para que el actualizador reemplace los archivos");
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(Duration::from_millis(300)).await; // que el actualizador alcance a leer la orden
         app.exit(0);
     });
     Ok(())
+}
+
+/// Ruta del registro de diagnostico de las actualizaciones (la interfaz la ofrece al fallar una).
+#[tauri::command]
+pub fn update_log_path(app: AppHandle) -> Result<String, DriverErrorDto> {
+    Ok(work_dir(&app)?.join(LOG_FILE).to_string_lossy().into_owned())
 }
 
 /// Resultado del ultimo reemplazo (`{ok, version, code?, message?}`), una sola vez: la app recien abierta lo muestra.

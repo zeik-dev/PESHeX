@@ -108,6 +108,7 @@ pub fn run() {
             updater::update_control,
             updater::update_apply,
             updater::update_last_result,
+            updater::update_log_path,
         ])
         .build(tauri::generate_context!());
 

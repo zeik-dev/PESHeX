@@ -47,10 +47,14 @@ export class DriverBridge {
     lastResult: unknown;
     /** Ordenes recibidas, en orden: `check`, `start`, `pause`, `resume`, `cancel`, `apply`. */
     calls: string[];
+    /** Rutas que la app pidió mostrar en el explorador (`revealItemInDir`), p. ej. el registro `updater.log`. */
+    revealed: string[];
     started: { version?: string } | null;
-  } = { available: false, check: { status: "upToDate", current: "1.0.0", latest: "1.0.0" }, lastResult: null, calls: [], started: null };
+  } = { available: false, check: { status: "upToDate", current: "1.0.0", latest: "1.0.0" }, lastResult: null, calls: [], revealed: [], started: null };
   /** Juegos que se estan precargando (como `PRELOADING` en Rust). */
   private preloading = new Set<string>();
+  /** El driver ya se cerró (fin de la prueba): los comandos que lleguen tarde responden con un error en vez de escribir en una tubería rota. */
+  private disposed = false;
 
   constructor(repoRoot: string) {
     this.proc = spawn("ruby", ["-E", "UTF-8", path.join(repoRoot, "driver", "rxdata_driver.rb")], {
@@ -64,6 +68,8 @@ export class DriverBridge {
       else this.buffer.push(line);
     });
     this.proc.stderr.on("data", (d) => process.stderr.write(`[driver] ${d}`));
+    // Una página que sigue pidiendo comandos cuando la prueba ya cerró el driver no debe tumbar la prueba SIGUIENTE (EPIPE).
+    this.proc.stdin.on("error", () => undefined);
   }
 
   /** Hace que `cmd` devuelva un error lógico `times` veces (por defecto, siempre hasta `clearFailures`). */
@@ -77,6 +83,7 @@ export class DriverBridge {
 
   private send(cmd: string, params: Json = {}): Promise<Json> {
     const id = this.nextId++;
+    if (this.disposed) return Promise.resolve({ ok: false, fatal: true, error: { type: "Fatal", message: "el driver de prueba ya está cerrado" } });
     return new Promise((resolve) => {
       // Igual que el crate `rxdriver`: la respuesta debe traer el `id` de la petición; si no, se marca como fatal.
       const onLine = (line: string) => {
@@ -185,6 +192,11 @@ export class DriverBridge {
       case "update_apply":
         this.updater.calls.push("apply");
         return { value: null };
+      case "update_log_path":
+        return { value: "C:\\Users\\Alex\\AppData\\Roaming\\com.zeik.peshex\\updates\\updater.log" };
+      case "plugin:opener|reveal_item_in_dir":
+        this.updater.revealed.push(...((args.paths as string[] | undefined) ?? []).map(String));
+        return { value: null };
       case "update_last_result": {
         const r = this.updater.lastResult;
         this.updater.lastResult = null;
@@ -263,6 +275,7 @@ export class DriverBridge {
     } catch {
       /* ya cerrado */
     }
+    this.disposed = true;
     this.proc.kill();
   }
 }

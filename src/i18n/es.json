@@ -1475,6 +1475,9 @@
       "default": "No se pudo completar la actualización."
     },
     "badge": "Actualización disponible: {{version}}",
-    "badgeReady": "Actualización {{version}} lista para instalar"
+    "badgeReady": "Actualización {{version}} lista para instalar",
+    "showLog": "Mostrar el registro",
+    "logHint": "Si el problema sigue, envía el archivo updater.log: este botón abre su carpeta.",
+    "logFailed": "No se pudo abrir el registro (todavía no existe o no hay permiso)."
   }
 }
