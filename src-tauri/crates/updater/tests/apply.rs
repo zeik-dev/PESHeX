@@ -247,9 +247,9 @@ fn limpia_restos_de_actualizaciones_interrumpidas() {
     assert!(dir.path().join("PESHeX.exe").exists());
 }
 
-/// Windows de verdad: un .exe en ejecucion no se puede sobrescribir (si se puede renombrar), y el reemplazo debe esperar
-/// a que se cierre. Se prueba con un proceso real llamado PESHeX.exe (una copia de `ping.exe` que se queda esperando).
-#[cfg(windows)]
+/// Un ejecutable en ejecucion no se puede abrir para escribir (Windows: violacion de uso compartido; Linux: «Text file busy»),
+/// y el reemplazo debe esperar a que se cierre. Se prueba con un proceso real llamado PESHeX.exe: una copia del propio actualizador (un .exe sin
+/// dependencias de otros archivos) en modo `run`, que se queda esperando ordenes por stdin mientras no se cierre su tuberia.
 #[test]
 fn reemplaza_un_exe_en_ejecucion_cuando_se_cierra() {
     use std::process::{Command, Stdio};
@@ -257,14 +257,15 @@ fn reemplaza_un_exe_en_ejecucion_cuando_se_cierra() {
     let app = dir.path().join("app");
     let stage = dir.path().join("stage");
     fs::create_dir_all(&app).unwrap();
-    let ping = Path::new(&std::env::var("SystemRoot").unwrap()).join("System32").join("PING.EXE");
-    fs::copy(&ping, app.join("PESHeX.exe")).unwrap();
+    fs::copy(env!("CARGO_BIN_EXE_PESHeX-Updater"), app.join("PESHeX.exe")).unwrap();
     // CONTENIDO.sha256 de la version instalada
     fs::write(app.join("CONTENIDO.sha256"), format!("{} *PESHeX.exe\n", sha256_bytes(&fs::read(app.join("PESHeX.exe")).unwrap()))).unwrap();
     package(&stage, &[("PESHeX.exe", "exe NUEVO"), ("ruby/a.rb", "a nuevo")]);
 
-    // «La app» en ejecucion: ping a 127.0.0.1 durante ~60 s.
-    let mut running = Command::new(app.join("PESHeX.exe")).args(["-n", "60", "127.0.0.1"]).stdout(Stdio::null()).spawn().unwrap();
+    // «La app» en ejecucion (la tuberia de stdin abierta la mantiene viva).
+    let mut running = Command::new(app.join("PESHeX.exe")).arg("run").stdin(Stdio::piped()).stdout(Stdio::null()).spawn().unwrap();
+    std::thread::sleep(Duration::from_millis(300)); // que arranque de verdad
+    assert!(running.try_wait().unwrap().is_none(), "el proceso de prueba debe seguir vivo");
     // Mientras corre no se puede abrir para escribir: la espera agota su tiempo y dice por que.
     let blocked = apply::wait_until_writable(&app.join("PESHeX.exe"), Duration::from_millis(400), Duration::from_millis(50));
     assert!(matches!(blocked, Err(UpdateError::NotWritable(_))), "{blocked:?}");
