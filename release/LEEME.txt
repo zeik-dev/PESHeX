@@ -11,9 +11,20 @@ mochila, IV/EV, movimientos... y tiene dos modos:
        aprende cada Pokemon, sus habilidades, etc.) y puede equivocarse en algunos fangames
        (randomizer, mecanicas propias).
 
-En Ajustes puedes cambiar el zoom de la aplicacion (50 % a 200 %, por defecto 100 %). Todo lo
+La escala de la aplicacion es automatica (se ajusta a la ventana); en Ajustes puedes fijar el zoom a mano (50 % a 200 %). Todo lo
 relativo a la legalidad (insignias, tarjeta del Resumen, pestana Legalidad, filtro "Solo ilegales")
 solo aparece con el modo HeX activo.
+
+Novedades de la 1.2.0: espanol por defecto con asistente de primer arranque; biblioteca "Mis juegos"
+con Save Scan (encuentra donde guarda las partidas cada juego, o eliges la carpeta a mano), precarga
+de los datos del juego y copias .bak con el nombre de cada partida; escala automatica (todas las
+pestanas visibles sin scroll) y ventana que recuerda si estaba maximizada y en que monitor; boton
+Guardar; ficha del Pokemon fija con estadisticas actuales por colores (base y nivel, IV, EV y
+naturaleza), iconos de tipo, categoria, objeto, bola y genero, y naturalezas con lo que suben y
+bajan; sprites en evoluciones y en "Agregar Pokemon"; imagen del entrenador y medallas del juego;
+sin falsos positivos de legalidad (formas por defecto, movimientos huevo de preevoluciones y
+ranuras vacias) y la naturaleza ya cambia en bases antiguas; y actualizaciones automaticas desde
+GitHub (ver "ACTUALIZACIONES").
 
 Novedades de la 1.1.0: Equipo y PC a todo el alto con clic derecho (Editar, Clonar, Exportar,
 Eliminar y Agregar Pokemon), un unico boton "Acciones rapidas", hoja de edicion ancha con
@@ -54,11 +65,33 @@ COMO USARLO
   2. Abre PESHeX.exe.
   3. Cierra tu juego, elige tu partida (Game.rxdata) y editala. Antes de guardar se crea
      una copia de seguridad (.bak) y siempre puedes deshacer.
-  4. Recomendado: en Ajustes, vincula la carpeta de tu juego (la que tiene Game.ini, Data
+  4. Recomendado: agrega tu juego a "Mis juegos" (pantalla de inicio) o, en Ajustes, vincula la carpeta de tu juego (la que tiene Game.ini, Data
      y Graphics) para ver los nombres y sprites reales y para que HeX compruebe la
      legalidad con las reglas de TU juego. Solo se lee: nunca se modifica.
 
-Las partidas de Essentials v19 en adelante suelen estar en %APPDATA%\<NombreDelJuego>\.
+Las partidas de Essentials v19 en adelante suelen estar en %APPDATA%\<NombreDelJuego>\ ("Mis juegos" las busca por ti).
+
+
+ACTUALIZACIONES
+---------------
+PESHeX busca solo si hay una version nueva en https://github.com/zeik-dev/PESHeX/releases (al
+iniciar, como mucho una vez al dia; tambien a mano en Ajustes > Actualizaciones, donde puedes
+apagar la busqueda automatica). Si la hay, te muestra las novedades y te deja:
+
+  * Descargar e instalar: descarga con barra de progreso y puedes pausar, reanudar o cancelar. Si
+    se corta la red o cierras PESHeX, lo descargado se conserva.
+  * Recordartelo luego / Omitir esta version.
+
+Antes de instalar se comprueba la huella SHA-256 del zip (SHA256SUMS.txt del mismo Release) y la
+de cada archivo (CONTENIDO.sha256). Al pulsar "Instalar y reiniciar", PESHeX se cierra, el
+actualizador (PESHeX-Updater.exe, incluido en esta carpeta) reemplaza los archivos guardando
+los antiguos y restaurandolos si algo falla, y vuelve a abrir PESHeX. Tus ajustes y tus partidas
+no se tocan.
+
+Requisitos: la carpeta de PESHeX debe poder escribirse (no la pongas en "Archivos de programa") y
+PESHeX.exe no debe estar abierto mas que una vez. La comprobacion detecta descargas corruptas,
+pero como el programa no esta firmado no demuestra quien publico la version. Si prefieres
+actualizar a mano, descarga el zip, extraelo encima (o en otra carpeta) y listo.
 
 
 SOBRE LOS AVISOS DE WINDOWS Y DEL ANTIVIRUS
@@ -92,4 +125,4 @@ COPIAS DE SEGURIDAD, DESINSTALAR, LICENCIA
   * PESHeX se distribuye bajo licencia MIT (archivo LICENSE). El logo y las marcas Pokemon /
     Poke Ball no estan cubiertos por esa licencia. Avisos de terceros: THIRD-PARTY-NOTICES.txt.
 
-Codigo y novedades: https://github.com/zeik-dev/pbs-editor
+Codigo y novedades: https://github.com/zeik-dev/PESHeX

@@ -14,15 +14,19 @@ una Poké Ball.
 
 ## Descargar y usar (Windows)
 
-1. Entra en [Releases](https://github.com/zeik-dev/pbs-editor/releases) y baja
+1. Entra en [Releases](https://github.com/zeik-dev/PESHeX/releases) y baja
    **`PESHeX-<versión>-windows-x64.zip`** (junto a `SHA256SUMS.txt`).
 2. Extrae **todo** el contenido en una carpeta y abre `PESHeX.exe`. No hay que
    instalar nada: Ruby viene incluido (`ruby/`) y el motor de edición también
    (`rxdata/`).
-3. Abre tu partida (`Game.rxdata`; en Essentials v19+ suele estar en
-   `%APPDATA%\<NombreDelJuego>\`) y, en **Ajustes**, vincula la carpeta de tu
-   juego para ver los nombres y los gráficos reales y para que HeX compruebe la
-   legalidad con *tus* reglas.
+3. La primera vez, PESHeX te deja elegir el idioma (**español** por defecto) y te
+   ofrece agregar la carpeta de tu juego a **Mis juegos**. Abre tu partida
+   (`Game.rxdata`; en Essentials v19+ suele estar en `%APPDATA%\<NombreDelJuego>\`,
+   y *Mis juegos* la encuentra por ti) y vincula la carpeta de tu juego para ver los
+   nombres y los gráficos reales y para que HeX compruebe la legalidad con *tus* reglas.
+
+A partir de la 1.2.0 PESHeX **se actualiza solo** (ver [Actualizaciones](#actualizaciones-automáticas)):
+desde la 1.1.0 hay que bajar la 1.2.0 a mano una única vez.
 
 Requiere Windows 10/11 de 64 bits y Microsoft Edge WebView2 (viene con Windows 11
 y con Windows 10 actualizado; si falta, PESHeX lo avisa y da el enlace).
@@ -68,20 +72,31 @@ principales; la tabla del final resume el resto.
 </p>
 
 La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
-**General · IV y EV · Movimientos · Información** (más **Legalidad** en HeX):
+**General · IV y EV · Movimientos · Información** (más **Legalidad** en HeX). La **ficha del
+Pokémon, las acciones rápidas y las pestañas quedan fijas arriba**: solo el contenido de cada
+pestaña hace scroll.
 
-- **Stats base** de la especie *en tu juego* junto al sprite, con su total.
+- **Estadísticas de la ficha**, con un interruptor entre **«Estadísticas base en este juego»** y
+  **«Estadísticas actuales»**. Las actuales se dibujan como una barra apilada por colores —la parte
+  de base y nivel en **rojo**, los **IV en azul**, los **EV en naranja** y la **naturaleza en verde**—
+  con el total a la derecha y un *tooltip* en cada color que explica de dónde sale (los tramos
+  suman exactamente el valor que calcula el juego).
 - **Nivel, felicidad, PS, IV y EV** con deslizador *y* campo numérico (un gesto = un solo
   «deshacer»); en PS, el campo admite 0 (debilitado). IV y EV siguen el orden
   *IV → Poder oculto → acciones rápidas → EV → presets → estadísticas totales → recalcular*.
-- **Naturaleza** (la original no se toca) y **naturaleza por menta** (`nature_for_stats`, en bases v20+).
+- **Naturaleza** en un selector que muestra a la derecha qué sube (rojo) y qué baja (azul) cada una,
+  y debajo «Naturaleza efectiva para las estadísticas: **X**» (la original no se toca); también la
+  **naturaleza por menta** (`nature_for_stats`, en bases v20+). En las bases antiguas (v16–v18) el cambio
+  se escribe donde el juego lo lee (`@natureflag`), así que el selector ya no «rebota».
+- El **preset de EV sugerido** vive solo en la pestaña **IV y EV**.
 - **Habilidad** y **movimientos** con interruptores *«Mostrar solo habilidades de la especie»* y
   *«Mostrar solo movimientos aprendidos por la especie»* (activados por defecto y apagables en
   HaX; en HeX el filtro es obligatorio). Con el filtro **apagado** el selector lista **todas** las habilidades y
-  movimientos del juego. Los movimientos muestran su tipo, potencia, PP y el **ícono de su categoría**
-  (Físico, Especial, Estado), que sale de la carpeta de *tu* juego (`Graphics/Pictures/category.png`); si no lo
-  trae, PESHeX usa tres íconos propios.
-- **Objeto equipado** con el mismo selector de la mochila (nombre, icono e id) y **bola** usada.
+  movimientos del juego. Cada movimiento muestra a la izquierda el **ícono de su tipo** (`Graphics/Pictures/types.png`)
+  y a la derecha el **ícono de su categoría** (Físico, Especial, Estado; `category.png`) antes de la potencia y los PP.
+  Los íconos salen de la carpeta de *tu* juego; si no los trae, PESHeX usa unos propios.
+- **Objeto equipado** y **bola** con su ícono dentro del selector (con la carpeta del juego cargada) y **género** con su
+  símbolo (siempre).
 - **Información**: entrenador original, ID personal y **cintas** con su nombre (`ribbons.txt`).
 
 ### Mochila
@@ -122,7 +137,7 @@ La hoja de edición ocupa algo más de la mitad de la ventana y se organiza en
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
 | **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
 | **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (auto/ES/EN), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (50 %–200 %, por defecto 100 %), carpeta del juego (con **barra de progreso**), modo HaX/HeX y detección de la base |
+| **Ajustes** | Idioma (ES por defecto), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (automático o manual 50 %–200 %), carpeta del juego (con **barra de progreso**), **Mis juegos**, **Actualizaciones**, modo HaX/HeX y detección de la base |
 
 Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y` y
 **clonar / importar / exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
@@ -151,6 +166,51 @@ básicas (rangos, duplicados, tamaños) y la app lo avisa como «legalidad parci
 **HeX puede equivocarse en algunos fangames** (bases con *randomizer*, mecánicas o
 datos propios): rechazar cambios que sí son válidos u omitir reglas que no puede
 comprobar. Si te estorba, vuelve a HaX en cualquier momento.
+
+### Mis juegos y Save Scan
+
+PESHeX recuerda tus fangames en una biblioteca (*Mis juegos*, en la pantalla de inicio y en Ajustes):
+
+- **Agregar directorio de juego** valida que sea un juego de Essentials (`Game.ini`, `Data`, `Graphics`) y lo
+  guarda con su título. Al abrir una partida de un juego registrado, se vincula **sin preguntar**.
+- **Save Scan**: busca dónde guarda las partidas cada juego —la carpeta del juego y sus `Saves`/`Partidas`,
+  `%APPDATA%\<Título>`, `%LOCALAPPDATA%`, *Saved Games*, *Documentos*— y las lista para abrirlas con un clic. Un archivo
+  cuenta como partida si es un `.rxdata` Marshal válido (se ignoran `Data/*.rxdata`, las copias `.bak` y los
+  temporales). Si el escaneo no la encuentra, **Elegir carpeta de guardados…** la fija a mano.
+- Las copias de seguridad se nombran con el **nombre de cada partida** (`Game.rxdata.<fecha>.bak`,
+  `Game2.rxdata.<fecha>.bak`…), así que varias partidas en la misma carpeta no se mezclan.
+- **Precargar** lee de una vez los datos del juego (especies, movimientos, objetos, gráficos…) y los guarda en
+  una caché en disco; el índice de `Graphics/` es incremental (solo se reabren las imágenes nuevas o
+  modificadas). La primera carga de un fangame grande puede tardar **varios minutos** (la barra de progreso lo
+  avisa); las siguientes reutilizan la caché y tardan mucho menos.
+
+PESHeX solo **lee** las carpetas de tus juegos; nunca escribe en ellas (salvo las copias `.bak` junto a la partida que guardas).
+
+### Actualizaciones automáticas
+
+PESHeX busca en [GitHub Releases](https://github.com/zeik-dev/PESHeX/releases) si hay una versión nueva (al iniciar,
+como mucho una vez al día, o a mano en **Ajustes → Actualizaciones**) y te avisa con las notas de la versión:
+
+- **Descargar e instalar** baja el zip con barra de progreso, velocidad y tiempo restante, y se puede **pausar,
+  reanudar y cancelar**. Si la red se corta o cierras PESHeX, lo descargado se conserva y se continúa desde ahí.
+- Antes de instalar se comprueba el **SHA-256** del zip contra el `SHA256SUMS.txt` del mismo Release y cada archivo
+  contra `CONTENIDO.sha256`; las rutas del zip se validan (sin salirse de la carpeta de la app).
+- **Instalar y reiniciar** (te avisa si tienes cambios sin guardar): un proceso aparte, `PESHeX-Updater.exe`, espera a
+  que PESHeX se cierre, reemplaza los archivos —conservando los antiguos hasta confirmar y **restaurándolos si algo
+  falla**— y vuelve a abrir la app.
+- *Recordármelo luego* y *Omitir esta versión* están disponibles; el interruptor *Buscar actualizaciones al iniciar*
+  lo apaga.
+
+> **Límite honesto:** la comprobación detecta descargas corruptas o incompletas, pero como el ejecutable **no está
+> firmado** no prueba quién publicó el Release: confía en el repositorio `zeik-dev/PESHeX`. La carpeta de PESHeX debe
+> ser escribible (no la instales en *Archivos de programa*).
+
+### Escala y ventana
+
+La escala de la interfaz es **automática** por defecto: se ajusta, en proporción de ancho y alto, para que **todas las
+pestañas del encabezado se vean sin scroll** y se reescala al agrandar la ventana o maximizarla (en Ajustes puedes
+fijarla a mano de 50 % a 200 %). PESHeX recuerda si estaba **maximizada y en qué monitor**; si no, abre centrada,
+sin parpadeos.
 
 ### Carpeta del juego
 
@@ -217,6 +277,8 @@ React 19 + TS (src/)  ──invoke──►  Tauri 2 / Rust (src-tauri/)  ──
 - **`src-tauri/`**: ventana, diálogo de archivos y el comando genérico
   `driver_call`. La sesión con Ruby vive en el crate `src-tauri/crates/rxdriver`
   (sin dependencia de Tauri, así sus tests corren en cualquier Linux con Ruby).
+  Otros crates sin Tauri: `peshex-core` (estado de la ventana, biblioteca de juegos y Save Scan) y
+  `peshex-updater` (el actualizador; compila a `PESHeX-Updater.exe`).
 - **`src/`**: `app/` (cabecera Poké Ball, shell), `features/` (una carpeta por
   pestaña), `ui/` (design system), `i18n/` (es/en), `theme/` (tokens CSS),
   `stores/` (zustand), `api/` (llamadas tipadas al driver).
@@ -248,7 +310,7 @@ npm run dev              # solo la UI en el navegador (sin backend)
 npm run typecheck        # tsc
 npm test                 # vitest: i18n, formateadores, contraste, controles
 npm run test:ruby        # minitest: protocolo, capa semántica, edición, bases antiguas y juegos reales
-cargo test -p rxdriver   # integración Rust<->Ruby (cd src-tauri)
+cargo test --workspace   # Rust: rxdriver (Rust<->Ruby), peshex-core, peshex-updater y la app (cd src-tauri)
 npm run e2e              # Playwright: UI real contra el driver Ruby real
 ```
 
@@ -278,14 +340,14 @@ EOF
 
 ### Publicar un release
 
-El flujo `.github/workflows/release-windows.yml` compila `PESHeX.exe` en Windows,
-pasa los tests con el Ruby portátil que se distribuye, arma el zip
+El flujo `.github/workflows/release-windows.yml` compila `PESHeX.exe` y `PESHeX-Updater.exe` en Windows,
+pasa los tests (incluidos los de Rust, con el reemplazo de un `.exe` en ejecución) con el Ruby portátil que se distribuye, arma el zip
 (`scripts/package-release.mjs`, determinista), lo prueba (`scripts/smoke-release.ps1`:
 ruta con espacios y `ñ`, `PATH` reducido, hashes, VersionInfo y un arranque real) y
 publica el Release con `SHA256SUMS.txt`.
 
 - Un push a `development` cuyo mensaje empiece por `release: X.Y.Z` (la versión debe
-  coincidir con `package.json`, `src-tauri/Cargo.toml` y `src-tauri/tauri.conf.json`)
+  coincidir con `package.json`, `src-tauri/tauri.conf.json` y todos los `Cargo.toml` del workspace)
   publica el Release `vX.Y.Z`; un tag `vX.Y.Z` empujado a mano hace lo mismo.
 - `[replace-release]` (junto a `release: X.Y.Z`) borra el Release y el tag de esa versión
   si ya existen y los recrea sobre ese commit (útil tras reescribir el historial).
@@ -303,6 +365,12 @@ publica el Release con `SHA256SUMS.txt`.
   y Megapiedras, hoja de edición ancha con deslizadores, stats base, naturaleza por menta
   y filtros por especie, lector de PBS v16–v21 (CSV e INI), ficha de especie en la
   Pokédex, cintas, y barra de progreso y aviso al abrir una partida sin carpeta de juego.
+- **Hecho en la 1.2.0:** español por defecto con asistente de primer arranque, biblioteca **Mis juegos** con *Save Scan*,
+  carpeta de guardados manual, precarga y caché de los datos del juego, copias `.bak` por partida, escala automática
+  proporcional, estado de la ventana (maximizada / monitor / centrada sin parpadeo), botón *Guardar*, ficha de Pokémon fija
+  con estadísticas actuales por colores, selectores con íconos (tipo, categoría, objeto, bola, género) y naturalezas con su
+  efecto, sprites de especie en evoluciones y *Agregar Pokémon*, imagen del entrenador y medallas del juego, corrección de
+  falsos positivos de legalidad y de la naturaleza en bases antiguas, y **actualizaciones automáticas** desde GitHub Releases.
 - **Pendiente / ideas:** firma de código del ejecutable (el flujo ya la admite
   con los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`), perfiles
   afinados con más saves reales de otras bases (Reborn, Rejuvenation, v16–v18…)

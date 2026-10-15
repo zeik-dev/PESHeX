@@ -2,6 +2,19 @@
 
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
+### Novedades de la 1.2.0
+- **Actualizaciones automáticas**: PESHeX busca en GitHub Releases (al iniciar, como mucho una vez al día, o a mano en *Ajustes → Actualizaciones*) y avisa con las notas; **descarga con barra de progreso, pausar, reanudar y cancelar**, comprueba el **SHA-256** y reemplaza los archivos con un proceso aparte (`PESHeX-Updater.exe`) que **restaura la versión anterior si algo falla**. La 1.2.0 es la primera que lo incluye: desde la 1.1.0 hay que bajarla a mano una vez. *Limitación: el ejecutable no está firmado, así que la comprobación detecta descargas corruptas pero no demuestra la autoría.*
+- **Mis juegos**: biblioteca de fangames en la pantalla de inicio y en Ajustes, con **Save Scan** (encuentra dónde guarda las partidas cada juego, sin copias `.bak`; o eliges la carpeta de guardados a mano), **precarga** con caché de los datos del juego y apertura de partidas con un clic. Las copias de seguridad se nombran con el nombre de cada partida (`Game.rxdata.<fecha>.bak`).
+- **Primer arranque**: **español por defecto**, selección de idioma y, si quieres, agregar tu directorio de juego. La carga de la carpeta del juego avisa de que puede tardar varios minutos.
+- **Escala automática** proporcional (ancho y alto): todas las pestañas visibles sin scroll y se reajusta al agrandar o maximizar. La ventana **recuerda si estaba maximizada y en qué monitor** y, si no, abre centrada sin parpadeo. Botón **Guardar** junto a *Cerrar archivo* y logo con disco sólido.
+- **Editor de Pokémon**: la **ficha, las acciones rápidas y las pestañas quedan fijas**; **estadísticas base / actuales** con el desglose por colores (base y nivel en rojo, IV en azul, EV en naranja, naturaleza en verde) y *tooltips*; el preset de EV sugerido solo está en *IV y EV*; **íconos** de tipo y categoría en los movimientos y de objeto, bola y género en sus selectores; las **naturalezas muestran lo que suben (rojo) y bajan (azul)** y la «Naturaleza efectiva» en negrita.
+- **Sprites** que faltaban con la carpeta del juego cargada: *Evolución / Evoluciona de* en la Pokédex y *Especie* en *Agregar Pokémon*.
+- **Entrenador**: imagen del entrenador (de `trainertypes` y `metadata`) en el Resumen y en *Entrenador*, y **medallas** con el gráfico del juego.
+
+### Correcciones de la 1.2.0
+- **Naturaleza en bases antiguas (p. ej. Pokémon Z)**: cambiarla en el selector no tenía efecto en el juego (se escribía en `@nature` en vez de `@natureflag`). Lo mismo con el **género** y el **brillante**. Corregido, con la partida real de Z.
+- **Falsos positivos de legalidad**: «Form 1 of MRRIME does not exist» (las formas por defecto, `DefaultForm_N`, y los huecos entre formas), «This species cannot learn Testarazo (Head Smash)» en Arcanine de Hisui (los movimientos huevo de preevoluciones con forma) y «Move “0” does not exist» en bases antiguas con un hueco de movimiento vacío (también hacía caer la calibración de todo el save).
+
 ### Correcciones de la 1.1.0
 - **Pokédex**: abrir la ficha de una especie **desconectaba la partida del editor** (la respuesta de las zonas de aparición pisaba el identificador del protocolo y la app daba la conexión por perdida: «No save is open» y el resto de pestañas sin datos hasta volver a cargar). Corregido, con una prueba que comprueba el identificador de cada respuesta. Además la ficha ya no se queda en «Cargando la ficha…»: si el motor tarda o falla, muestra el motivo y un botón para **reintentar**; las zonas y la numeración regional se piden aparte y nunca bloquean la ficha, y un dato raro de una parte opcional ya no la tumba.
 - **Selectores de habilidades y movimientos**: con el interruptor «Mostrar solo … de la especie» apagado listan **todas** las opciones del juego (antes se cortaban a 60); al abrirlos se ve la opción actual.
