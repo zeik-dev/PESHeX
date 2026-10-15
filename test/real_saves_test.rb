@@ -113,6 +113,53 @@ class RealSavesTest < Minitest::Test
     end
   end
 
+  # Bug 1.1.0: sin @natureflag el parche creaba un @nature que el juego (y el DTO) ignoran, y el selector "rebotaba".
+  def test_z_cambiar_la_naturaleza_de_un_pokemon_sin_natureflag_se_refleja
+    open_z do
+      node = Sem::Api.state!(@h.session).model.resolve_pokemon('party/2')[:node]
+      refute Sem::Tree.ivar?(node, '@natureflag'), 'party/2 de Game.rxdata no trae @natureflag (usa el ID personal)'
+      before = pokemon('party/2').dig('nature', 'id')
+      target = before == 'QUIET' ? 'JOLLY' : 'QUIET'
+      r = apply([{ op: 'pokemon.patch', ref: 'party/2', patch: { nature: target } }])
+      assert r['applied'], r.inspect
+      assert_equal target, pokemon('party/2').dig('nature', 'id'), 'el selector debe leer lo que se acaba de escribir'
+      changes = @h.call('list_changes')['changes'].map(&:to_s).join(' ')
+      assert_includes changes, '@natureflag'
+      refute_match(/@nature(?!flag)/, changes, 'no se debe crear un @nature que el juego no lee')
+      # Un segundo cambio edita el ivar ya creado y sigue funcionando.
+      r = apply([{ op: 'pokemon.patch', ref: 'party/2', patch: { nature: 'ADAMANT' } }])
+      assert r['applied'], r.inspect
+      assert_equal 'ADAMANT', pokemon('party/2').dig('nature', 'id')
+      @h.call('undo_all')
+      assert_equal @original, @h.session.doc.to_bytes
+    end
+  end
+
+  def test_z_una_naturaleza_desconocida_se_rechaza
+    open_z do
+      err = assert_raises(DriverError) { apply([{ op: 'pokemon.patch', ref: 'party/2', patch: { nature: 'NOEXISTE' } }]) }
+      assert_equal 'unknown_id', err.params[:code]
+      assert_equal @original, @h.session.doc.to_bytes
+    end
+  end
+
+  def test_z_genero_y_brillante_sin_flag_se_escriben_donde_los_lee_el_juego
+    open_z do
+      node = Sem::Api.state!(@h.session).model.resolve_pokemon('party/2')[:node]
+      skip 'party/2 ya trae flags de genero/brillante' if Sem::Tree.ivar?(node, '@genderflag') || Sem::Tree.ivar?(node, '@shinyflag')
+      r = apply([{ op: 'pokemon.patch', ref: 'party/2', patch: { gender: 1, shiny: true } }])
+      assert r['applied'], r.inspect
+      node = Sem::Api.state!(@h.session).model.resolve_pokemon('party/2')[:node]
+      assert Sem::Tree.ivar?(node, '@genderflag')
+      assert Sem::Tree.ivar?(node, '@shinyflag')
+      refute Sem::Tree.ivar?(node, '@gender')
+      d = pokemon('party/2')
+      assert_equal [1, true], [d['gender'], d['shiny']]
+      @h.call('undo_all')
+      assert_equal @original, @h.session.doc.to_bytes
+    end
+  end
+
   def test_z_un_slot_de_movimiento_vacio_no_es_un_falso_positivo
     open_z do
       # En v16-18 el hueco libre es un PBMove con id 0: no es un movimiento y le puede pasar a cualquier Pokémon.

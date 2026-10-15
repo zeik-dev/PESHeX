@@ -368,8 +368,31 @@ module Sem
         patch_legacy_flag(builder, pk, path, '@abilityflag', index)
       when 'abilityIndex'
         patch_legacy_flag(builder, pk, path, '@abilityflag', value)
+      when 'nature'
+        # El juego lee @natureflag (o el ID personal): escribir @nature no cambia nada en una base vieja.
+        index = value.is_a?(String) ? GameData::Tables.nature_index(value) : value
+        unless index.is_a?(Integer) && index.between?(0, GameData::Tables::NATURE_IDS.size - 1)
+          raise DriverError.new('ValidationError', "naturaleza desconocida: #{value}",
+                                { code: 'unknown_id', field: 'nature', value: value })
+        end
+
+        patch_legacy_flag(builder, pk, path, '@natureflag', index)
+      when 'gender', 'shiny'
+        patch_legacy_flag_default(builder, pk, path, key, value)
       else false
       end
+    end
+
+    # Genero y brillante de v16-18: los lee el juego de @genderflag / @shinyflag. Si el Pokemon no trae ninguno de los
+    # dos alias se agrega el ivar de la base vieja (no @gender / @shiny, que esa base ignora). Con alguno ya presente
+    # se sigue el camino normal (devuelve false).
+    def patch_legacy_flag_default(builder, pk, path, key, value)
+      spec = POKEMON_FIELDS[key]
+      return false if spec[:ivars].any? { |iv| Tree.ivar?(pk, iv) }
+
+      node = coerce(nil, value, spec[:type], key, nullable: spec[:nullable])
+      builder.apply(AddAttr.new(pk, @doc.sym(spec[:ivars].last), node, path))
+      true
     end
 
     def patch_legacy_flag(builder, pk, path, ivar, value)
