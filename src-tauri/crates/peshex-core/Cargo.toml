@@ -1,6 +1,6 @@
 [package]
 name = "peshex-core"
-version = "1.2.0"
+version = "1.2.1"
 description = "Logica de PESHeX sin dependencia de Tauri: estado de la ventana, biblioteca de juegos y Save Scan."
 license = "MIT"
 authors = ["zeik-dev"]
