@@ -5,11 +5,15 @@
 //! mapa manual se guarda en el directorio de datos de la app, una vez por
 //! juego (identificado por un hash de su ruta).
 
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
+use std::time::UNIX_EPOCH;
 
+use peshex_core::fsutil::{read_json, write_json};
+use peshex_core::registry::game_id;
 use rxdriver::DriverErrorDto;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::ipc::Response;
 use tauri::{AppHandle, Manager, State};
@@ -29,6 +33,34 @@ const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "bmp"];
 const MAX_FILES: usize = 50_000;
 const MAX_DEPTH: usize = 8;
 const MAX_IMAGE_BYTES: u64 = 8 * 1024 * 1024;
+
+/// Version del formato del indice en cache (si cambia, el indice anterior se descarta).
+const GRAPHICS_CACHE_VERSION: u32 = 1;
+
+/// Lo ultimo que se supo de una imagen: con el mismo tamano y la misma fecha de modificacion no hace falta volver a abrirla
+/// para leer sus medidas (abrir miles de archivos es lo que tarda, sobre todo con un antivirus mirando cada apertura).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+struct CachedFile {
+    size: u64,
+    mtime: u64,
+    w: u32,
+    h: u32,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct GraphicsCache {
+    #[serde(default)]
+    version: u32,
+    #[serde(default)]
+    files: HashMap<String, CachedFile>,
+}
+
+/// Cuanto trabajo hizo un escaneo: `reused` imagenes cuyas medidas salieron de la cache y `read` cuyas cabeceras hubo que abrir.
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub struct ScanStats {
+    pub reused: usize,
+    pub read: usize,
+}
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct GameScan {
@@ -87,52 +119,88 @@ fn name_matches(path: &Path, prefixes: Option<&[&str]>) -> bool {
     prefixes.iter().any(|p| name.starts_with(p))
 }
 
-fn walk(
-    base: &Path,
-    dir: &Path,
-    depth: usize,
-    out: &mut Vec<(String, u32, u32)>,
+/// Estado de un recorrido de `Graphics/`: lo que ya se sabia (cache), lo nuevo y cuanto trabajo costo.
+struct Walker<'a> {
+    base: &'a Path,
     cap: usize,
-    prefixes: Option<&[&str]>,
-) -> bool {
-    if depth > MAX_DEPTH {
-        return false;
-    }
-    let Ok(rd) = fs::read_dir(dir) else {
-        return false;
-    };
-    let mut entries: Vec<_> = rd.flatten().collect();
-    entries.sort_by_key(|e| e.file_name());
-    for e in entries {
-        // `file_type` no sigue enlaces: los symlinks se ignoran (evita salir de la carpeta y ciclos).
-        let Ok(ft) = e.file_type() else { continue };
-        let path = e.path();
-        if ft.is_dir() {
-            if walk(base, &path, depth + 1, out, cap, prefixes) {
-                return true;
-            }
-        } else if ft.is_file() && is_image(&path) && name_matches(&path, prefixes) {
-            if out.len() >= cap {
-                return true;
-            }
-            let rel = path
-                .strip_prefix(base)
-                .map(|p| {
-                    p.components()
-                        .map(|c| c.as_os_str().to_string_lossy().into_owned())
-                        .collect::<Vec<_>>()
-                        .join("/")
-                })
-                .unwrap_or_default();
-            let (w, h) = png_size(&path).unwrap_or((0, 0));
-            out.push((rel, w, h));
+    old: &'a HashMap<String, CachedFile>,
+    fresh: HashMap<String, CachedFile>,
+    stats: ScanStats,
+    out: Vec<(String, u32, u32)>,
+}
+
+impl Walker<'_> {
+    fn walk(&mut self, dir: &Path, depth: usize, prefixes: Option<&[&str]>) -> bool {
+        if depth > MAX_DEPTH {
+            return false;
         }
+        let Ok(rd) = fs::read_dir(dir) else {
+            return false;
+        };
+        let mut entries: Vec<_> = rd.flatten().collect();
+        entries.sort_by_key(|e| e.file_name());
+        for e in entries {
+            // `file_type` no sigue enlaces: los symlinks se ignoran (evita salir de la carpeta y ciclos).
+            let Ok(ft) = e.file_type() else { continue };
+            let path = e.path();
+            if ft.is_dir() {
+                if self.walk(&path, depth + 1, prefixes) {
+                    return true;
+                }
+            } else if ft.is_file() && is_image(&path) && name_matches(&path, prefixes) {
+                if self.out.len() >= self.cap {
+                    return true;
+                }
+                let rel = path
+                    .strip_prefix(self.base)
+                    .map(|p| {
+                        p.components()
+                            .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                            .collect::<Vec<_>>()
+                            .join("/")
+                    })
+                    .unwrap_or_default();
+                let (w, h) = self.measure(&e, &path, &rel);
+                self.out.push((rel, w, h));
+            }
+        }
+        false
     }
-    false
+
+    /// Medidas de una imagen: de la cache si el archivo no cambio (mismo tamano y fecha); si no, de su cabecera PNG.
+    fn measure(&mut self, entry: &fs::DirEntry, path: &Path, rel: &str) -> (u32, u32) {
+        let stamp = entry.metadata().ok().map(|m| {
+            let mtime = m.modified().ok().and_then(|t| t.duration_since(UNIX_EPOCH).ok()).map(|d| d.as_secs()).unwrap_or(0);
+            (m.len(), mtime)
+        });
+        if let Some((size, mtime)) = stamp {
+            if let Some(c) = self.old.get(rel).filter(|c| c.size == size && c.mtime == mtime) {
+                self.stats.reused += 1;
+                self.fresh.insert(rel.to_string(), *c);
+                return (c.w, c.h);
+            }
+        }
+        self.stats.read += 1;
+        let (w, h) = png_size(path).unwrap_or((0, 0));
+        if let Some((size, mtime)) = stamp {
+            self.fresh.insert(rel.to_string(), CachedFile { size, mtime, w, h });
+        }
+        (w, h)
+    }
 }
 
 /// Recorre las carpetas relevantes de `Graphics/` de la raiz del juego.
 pub fn scan_graphics(root: &Path, cap: usize) -> Result<GameScan, DriverErrorDto> {
+    scan_graphics_cached(root, cap, None).map(|(scan, _)| scan)
+}
+
+/// Igual que [`scan_graphics`], pero con un indice en cache (`cache_file`): solo se abren las imagenes nuevas o modificadas
+/// desde el ultimo escaneo y el resto reutiliza sus medidas. El indice se actualiza (de forma atomica) si algo cambio.
+pub fn scan_graphics_cached(
+    root: &Path,
+    cap: usize,
+    cache_file: Option<&Path>,
+) -> Result<(GameScan, ScanStats), DriverErrorDto> {
     if !root.is_dir() {
         return Err(err(
             "GameFolderInvalid",
@@ -140,26 +208,40 @@ pub fn scan_graphics(root: &Path, cap: usize) -> Result<GameScan, DriverErrorDto
         ));
     }
     let graphics = child_ci(root, "Graphics").filter(|g| g.is_dir());
-    let mut files = Vec::new();
+    let old: GraphicsCache = cache_file
+        .and_then(read_json::<GraphicsCache>)
+        .filter(|c| c.version == GRAPHICS_CACHE_VERSION)
+        .unwrap_or_default();
+    let mut walker = Walker { base: root, cap, old: &old.files, fresh: HashMap::new(), stats: ScanStats::default(), out: Vec::new() };
     let mut truncated = false;
     if let Some(g) = &graphics {
         let dirs = RELEVANT_DIRS.iter().map(|n| (*n, None)).chain(FILTERED_DIRS.iter().map(|(n, p)| (*n, Some(*p))));
         for (name, prefixes) in dirs {
             if let Some(sub) = child_ci(g, name).filter(|p| p.is_dir()) {
-                if walk(root, &sub, 0, &mut files, cap, prefixes) {
+                if walker.walk(&sub, 0, prefixes) {
                     truncated = true;
                     break;
                 }
             }
         }
     }
+    let Walker { fresh, stats, out: mut files, .. } = walker;
+    // Se guarda lo nuevo solo si no se corto por el tope (un indice parcial no sirve) y si algo cambio.
+    if let Some(path) = cache_file {
+        if !truncated && fresh != old.files {
+            let _ = write_json(path, &GraphicsCache { version: GRAPHICS_CACHE_VERSION, files: fresh });
+        }
+    }
     files.sort_by(|a, b| a.0.cmp(&b.0));
-    Ok(GameScan {
-        root: root.to_string_lossy().into_owned(),
-        graphics: graphics.map(|g| g.to_string_lossy().into_owned()),
-        files,
-        truncated,
-    })
+    Ok((
+        GameScan {
+            root: root.to_string_lossy().into_owned(),
+            graphics: graphics.map(|g| g.to_string_lossy().into_owned()),
+            files,
+            truncated,
+        },
+        stats,
+    ))
 }
 
 /// Valida una ruta relativa pedida por la UI y la resuelve DENTRO de `root`.
@@ -238,6 +320,16 @@ pub fn write_assetmap(path: &Path, map: &Value) -> Result<(), DriverErrorDto> {
     fs::rename(&tmp, path).map_err(|e| err("Io", e.to_string()))
 }
 
+/// Carpeta de cache de un juego: `<datos de la app>/gamecache/<id del juego>/`. El indice de imagenes y la cache de datos del
+/// driver Ruby viven ahi.
+pub fn game_cache_dir(data_dir: &Path, root: &Path) -> PathBuf {
+    data_dir.join("gamecache").join(game_id(root))
+}
+
+fn graphics_cache_path(data_dir: &Path, root: &Path) -> PathBuf {
+    game_cache_dir(data_dir, root).join("graphics.json")
+}
+
 fn data_dir(app: &AppHandle) -> Result<PathBuf, DriverErrorDto> {
     app.path()
         .app_data_dir()
@@ -255,9 +347,11 @@ pub async fn scan_game_folder(
     root: String,
 ) -> Result<GameScan, DriverErrorDto> {
     let root_path = PathBuf::from(&root);
-    let scan = tauri::async_runtime::spawn_blocking(move || scan_graphics(&root_path, MAX_FILES))
+    let cache = graphics_cache_path(&data_dir(&app)?, &root_path);
+    let scan = tauri::async_runtime::spawn_blocking(move || scan_graphics_cached(&root_path, MAX_FILES, Some(&cache)))
         .await
-        .map_err(|e| err("Internal", e.to_string()))??;
+        .map_err(|e| err("Internal", e.to_string()))??
+        .0;
     if let Some(g) = &scan.graphics {
         // El scope del asset protocol es de solo lectura y solo cubre Graphics/.
         app.asset_protocol_scope()
@@ -389,6 +483,60 @@ mod tests {
         assert_eq!((icon.1, icon.2), (128, 64));
         assert!(!scan.truncated);
         assert!(scan.graphics.is_some());
+    }
+
+    #[test]
+    fn con_cache_solo_se_abren_las_imagenes_nuevas_o_modificadas() {
+        let g = sample_game();
+        let cache = g.0.join("cache").join("graphics.json");
+        let (first, s1) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert_eq!((s1.reused, s1.read), (0, 6), "la primera vez se abre todo");
+        assert!(cache.is_file());
+
+        let (second, s2) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert_eq!((s2.reused, s2.read), (6, 0), "la segunda no abre ningun archivo");
+        assert_eq!(first, second, "y el resultado es el mismo");
+
+        // Una imagen nueva y otra modificada (otro tamano): solo esas dos se vuelven a abrir.
+        g.write("Graphics/Items/ETHER.png", &png_header(48, 48));
+        g.write("Graphics/Items/POTION.png", &png_header(64, 64));
+        // `png_header` mide siempre lo mismo y la fecha tiene resolucion de segundos: se adelanta la de la modificada.
+        let later = std::time::SystemTime::now() + std::time::Duration::from_secs(30);
+        fs::File::options().write(true).open(g.0.join("Graphics/Items/POTION.png")).unwrap().set_modified(later).unwrap();
+        let (third, s3) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert_eq!((s3.reused, s3.read), (5, 2), "6 conocidas + 1 nueva: se abren la nueva y la modificada");
+        let potion = third.files.iter().find(|f| f.0.ends_with("POTION.png")).unwrap();
+        assert_eq!((potion.1, potion.2), (64, 64), "se vieron las medidas nuevas");
+
+        // Un archivo borrado desaparece del indice y no queda basura en la cache.
+        fs::remove_file(g.0.join("Graphics/Items/ETHER.png")).unwrap();
+        let (fourth, _) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert!(!fourth.files.iter().any(|f| f.0.ends_with("ETHER.png")));
+        let saved: GraphicsCache = read_json(&cache).unwrap();
+        assert!(!saved.files.contains_key("Graphics/Items/ETHER.png"));
+    }
+
+    #[test]
+    fn una_cache_danada_o_de_otra_version_se_ignora() {
+        let g = sample_game();
+        let cache = g.0.join("graphics.json");
+        fs::write(&cache, b"{ roto").unwrap();
+        let (_, s) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert_eq!((s.reused, s.read), (0, 6));
+        fs::write(&cache, br#"{"version":99,"files":{"Graphics/Items/POTION.png":{"size":1,"mtime":1,"w":9,"h":9}}}"#).unwrap();
+        let (scan, s) = scan_graphics_cached(&g.0, MAX_FILES, Some(&cache)).unwrap();
+        assert_eq!(s.reused, 0);
+        let potion = scan.files.iter().find(|f| f.0.ends_with("POTION.png")).unwrap();
+        assert_eq!((potion.1, potion.2), (48, 48));
+    }
+
+    #[test]
+    fn un_escaneo_cortado_por_el_tope_no_guarda_un_indice_parcial() {
+        let g = sample_game();
+        let cache = g.0.join("graphics.json");
+        let (scan, _) = scan_graphics_cached(&g.0, 2, Some(&cache)).unwrap();
+        assert!(scan.truncated);
+        assert!(!cache.exists());
     }
 
     #[test]
