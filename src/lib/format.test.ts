@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clamp, fileName, formatDuration, formatMoney, formatNumber, hueFromString } from "./format";
+import { clamp, fileName, formatBytes, formatDuration, formatMoney, formatNumber, hueFromString } from "./format";
 
 describe("formatters", () => {
   it("formatea dinero y numeros segun el idioma", () => {
@@ -34,5 +34,17 @@ describe("formatters", () => {
     expect(clamp(5, 0, 3)).toBe(3);
     expect(clamp(-1, 0, 3)).toBe(0);
     expect(clamp(2, 0, 3)).toBe(2);
+  });
+});
+
+describe("formatBytes", () => {
+  it("elige la unidad y los decimales", () => {
+    expect(formatBytes(0, "es")).toBe("0 B");
+    expect(formatBytes(820, "es")).toBe("820 B");
+    expect(formatBytes(1536, "en")).toBe("1.5 KB");
+    expect(formatBytes(17_538_957, "es")).toBe("16,7 MB");
+    expect(formatBytes(250 * 1024 * 1024, "en")).toBe("250 MB");
+    expect(formatBytes(null, "es")).toBe("—");
+    expect(formatBytes(-1, "es")).toBe("—");
   });
 });

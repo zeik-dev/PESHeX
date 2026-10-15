@@ -77,6 +77,7 @@ function fakeInstall() {
     fs.writeFileSync(p, text);
   };
   w("exe/PESHeX.exe", "MZ-fake");
+  w("exe/PESHeX-Updater.exe", "MZ-updater");
   w("ruby/bin/ruby.exe", "ruby");
   w("ruby/lib/ruby/4.0.0/json.rb", "json");
   w("ruby/share/ri/gigante.ri", "x".repeat(1000));
@@ -88,12 +89,12 @@ function fakeInstall() {
 
 test("package-release arma el zip con la estructura, los hashes y el LEEME", { skip: !hasUnzip }, () => {
   const dir = fakeInstall();
-  const r = packageRelease({ exe: path.join(dir, "exe/PESHeX.exe"), version: "9.8.7", out: path.join(dir, "out"),
+  const r = packageRelease({ exe: path.join(dir, "exe/PESHeX.exe"), updater: path.join(dir, "exe/PESHeX-Updater.exe"), version: "9.8.7", out: path.join(dir, "out"),
     ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") });
   assert.match(path.basename(r.zipPath), /^PESHeX-9\.8\.7-windows-x64\.zip$/);
   const listing = execFileSync("unzip", ["-Z1", r.zipPath]).toString().trim().split("\n");
   const top = "PESHeX-9.8.7-windows-x64/";
-  for (const f of ["PESHeX.exe", "ruby/bin/ruby.exe", "ruby/lib/ruby/4.0.0/json.rb", "rxdata/driver/rxdata_driver.rb", "LEEME.txt",
+  for (const f of ["PESHeX.exe", "PESHeX-Updater.exe", "ruby/bin/ruby.exe", "ruby/lib/ruby/4.0.0/json.rb", "rxdata/driver/rxdata_driver.rb", "LEEME.txt",
     "LICENSE", "THIRD-PARTY-NOTICES.txt", "CONTENIDO.sha256"]) {
     assert.ok(listing.includes(top + f), `falta ${f}`);
   }
@@ -120,7 +121,7 @@ test("package-release arma el zip con la estructura, los hashes y el LEEME", { s
 
 test("package-release es reproducible", () => {
   const dir = fakeInstall();
-  const o = { exe: path.join(dir, "exe/PESHeX.exe"), version: "1.2.3", ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") };
+  const o = { exe: path.join(dir, "exe/PESHeX.exe"), updater: path.join(dir, "exe/PESHeX-Updater.exe"), version: "1.2.3", ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") };
   const a = packageRelease({ ...o, out: path.join(dir, "o1") });
   const b = packageRelease({ ...o, out: path.join(dir, "o2") });
   assert.equal(a.zipSha256, b.zipSha256);
@@ -131,10 +132,16 @@ test("package-release falla si falta algo imprescindible", () => {
   const dir = fakeInstall();
   fs.rmSync(path.join(dir, "ruby/bin/ruby.exe"));
   assert.throws(
-    () => packageRelease({ exe: path.join(dir, "exe/PESHeX.exe"), version: "1.0.0", out: path.join(dir, "o"), ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") }),
+    () => packageRelease({ exe: path.join(dir, "exe/PESHeX.exe"), updater: path.join(dir, "exe/PESHeX-Updater.exe"), version: "1.0.0", out: path.join(dir, "o"), ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") }),
     /bin\/ruby\.exe/,
   );
-  assert.throws(() => packageRelease({ exe: path.join(dir, "nope.exe"), version: "1.0.0", out: path.join(dir, "o") }), /ejecutable/);
+  assert.throws(() => packageRelease({ exe: path.join(dir, "nope.exe"), updater: path.join(dir, "exe/PESHeX-Updater.exe"), version: "1.0.0", out: path.join(dir, "o") }), /ejecutable/);
+  // Sin el actualizador no se publica: la app de esa version no podria actualizarse sola
+  fs.rmSync(path.join(dir, "exe/PESHeX-Updater.exe"));
+  assert.throws(
+    () => packageRelease({ exe: path.join(dir, "exe/PESHeX.exe"), updater: path.join(dir, "exe/PESHeX-Updater.exe"), version: "1.0.0", out: path.join(dir, "o"), ruby: path.join(dir, "ruby"), rxdata: path.join(dir, "rxdata") }),
+    /actualizador/,
+  );
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -148,9 +155,10 @@ test("check-version: coincidencia de versiones y de tag", () => {
     fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
     fs.writeFileSync(path.join(dir, rel), text);
   };
-  const setup = (a, b, c) => {
+  const setup = (a, b, c, crate = b) => {
     w("package.json", JSON.stringify({ version: a }));
     w("src-tauri/Cargo.toml", `[package]\nname = "peshex"\nversion = "${b}"\n\n[dependencies]\nserde = { version = "1" }\n`);
+    w("src-tauri/crates/updater/Cargo.toml", `[package]\nname = "peshex-updater"\nversion = "${crate}"\n\n[dependencies]\nserde = { version = "1" }\n`);
     w("src-tauri/tauri.conf.json", JSON.stringify({ version: c }));
   };
   setup("1.0.0", "1.0.0", "1.0.0");
@@ -162,6 +170,9 @@ test("check-version: coincidencia de versiones y de tag", () => {
   assert.match(check(dir, "release-1").errors[0], /no reconocido/);
   setup("1.0.0", "1.0.1", "1.0.0");
   assert.match(check(dir, "").errors[0], /no coinciden/);
+  // El actualizador (un crate del workspace) tambien tiene que llevar la misma version
+  setup("1.0.0", "1.0.0", "1.0.0", "0.9.0");
+  assert.match(check(dir, "").errors[0], /no coinciden.*crates\/updater/);
   setup("1.0.0-rc.1", "1.0.0-rc.1", "1.0.0-rc.1");
   assert.equal(check(dir, "v1.0.0-rc.1").prerelease, true);
   setup("uno", "uno", "uno");

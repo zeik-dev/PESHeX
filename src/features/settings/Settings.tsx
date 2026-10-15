@@ -11,6 +11,7 @@ import { ModeSwitch } from "../../app/ModeSwitch";
 import { AssetsCard } from "./AssetsCard";
 import { GameFolderCard } from "./GameFolderCard";
 import { GamesCard } from "./GamesCard";
+import { UpdatesCard } from "../updater/UpdatesCard";
 import { ZoomCard } from "./ZoomCard";
 import shared from "../shared/shared.module.css";
 
@@ -128,6 +129,7 @@ export function Settings() {
 
       <GameFolderCard />
       <GamesCard />
+      <UpdatesCard />
       <AssetsCard />
 
       <Card title={t("settings.about")}>

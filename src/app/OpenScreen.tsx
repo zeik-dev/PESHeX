@@ -6,6 +6,7 @@ import { AppLogo, PokeballSpinner, Button, cx } from "../ui";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
 import { GameLibrary } from "../features/games/GameLibrary";
+import { UpdateBadge } from "../features/updater/UpdateBadge";
 import { useSession } from "../stores/session";
 import { useSettings } from "../stores/settings";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
@@ -62,6 +63,7 @@ export function OpenScreen() {
   return (
     <div className={styles.openPage}>
       <div className={styles.openTools}>
+        <UpdateBadge />
         <LangSwitch />
         <ThemeToggle />
       </div>

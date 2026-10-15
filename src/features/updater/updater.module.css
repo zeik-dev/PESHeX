@@ -1,0 +1,83 @@
+.intro {
+  margin: 0 0 8px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.notes {
+  max-height: min(34vh, 280px);
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2, var(--surface));
+  font-size: 13px;
+}
+.notes h4 {
+  margin: 10px 0 4px;
+  font-size: 13px;
+}
+.notes h4:first-child {
+  margin-top: 0;
+}
+.notes ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.notes p {
+  margin: 4px 0;
+}
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.detail {
+  margin: 6px 0 0;
+  font-size: 12px;
+  word-break: break-word;
+}
+.cardRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.cardStatus {
+  margin: 10px 0 0;
+}
+.badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--info, #2f6fed);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.dotReady {
+  background: var(--success, #1f9d55);
+}

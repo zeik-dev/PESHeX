@@ -29,7 +29,7 @@ $top = Join-Path $work "PESHeX-$Version-windows-x64"
 if (-not (Test-Path $top)) { Fail "el zip no contiene la carpeta PESHeX-$Version-windows-x64" }
 
 # 1. Estructura minima
-foreach ($rel in 'PESHeX.exe', 'ruby\bin\ruby.exe', 'rxdata\driver\rxdata_driver.rb', 'rxdata\edit_rxdata.rb',
+foreach ($rel in 'PESHeX.exe', 'PESHeX-Updater.exe', 'ruby\bin\ruby.exe', 'rxdata\driver\rxdata_driver.rb', 'rxdata\edit_rxdata.rb',
                  'LEEME.txt', 'LICENSE', 'THIRD-PARTY-NOTICES.txt', 'CONTENIDO.sha256') {
     if (-not (Test-Path -LiteralPath (Join-Path $top $rel))) { Fail "falta $rel en el zip" }
 }
@@ -56,6 +56,21 @@ if ($vi.ProductName -ne 'PESHeX') { Fail "ProductName es '$($vi.ProductName)', s
 if (-not ($vi.ProductVersion -like "$Version*" -or $vi.FileVersion -like "$Version*")) { Fail "la version del .exe no empieza por $Version" }
 if (-not $vi.CompanyName) { Write-Host '::warning::el .exe no tiene CompanyName (bundle.publisher)' }
 Ok 'informacion de version del .exe'
+
+# 3b. El actualizador que va junto a la app (la app lo copia a %TEMP% y lo ejecuta para actualizarse)
+$updater = Join-Path $top 'PESHeX-Updater.exe'
+$uv = (& $updater --version) | Out-String
+if ($LASTEXITCODE -ne 0) { Fail 'PESHeX-Updater.exe --version fallo' }
+if ($uv.Trim() -ne "PESHeX-Updater $Version") { Fail "PESHeX-Updater.exe --version dice '$($uv.Trim())', se esperaba 'PESHeX-Updater $Version'" }
+# Una consulta REAL a GitHub (informativa: el runner puede no tener red o GitHub limitar las consultas): comprueba el TLS y el formato.
+$check = (& $updater check --current 0.0.1) | Out-String
+Write-Host "  update check: $($check.Trim())"
+try {
+    $status = ($check | ConvertFrom-Json).status
+    if ($status -notin 'available', 'upToDate', 'error') { Fail "respuesta inesperada de 'check': $check" }
+    if ($status -eq 'error') { Write-Host '::warning::PESHeX-Updater check no pudo consultar GitHub (red o limite de consultas)' }
+} catch { Fail "'PESHeX-Updater check' no devolvio un JSON: $check" }
+Ok 'actualizador (version y consulta a GitHub)'
 
 # 4. Ruby del zip con un entorno minimo (PATH solo con System32/Windows, sin variables de Ruby)
 $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"

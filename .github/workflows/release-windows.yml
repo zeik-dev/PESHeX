@@ -84,19 +84,29 @@ jobs:
           ruby -v
           ruby -Itest scripts/run_ruby_tests.rb
 
+      # Pruebas de Rust en Windows de verdad: incluyen el reemplazo de un .exe EN EJECUCION (lo que el actualizador hace al instalar).
+      - name: Pruebas de Rust (peshex-core, peshex-updater, rxdriver)
+        working-directory: src-tauri
+        run: cargo test -p peshex-core -p peshex-updater -p rxdriver
+
       - name: Compilar PESHeX.exe
         run: npx tauri build --no-bundle
+
+      - name: Compilar PESHeX-Updater.exe (el actualizador que se distribuye junto a la app)
+        run: cargo build --release -p peshex-updater --manifest-path src-tauri/Cargo.toml
 
       - name: Firmar (solo si hay certificado en los secretos)
         shell: pwsh
         env:
           WINDOWS_CERT_PFX_B64: ${{ secrets.WINDOWS_CERT_PFX_B64 }}
           WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
-        run: ./scripts/sign-windows.ps1 -File src-tauri/target/release/PESHeX.exe
+        run: |
+          ./scripts/sign-windows.ps1 -File src-tauri/target/release/PESHeX.exe
+          ./scripts/sign-windows.ps1 -File src-tauri/target/release/PESHeX-Updater.exe
 
       - name: Empaquetar el zip
         shell: pwsh
-        run: node scripts/package-release.mjs --exe src-tauri/target/release/PESHeX.exe --version "${{ steps.ver.outputs.version }}" --out release-out
+        run: node scripts/package-release.mjs --exe src-tauri/target/release/PESHeX.exe --updater src-tauri/target/release/PESHeX-Updater.exe --version "${{ steps.ver.outputs.version }}" --out release-out
 
       - name: Prueba de humo del zip (ruta con espacios y ñ, PATH reducido)
         shell: pwsh

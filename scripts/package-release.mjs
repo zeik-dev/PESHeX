@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Arma el zip del release: todo lo necesario para ejecutar PESHeX en Windows, sin instalador.
 //
-//   node scripts/package-release.mjs --exe <PESHeX.exe> --version 1.0.0 [--out release-out] [--ruby <dir>] [--rxdata <dir>]
+//   node scripts/package-release.mjs --exe <PESHeX.exe> --updater <PESHeX-Updater.exe> --version 1.0.0 [--out release-out] [--ruby <dir>] [--rxdata <dir>]
 //
 // Contenido (carpeta raiz PESHeX-<version>-windows-x64/):
-//   PESHeX.exe  ruby/  rxdata/  LEEME.txt  LICENSE  THIRD-PARTY-NOTICES.txt  CONTENIDO.sha256
+//   PESHeX.exe  PESHeX-Updater.exe  ruby/  rxdata/  LEEME.txt  LICENSE  THIRD-PARTY-NOTICES.txt  CONTENIDO.sha256
+// El actualizador va SIEMPRE: sin el, la app de esta version no podria actualizarse sola a la siguiente.
 // Ademas escribe SHA256SUMS.txt (con el hash del zip) junto al zip.
 
 import { createHash } from "node:crypto";
@@ -37,7 +38,7 @@ export function leemeFor(version) {
 }
 
 /**
- * @param {{ exe: string, version: string, out: string, ruby?: string, rxdata?: string }} o
+ * @param {{ exe: string, updater: string, version: string, out: string, ruby?: string, rxdata?: string }} o
  * @returns {{ zipPath: string, sumsPath: string, zipSha256: string, files: number }}
  */
 export function packageRelease(o) {
@@ -45,7 +46,7 @@ export function packageRelease(o) {
   const rxdata = o.rxdata ?? path.join(ROOT, "src-tauri", "resources", "rxdata");
   const top = `PESHeX-${o.version}-windows-x64`;
 
-  for (const [what, p] of [["el ejecutable", o.exe], ["el Ruby portatil", ruby], ["el driver (rxdata)", rxdata]]) {
+  for (const [what, p] of [["el ejecutable", o.exe], ["el actualizador (PESHeX-Updater.exe)", o.updater], ["el Ruby portatil", ruby], ["el driver (rxdata)", rxdata]]) {
     if (!fs.existsSync(p)) throw new Error(`falta ${what}: ${p}`);
   }
   const rubyFiles = walk(ruby, shouldKeep);
@@ -60,6 +61,7 @@ export function packageRelease(o) {
   const entries = [];
   const add = (name, data) => entries.push({ name: `${top}/${name}`, data });
   add("PESHeX.exe", fs.readFileSync(o.exe));
+  add("PESHeX-Updater.exe", fs.readFileSync(o.updater));
   for (const [rel, abs] of rubyFiles) {
     if (rel === ".ruby-version-installed") continue; // marcador interno del script de instalacion
     add(`ruby/${rel}`, fs.readFileSync(abs));
@@ -94,13 +96,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const args = process.argv.slice(2);
   const get = (flag, def) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : def);
   const exe = get("--exe");
+  const updater = get("--updater");
   const version = get("--version");
-  if (!exe || !version) {
-    console.error("uso: node scripts/package-release.mjs --exe <PESHeX.exe> --version <X.Y.Z> [--out dir] [--ruby dir] [--rxdata dir]");
+  if (!exe || !updater || !version) {
+    console.error("uso: node scripts/package-release.mjs --exe <PESHeX.exe> --updater <PESHeX-Updater.exe> --version <X.Y.Z> [--out dir] [--ruby dir] [--rxdata dir]");
     process.exit(2);
   }
   try {
-    const r = packageRelease({ exe, version, out: get("--out", "release-out"), ruby: get("--ruby"), rxdata: get("--rxdata") });
+    const r = packageRelease({ exe, updater, version, out: get("--out", "release-out"), ruby: get("--ruby"), rxdata: get("--rxdata") });
     console.log(`zip: ${r.zipPath}\nsha256: ${r.zipSha256}\narchivos: ${r.files}`);
   } catch (e) {
     console.error(`error: ${e.message}`);

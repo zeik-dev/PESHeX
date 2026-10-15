@@ -1,0 +1,27 @@
+[package]
+name = "peshex-updater"
+version = "1.1.0"
+description = "Actualizador de PESHeX: busca el ultimo Release de GitHub, lo descarga (reanudable) y reemplaza los archivos de la app."
+license = "MIT"
+authors = ["zeik-dev"]
+edition = "2021"
+
+[lib]
+name = "peshex_updater"
+path = "src/lib.rs"
+
+[[bin]]
+# Se distribuye junto a PESHeX.exe (la app lo copia a %TEMP% antes de ejecutarlo para poder reemplazarse a si mismo).
+name = "PESHeX-Updater"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+ureq = { version = "2", default-features = false, features = ["tls"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+tempfile = "3"
+

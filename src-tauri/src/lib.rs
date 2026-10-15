@@ -2,6 +2,7 @@ mod commands;
 mod game;
 mod games;
 mod state;
+mod updater;
 mod winstate;
 
 use tauri::Manager;
@@ -74,6 +75,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state::AppState::default())
+        .manage(updater::UpdaterState::default())
         // La ventana principal la crea `winstate` (oculta, colocada y despues mostrada), no Tauri al arrancar.
         .setup(|app| winstate::init(app))
         .invoke_handler(tauri::generate_handler![
@@ -100,6 +102,12 @@ pub fn run() {
             games::games_preload,
             games::games_preloading,
             games::games_id_of,
+            updater::update_available,
+            updater::update_check,
+            updater::update_start,
+            updater::update_control,
+            updater::update_apply,
+            updater::update_last_result,
         ])
         .build(tauri::generate_context!());
 

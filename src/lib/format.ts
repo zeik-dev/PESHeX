@@ -22,6 +22,20 @@ export function formatDuration(seconds: number | null | undefined): string {
   return `${total} s`;
 }
 
+/** Tamaño de archivo legible: "17,5 MB", "820 KB". */
+export function formatBytes(bytes: number | null | undefined, locale: string): string {
+  if (bytes == null || Number.isNaN(bytes) || bytes < 0) return "—";
+  const units = ["B", "KB", "MB", "GB"];
+  let v = bytes;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  const digits = i === 0 || v >= 100 ? 0 : 1;
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(v)} ${units[i]}`;
+}
+
 export function formatDateTime(iso: string | null | undefined, locale: string): string {
   if (!iso) return "—";
   const d = new Date(iso);

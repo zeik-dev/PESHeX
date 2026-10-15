@@ -36,6 +36,12 @@ interface SettingsState {
   recentGames: string[];
   /** Partidas para las que el usuario pidio «No volver a preguntar» por la carpeta del juego. */
   noGamePrompt: Record<string, true>;
+  /** Buscar actualizaciones al iniciar (como mucho una vez al dia). */
+  updateCheckOnStart: boolean;
+  /** Ultima busqueda de actualizaciones (ms desde 1970; 0 = nunca). */
+  updateLastCheck: number;
+  /** Version que el usuario eligio omitir (no se vuelve a avisar de ella). */
+  updateSkipped: string | null;
   setLang: (lang: LangPref) => void;
   setTheme: (theme: ThemePref) => void;
   setBall: (ball: BallTheme) => void;
@@ -54,6 +60,9 @@ interface SettingsState {
   rememberGame: (root: string, savePath?: string | null) => void;
   forgetGameFor: (savePath: string) => void;
   setNoGamePrompt: (savePath: string, dontAsk: boolean) => void;
+  setUpdateCheckOnStart: (v: boolean) => void;
+  setUpdateLastCheck: (at: number) => void;
+  setUpdateSkipped: (version: string | null) => void;
 }
 
 // localStorage puede faltar o lanzar (ventana privada, datos bloqueados):
@@ -108,6 +117,9 @@ export const useSettings = create<SettingsState>()(
       gameFolders: {},
       recentGames: [],
       noGamePrompt: {},
+      updateCheckOnStart: true,
+      updateLastCheck: 0,
+      updateSkipped: null,
       setLang: (lang) => set({ lang }),
       setTheme: (theme) => set({ theme }),
       setBall: (ball) => set({ ball }),
@@ -120,6 +132,9 @@ export const useSettings = create<SettingsState>()(
       setOnlySpeciesAbilities: (onlySpeciesAbilities) => set({ onlySpeciesAbilities }),
       setOnlySpeciesMoves: (onlySpeciesMoves) => set({ onlySpeciesMoves }),
       setMode: (mode) => set({ mode }),
+      setUpdateCheckOnStart: (updateCheckOnStart) => set({ updateCheckOnStart }),
+      setUpdateLastCheck: (updateLastCheck) => set({ updateLastCheck }),
+      setUpdateSkipped: (updateSkipped) => set({ updateSkipped }),
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),
       removeRecent: (path) => set((s) => ({ recent: s.recent.filter((p) => p !== path) })),

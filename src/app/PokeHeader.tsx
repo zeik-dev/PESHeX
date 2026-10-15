@@ -4,6 +4,7 @@ import { AppLogo } from "../ui";
 import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 import { fileName } from "../lib/format";
+import { UpdateBadge } from "../features/updater/UpdateBadge";
 import { cx } from "../ui";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
 import { ModeSwitch } from "./ModeSwitch";
@@ -40,6 +41,7 @@ export function PokeHeader() {
           </span>
         )}
         <span className={styles.spacer} />
+        <UpdateBadge className={styles.hbtn} />
         <button type="button" className={styles.hbtn} onClick={() => setPalette(true)} aria-label={t("palette.open")} title={t("palette.openHint")}>
           <Search size={16} /> <span className={styles.hideNarrow}>{t("palette.short")}</span>
         </button>

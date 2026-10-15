@@ -4,11 +4,13 @@ import { useEdit } from "../stores/edit";
 import { useGame } from "../stores/game";
 import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
+import { useUpdater } from "../stores/updater";
 import { useUi } from "../stores/ui";
 import { ConfirmDialog, Modal, Button, Banner, Chip } from "../ui";
 import { FlagList } from "../features/legality/FlagList";
 import { FirstRunWizard } from "../features/settings/FirstRunWizard";
 import { GameFolderPrompt } from "../features/settings/GameFolderPrompt";
+import { UpdateDialog } from "../features/updater/UpdateDialog";
 
 /** Aviso previo a activar HeX: depende de la carpeta del juego y puede equivocarse en algunos fangames. */
 function HexWarning() {
@@ -78,6 +80,7 @@ export function Hosts() {
   // Biblioteca «Mis juegos»: se carga al arrancar (y escucha el progreso de «Precargar»).
   useEffect(() => {
     void useGames.getState().init();
+    void useUpdater.getState().init(); // actualizaciones: ¿hay actualizador?, resultado del ultimo reemplazo y busqueda diaria
   }, []);
 
   return (
@@ -85,6 +88,7 @@ export function Hosts() {
       <HexWarning />
       <FirstRunWizard />
       <GameFolderPrompt />
+      <UpdateDialog />
       <Modal
         open={!!rejected}
         title={rejected?.where === "save" ? t("mode.rejectedSaveTitle") : t("mode.rejectedTitle")}

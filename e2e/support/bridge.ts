@@ -40,6 +40,15 @@ export class DriverBridge {
   games = new GamesMock();
   /** Emite un evento de Tauri hacia la página (lo conecta `setup` con `window.__pwEmit`). */
   emit?: (event: string, payload: unknown) => Promise<void>;
+  /** Actualizador simulado (los comandos `update_*` de updater.rs): la prueba dicta que responde y emite `updater://event`. */
+  updater: {
+    available: boolean;
+    check: unknown;
+    lastResult: unknown;
+    /** Ordenes recibidas, en orden: `check`, `start`, `pause`, `resume`, `cancel`, `apply`. */
+    calls: string[];
+    started: { version?: string } | null;
+  } = { available: false, check: { status: "upToDate", current: "1.0.0", latest: "1.0.0" }, lastResult: null, calls: [], started: null };
   /** Juegos que se estan precargando (como `PRELOADING` en Rust). */
   private preloading = new Set<string>();
 
@@ -160,6 +169,27 @@ export class DriverBridge {
         return this.gamesCommand(cmd, args);
       case "games_preload":
         return this.gamesPreload(String(args.id));
+      // ── Actualizador (updater.rs) ──
+      case "update_available":
+        return { value: this.updater.available };
+      case "update_check":
+        this.updater.calls.push("check");
+        return { value: this.updater.check };
+      case "update_start":
+        this.updater.calls.push("start");
+        this.updater.started = (args.release ?? null) as { version?: string } | null;
+        return { value: null };
+      case "update_control":
+        this.updater.calls.push(String(args.action));
+        return { value: null };
+      case "update_apply":
+        this.updater.calls.push("apply");
+        return { value: null };
+      case "update_last_result": {
+        const r = this.updater.lastResult;
+        this.updater.lastResult = null;
+        return { value: r };
+      }
       case "plugin:webview|set_webview_zoom":
         this.zoomCalls.push(Number(args.value));
         this.onZoom?.(Number(args.value));

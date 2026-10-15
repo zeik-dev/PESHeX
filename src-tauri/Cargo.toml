@@ -9,7 +9,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = [".", "crates/rxdriver", "crates/peshex-core"]
+members = [".", "crates/rxdriver", "crates/peshex-core", "crates/updater"]
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Comprueba que la version de package.json, src-tauri/Cargo.toml y tauri.conf.json coinciden y, si se
+// Comprueba que la version de package.json, tauri.conf.json y los Cargo.toml del workspace (la app y sus crates,
+// incluido el actualizador, que la muestra en `--version`) coinciden y, si se
 // da un tag (--tag v1.0.0), que el tag la nombra. Imprime `version=`, `prerelease=` y `tag=` listos para
 // $GITHUB_OUTPUT. Los tags de prueba `ci-*` no exigen coincidencia (nunca publican un Release).
 //
@@ -11,12 +12,26 @@ import { fileURLToPath } from "node:url";
 
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 
+/** Cargo.toml de la app y de cada crate del workspace (`crates/*`). */
+function cargoManifests(root) {
+  const out = ["src-tauri/Cargo.toml"];
+  const crates = path.join(root, "src-tauri", "crates");
+  if (fs.existsSync(crates)) {
+    for (const d of fs.readdirSync(crates).sort()) {
+      if (fs.existsSync(path.join(crates, d, "Cargo.toml"))) out.push(`src-tauri/crates/${d}/Cargo.toml`);
+    }
+  }
+  return out;
+}
+
 export function readVersions(root) {
-  const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version;
-  const cargoText = fs.readFileSync(path.join(root, "src-tauri", "Cargo.toml"), "utf8");
-  const cargo = /^\[package\][\s\S]*?^version\s*=\s*"([^"]+)"/m.exec(cargoText)?.[1];
-  const tauri = JSON.parse(fs.readFileSync(path.join(root, "src-tauri", "tauri.conf.json"), "utf8")).version;
-  return { "package.json": pkg, "src-tauri/Cargo.toml": cargo, "src-tauri/tauri.conf.json": tauri };
+  const versions = { "package.json": JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version };
+  for (const rel of cargoManifests(root)) {
+    const text = fs.readFileSync(path.join(root, rel), "utf8");
+    versions[rel] = /^\[package\][\s\S]*?^version\s*=\s*"([^"]+)"/m.exec(text)?.[1];
+  }
+  versions["src-tauri/tauri.conf.json"] = JSON.parse(fs.readFileSync(path.join(root, "src-tauri", "tauri.conf.json"), "utf8")).version;
+  return versions;
 }
 
 /** @returns {{ version: string, prerelease: boolean, tag: string, errors: string[] }} */

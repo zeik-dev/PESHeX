@@ -381,6 +381,7 @@
 }
 .modalFoot {
   display: flex;
+  flex-wrap: wrap; /* con tres botones largos (o en ingles) pasan a otra linea en vez de salirse por la izquierda */
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 20px;
