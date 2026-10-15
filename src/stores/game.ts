@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import i18n from "../i18n";
 import { gameApi } from "../api/game";
+import { gamesApi } from "../api/games";
 import { toApiError } from "../api/tauri";
 import type { ApiError } from "../api/types";
 import { AssetIndex } from "../game/assetIndex";
@@ -11,6 +12,7 @@ import type { ResolveCtx } from "../game/resolve/common";
 import { indexCatalog, type CatalogIndex } from "../game/lookup";
 import type { Catalog, GameSource, GameStatus } from "../game/types";
 import { errorText } from "../lib/errors";
+import { useGames } from "./games";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
 
@@ -94,7 +96,9 @@ export const useGame = create<GameState>((set, get) => ({
     set({ linking: true, error: null, progress: { done: 0, total: 1, step: "species" } });
     try {
       // 1. Datos (Ruby) por pasos: especies, movimientos, objetos, habilidades, tipos, apoyo, limites y calibracion.
-      const begin = await gameApi.linkBegin(path, source);
+      // La cache de datos de ESTE juego (en la carpeta de datos de la app) hace que abrir otra partida suya sea casi instantaneo.
+      const cacheDir = await gamesApi.cacheDir(path).catch(() => undefined);
+      const begin = await gameApi.linkBegin(path, source, cacheDir ?? undefined);
       const total = begin.steps.length + CLIENT_STEPS.length;
       let done = 0;
       const mark = (step: string) => set({ progress: { done, total, step } });
@@ -125,6 +129,7 @@ export const useGame = create<GameState>((set, get) => ({
         catalog, catalogIndex: catalog ? indexCatalog(catalog) : null, ctx: makeCtx(index, layout, map),
       });
       useSettings.getState().rememberGame(root, savePath);
+      void useGames.getState().registerLinked(root); // «Mis juegos»: el juego vinculado queda registrado
       return true;
     } catch (e) {
       const err = toApiError(e);
@@ -160,6 +165,9 @@ export const useGame = create<GameState>((set, get) => ({
       if (await get().link(remembered, "remembered", savePath)) return done();
       settings.forgetGameFor(savePath); // la carpeta ya no existe
     }
+    // Biblioteca «Mis juegos»: la partida esta en la carpeta de guardado (o dentro) de un juego registrado.
+    const registered = await gamesApi.findForSave(savePath).catch(() => null);
+    if (registered && (await get().link(registered.root, "remembered", savePath))) return done();
     // Juegos v19+: el save vive en %APPDATA%\<Juego>\ -> casar con un juego visto antes.
     const parent = parentName(savePath);
     const known = settings.recentGames.find((g) => parent && baseName(g) === parent);

@@ -7,6 +7,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs";
 import { createInterface } from "node:readline";
 import path from "node:path";
+import { GamesMock } from "./games";
 
 type Json = Record<string, unknown>;
 
@@ -35,6 +36,12 @@ export class DriverBridge {
   zoomCalls: number[] = [];
   /** Se llama con cada zoom nativo pedido (lo usa `ZoomEmulator` para reproducir el efecto del zoom del WebView). */
   onZoom?: (factor: number) => void;
+  /** Biblioteca «Mis juegos» (en Rust: games.json + Save Scan). */
+  games = new GamesMock();
+  /** Emite un evento de Tauri hacia la página (lo conecta `setup` con `window.__pwEmit`). */
+  emit?: (event: string, payload: unknown) => Promise<void>;
+  /** Juegos que se estan precargando (como `PRELOADING` en Rust). */
+  private preloading = new Set<string>();
 
   constructor(repoRoot: string) {
     this.proc = spawn("ruby", ["-E", "UTF-8", path.join(repoRoot, "driver", "rxdata_driver.rb")], {
@@ -134,13 +141,82 @@ export class DriverBridge {
         this.assetMaps.set(String(args.root), args.map);
         return { value: null };
       case "plugin:event|listen":
-        return { value: 1 };
+        return { value: Number(args.handler ?? 1) };
+      case "plugin:event|unlisten":
+        return { value: null };
+      // ── Biblioteca «Mis juegos» (games.rs) ──
+      case "games_list":
+      case "games_add":
+      case "games_remove":
+      case "games_rename":
+      case "games_touch":
+      case "games_scan_saves":
+      case "games_add_save_dir":
+      case "games_remove_save_dir":
+      case "games_find_for_save":
+      case "games_seed":
+      case "games_cache_dir":
+      case "games_preloading":
+        return this.gamesCommand(cmd, args);
+      case "games_preload":
+        return this.gamesPreload(String(args.id));
       case "plugin:webview|set_webview_zoom":
         this.zoomCalls.push(Number(args.value));
         this.onZoom?.(Number(args.value));
         return { value: null };
       default:
         return { value: null };
+    }
+  }
+
+  private gamesCommand(cmd: string, args: Json): { value?: unknown; error?: unknown } {
+    try {
+      const g = this.games;
+      switch (cmd) {
+        case "games_list": return { value: g.list() };
+        case "games_add": return { value: g.add(String(args.root)) };
+        case "games_remove": g.remove(String(args.id)); return { value: null };
+        case "games_rename": g.rename(String(args.id), String(args.name)); return { value: null };
+        case "games_touch": g.touch(String(args.id)); return { value: null };
+        case "games_scan_saves": return { value: g.scanById(String(args.id)) };
+        case "games_add_save_dir": return { value: g.addSaveDir(String(args.id), String(args.dir)) };
+        case "games_remove_save_dir": return { value: g.removeSaveDir(String(args.id), String(args.dir)) };
+        case "games_find_for_save": return { value: g.findForSave(String(args.path)) };
+        case "games_seed": return { value: g.seed((args.roots as string[]) ?? []) };
+        case "games_cache_dir": return { value: g.cacheDir(String(args.root)) };
+        default: return { value: [...this.preloading] };
+      }
+    } catch (e) {
+      return { error: { params: null, fatal: false, ...(e as object) } };
+    }
+  }
+
+  /** Como `games_preload` de Rust: recorre los pasos del driver (sin partida abierta) y avisa con `games://preload`. */
+  private async gamesPreload(id: string): Promise<{ value?: unknown; error?: unknown }> {
+    const game = this.games.games.find((x) => x.id === id);
+    if (!game) return { error: { kind: "GameNotFound", message: `no hay ningún juego registrado con el id ${id}`, params: null } };
+    if (this.preloading.has(id)) return { error: { kind: "Busy", message: "este juego ya se está precargando", params: null } };
+    this.preloading.add(id);
+    try {
+      const begin = await this.send("game_preload_begin", { path: game.root, cacheDir: this.games.cacheDir(game.root) });
+      if (!begin.ok) return this.wrap(begin);
+      const steps = (begin.steps as string[]) ?? [];
+      const total = steps.length + 1;
+      for (const [i, step] of steps.entries()) {
+        await this.emit?.("games://preload", { id, step, done: i, total });
+        if (this.stepDelayMs) await new Promise((r) => setTimeout(r, this.stepDelayMs));
+        const r = await this.send("game_preload_step", { step });
+        if (!r.ok) return this.wrap(r);
+      }
+      await this.emit?.("games://preload", { id, step: "graphics", done: steps.length, total });
+      const fin = await this.send("game_preload_finish");
+      if (!fin.ok) return this.wrap(fin);
+      game.indexedAt = Math.floor(Date.now() / 1000);
+      game.fingerprint = (fin.fingerprint as string) ?? null;
+      await this.emit?.("games://preload", { id, done: true, total: 1 });
+      return { value: { id, cached: fin.cached ?? false, state: fin.state ?? null } };
+    } finally {
+      this.preloading.delete(id);
     }
   }
 
@@ -151,6 +227,7 @@ export class DriverBridge {
   }
 
   async dispose() {
+    this.games.dispose();
     try {
       await this.send("shutdown");
     } catch {
@@ -220,5 +297,15 @@ export const TAURI_MOCK = `
       metadata: { currentWindow: { label: 'main' }, currentWebview: { windowLabel: 'main', label: 'main' } },
     };
     window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
+    // Eventos de Tauri: la prueba los emite desde Node con window.__pwEmit(evento, carga).
+    const listeners = {};
+    const inv = window.__TAURI_INTERNALS__.invoke;
+    window.__TAURI_INTERNALS__.invoke = async (cmd, args) => {
+      if (cmd === 'plugin:event|listen') (listeners[args.event] ??= []).push(args.handler);
+      return inv(cmd, args);
+    };
+    window.__pwEmit = (event, payload) => {
+      for (const id of listeners[event] ?? []) callbacks[id]?.({ event, id, payload });
+    };
   })();
 `;

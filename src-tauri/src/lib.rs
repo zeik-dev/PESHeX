@@ -1,5 +1,6 @@
 mod commands;
 mod game;
+mod games;
 mod state;
 mod winstate;
 
@@ -85,6 +86,20 @@ pub fn run() {
             game::read_game_file,
             game::assetmap_load,
             game::assetmap_save,
+            games::games_list,
+            games::games_add,
+            games::games_remove,
+            games::games_rename,
+            games::games_touch,
+            games::games_scan_saves,
+            games::games_add_save_dir,
+            games::games_remove_save_dir,
+            games::games_find_for_save,
+            games::games_seed,
+            games::games_cache_dir,
+            games::games_preload,
+            games::games_preloading,
+            games::games_id_of,
         ])
         .build(tauri::generate_context!());
 

@@ -82,7 +82,7 @@ const NO_SESSION: &str = "No hay ningun archivo abierto. Abre un archivo primero
 /// de atras (el Mutex y el proceso hijo los gestiona este modulo).
 const LIFECYCLE_COMMANDS: &[&str] = &["open", "close", "shutdown", "ping", "check"];
 
-async fn spawn_session(app: &AppHandle) -> Result<DriverSession, DriverErrorDto> {
+pub(crate) async fn spawn_session(app: &AppHandle) -> Result<DriverSession, DriverErrorDto> {
     let (ruby_bin, driver_script) = resolve_ruby_paths(app)?;
     DriverSession::spawn(&ruby_bin, &driver_script)
         .await

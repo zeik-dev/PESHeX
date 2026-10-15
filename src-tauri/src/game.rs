@@ -30,7 +30,7 @@ const RELEVANT_DIRS: &[&str] = &[
 /// `trainer004.png`, y `trchar004.png` de su sprite de mapa).
 const FILTERED_DIRS: &[(&str, &[&str])] = &[("characters", &["trainer", "trchar"])];
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "bmp"];
-const MAX_FILES: usize = 50_000;
+pub(crate) const MAX_FILES: usize = 50_000;
 const MAX_DEPTH: usize = 8;
 const MAX_IMAGE_BYTES: u64 = 8 * 1024 * 1024;
 
@@ -189,7 +189,8 @@ impl Walker<'_> {
     }
 }
 
-/// Recorre las carpetas relevantes de `Graphics/` de la raiz del juego.
+/// Recorre las carpetas relevantes de `Graphics/` de la raiz del juego (sin cache: lo usan las pruebas).
+#[cfg(test)]
 pub fn scan_graphics(root: &Path, cap: usize) -> Result<GameScan, DriverErrorDto> {
     scan_graphics_cached(root, cap, None).map(|(scan, _)| scan)
 }

@@ -19,8 +19,8 @@ export const gameApi = {
   setFolder: async (path: string | null, source: GameSource = "manual") =>
     (await driverCall<{ game: GameStatus }>("set_game_folder", { path, source })).game,
   /** Carga por pasos (progreso real): begin devuelve los pasos; cada `linkStep` carga uno; `linkFinish` vincula. */
-  linkBegin: (path: string | null, source: GameSource = "manual") =>
-    driverCall<{ root: string | null; steps: string[] }>("game_link_begin", { path, source }),
+  linkBegin: (path: string | null, source: GameSource = "manual", cacheDir?: string) =>
+    driverCall<{ root: string | null; steps: string[]; cached?: boolean }>("game_link_begin", { path, source, cacheDir }),
   linkStep: (step: string) => driverCall<{ step: string }>("game_link_step", { step }),
   linkFinish: async () => (await driverCall<{ game: GameStatus }>("game_link_finish")).game,
   status: async () => (await driverCall<{ game: GameStatus }>("get_game_status")).game,

@@ -79,7 +79,11 @@ test("primer arranque: el idioma por defecto es español, el asistente deja eleg
   await wizard.getByRole("radio", { name: "English" }).click();
   const welcome = page.getByRole("dialog", { name: "Welcome to PESHeX" });
   await expect(welcome).toBeVisible();
-  await welcome.getByRole("button", { name: "Get started" }).click();
+  await welcome.getByRole("button", { name: "Continue" }).click();
+  // Segundo paso: agregar un directorio de juego (opcional), ya en el idioma elegido
+  const gameStep = page.getByRole("dialog", { name: "Do you want to add a game folder?" });
+  await expect(gameStep).toBeVisible();
+  await gameStep.getByRole("button", { name: "Not now" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Open a save file" })).toBeVisible();
   // Se recuerda (el resto de pruebas vacían el almacenamiento en cada carga, por eso se comprueba lo guardado):

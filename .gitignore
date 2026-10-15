@@ -42,3 +42,4 @@ playwright-report/
 # Salida del empaquetado del release (scripts/package-release.mjs)
 release-out/
 *.zip
+*.tsbuildinfo

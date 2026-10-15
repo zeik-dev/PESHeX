@@ -77,6 +77,7 @@ export async function setup(page: Page, save = "Partida_2.rxdata", opts: { gameP
   await page.addInitScript(() => localStorage.clear());
   const window = new ZoomEmulator(page);
   // Si la página ya se cerró (el último ajuste de zoom llega tarde), se ignora el fallo.
+  bridge.emit = (event, payload) => page.evaluate(([e, p]) => (window as unknown as { __pwEmit?: (e: string, p: unknown) => void }).__pwEmit?.(e, p), [event, payload] as const).catch(() => undefined);
   bridge.onZoom = (z) => void window.setZoom(z).catch(() => undefined);
   return { bridge, workDir, savePath, window, gamePrompt: !!opts.gamePrompt };
 }

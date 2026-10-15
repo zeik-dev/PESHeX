@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useEdit } from "../stores/edit";
 import { useGame } from "../stores/game";
+import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 import { ConfirmDialog, Modal, Button, Banner, Chip } from "../ui";
@@ -72,6 +74,11 @@ export function Hosts() {
   const closeConfirm = useSession((s) => s.closeConfirm);
   const close = useSession((s) => s.close);
   const dismissClose = useSession((s) => s.dismissCloseConfirm);
+
+  // Biblioteca «Mis juegos»: se carga al arrancar (y escucha el progreso de «Precargar»).
+  useEffect(() => {
+    void useGames.getState().init();
+  }, []);
 
   return (
     <>

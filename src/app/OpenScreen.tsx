@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { AppLogo, PokeballSpinner, Button, cx } from "../ui";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
+import { GameLibrary } from "../features/games/GameLibrary";
 import { useSession } from "../stores/session";
 import { useSettings } from "../stores/settings";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
@@ -125,6 +126,11 @@ export function OpenScreen() {
           </p>
           <p className={styles.disclaimer}>{t("app.disclaimer")}</p>
         </div>
+        {!opening && (
+          <div className={styles.libraryCard}>
+            <GameLibrary variant="open" />
+          </div>
+        )}
       </div>
     </div>
   );
