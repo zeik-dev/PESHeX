@@ -49,16 +49,21 @@ module Sem
 
     # Carga por pasos (para mostrar el progreso real en la UI): begin -> step* -> finish.
     # `begin` desvincula lo anterior y devuelve la lista de pasos; si `path` esta vacio solo desvincula.
-    def begin_link!(session, path, source)
+    # `cache_dir` (opcional): carpeta de cache de ESTE juego. Con una cache valida el Store sale ya cargado y los pasos terminan
+    # al instante; si no, se carga normal y al terminar (`finish_link!`) se escribe la cache.
+    def begin_link!(session, path, source, cache_dir = nil)
       raise DriverError.new('PendingChanges', 'guarda o descarta los cambios antes de cambiar la carpeta del juego') if session.dirty?
 
       detach!(session)
       return { steps: [], root: nil } if path.nil? || path.to_s.strip.empty?
 
-      store = GameData::Store.new(normalize_root(path), source: source)
+      root = normalize_root(path)
+      cache_dir = cache_dir.to_s.strip.empty? ? nil : cache_dir.to_s
+      cached = cache_dir && GameData::StoreCache.read(cache_dir, root, source)
+      store = cached || GameData::Store.new(root, source: source)
       store.check_root!
-      session.game_loading = { store: store, calibration: nil }
-      { root: store.root, steps: store.steps + ['calibration'] }
+      session.game_loading = { store: store, calibration: nil, cache_dir: cache_dir, from_cache: !cached.nil? }
+      { root: store.root, steps: store.steps + ['calibration'], cached: !cached.nil? }
     end
 
     def link_step!(session, id)
@@ -85,6 +90,46 @@ module Sem
       session.game = store
       session.game_calibration = pending[:calibration]
       Api.state!(session).attach_game(store, pending[:calibration])
+      # Recien leido del juego: se guarda para la proxima vez (un fallo al escribir no afecta a la vinculacion).
+      GameData::StoreCache.write(pending[:cache_dir], store) if pending[:cache_dir] && !pending[:from_cache]
+    end
+
+    # ── Precarga (sin partida abierta) ────────────────────────────────────────
+    # «Precargar» un juego desde la biblioteca: lee sus datos y deja la cache lista, sin necesitar un save. Va por pasos
+    # (begin -> step* -> finish) para mostrar el progreso real; el Store pendiente vive aqui porque no hay sesion.
+    @preload = nil
+
+    def preload_begin!(path, cache_dir)
+      root = normalize_root(path)
+      cache_dir = cache_dir.to_s.strip.empty? ? nil : cache_dir.to_s
+      raise DriverError.new('ValidationError', 'falta la carpeta de cache', { code: 'cache_dir_required' }) unless cache_dir
+
+      store = GameData::Store.new(root, source: 'manual')
+      store.check_root!
+      cached = GameData::StoreCache.valid?(cache_dir, root)
+      @preload = { store: store, cache_dir: cache_dir, cached: cached }
+      { root: root, steps: cached ? [] : store.steps, cached: cached }
+    end
+
+    def preload_step!(id)
+      raise DriverError.new('NoPendingGameLink', 'no hay una precarga en curso') unless @preload
+
+      @preload[:store].load_step!(id)
+      { step: id.to_s }
+    end
+
+    def preload_finish!
+      pending = @preload
+      raise DriverError.new('NoPendingGameLink', 'no hay una precarga en curso') unless pending
+
+      @preload = nil
+      return { root: pending[:store].root, cached: true, fingerprint: GameData::StoreCache.fingerprint(pending[:store].root) } if pending[:cached]
+
+      store = pending[:store]
+      raise DriverError.new('GameLinkIncomplete', 'faltan pasos por cargar', {}) unless store.loaded?
+
+      fingerprint = GameData::StoreCache.write(pending[:cache_dir], store)
+      { root: store.root, cached: false, fingerprint: fingerprint, state: store.state, species: store.count(:species) }
     end
   end
 end
@@ -98,7 +143,20 @@ end
 # Carga por pasos (progreso real): game_link_begin -> game_link_step {id}* -> game_link_finish.
 Commands.register('game_link_begin', bumps: true) do |ctx, params|
   source = %w[auto manual remembered].include?(params['source']) ? params['source'] : 'manual'
-  Sem::GameApi.begin_link!(ctx.session, params['path'], source)
+  Sem::GameApi.begin_link!(ctx.session, params['path'], source, params['cacheDir'])
+end
+
+# Precarga de un juego SIN partida abierta (lee sus datos y deja la cache): game_preload_begin -> step* -> finish.
+Commands.register('game_preload_begin', needs_session: false) do |_ctx, params|
+  Sem::GameApi.preload_begin!(params['path'], params['cacheDir'])
+end
+
+Commands.register('game_preload_step', needs_session: false) do |_ctx, params|
+  Sem::GameApi.preload_step!(params['step'])
+end
+
+Commands.register('game_preload_finish', needs_session: false) do |_ctx, _params|
+  Sem::GameApi.preload_finish!
 end
 
 Commands.register('game_link_step') do |ctx, params|

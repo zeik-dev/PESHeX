@@ -46,6 +46,22 @@ module Sem
         new(root, source: source).tap(&:load!)
       end
 
+      # Lo que se guarda en la cache en disco (ver StoreCache): solo los datos leidos del juego. Los derivados perezosos
+      # (perfiles de aprendizaje, preevoluciones, ribetes de PBS opcionales...) se recalculan al pedirlos.
+      CACHE_IVARS = %i[@tables @domains @errors @limit_overrides @limit_sources @settings_files @version @flavor @ball_types].freeze
+
+      def to_cache_hash
+        CACHE_IVARS.to_h { |iv| [iv, instance_variable_get(iv)] }
+      end
+
+      # Store ya cargado a partir de la cache; `root` y `source` son los de ESTA vinculacion (la carpeta pudo cambiar de sitio).
+      def self.from_cache_hash(root, source, data)
+        new(root, source: source).tap do |store|
+          CACHE_IVARS.each { |iv| store.instance_variable_set(iv, data.fetch(iv)) }
+          store.instance_variable_set(:@loaded, true)
+        end
+      end
+
       # Pasos de la carga (el orden importa: las MT se aplican a las especies ya cargadas y la version se
       # deduce de ellas). La UI puede ejecutarlos uno a uno (`load_step!`) para mostrar el progreso real.
       STEP_IDS = %w[species moves items abilities types extras settings].freeze
