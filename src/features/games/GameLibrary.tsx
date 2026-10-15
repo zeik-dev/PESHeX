@@ -12,7 +12,7 @@ import styles from "./games.module.css";
 /** «Mis juegos»: los fangames registrados, con las partidas que el Save Scan encontró de cada uno (sin copias `.bak`), la
  *  precarga de sus datos y la elección manual de la carpeta de guardados cuando el escaneo no la encuentra.
  *  `variant="open"` (pantalla de inicio) deja abrir las partidas; `"manage"` (Ajustes) solo gestiona. */
-export function GameLibrary({ variant }: { variant: "open" | "manage" }) {
+export function GameLibrary({ variant, showTitle = true }: { variant: "open" | "manage"; showTitle?: boolean }) {
   const { t } = useT();
   const games = useGames((s) => s.games);
   const loaded = useGames((s) => s.loaded);
@@ -36,8 +36,8 @@ export function GameLibrary({ variant }: { variant: "open" | "manage" }) {
   return (
     <section className={styles.library} aria-label={t("games.title")} data-testid="game-library">
       <header className={styles.head}>
-        {/* En Ajustes la tarjeta ya lleva el título. */}
-        {variant === "open" ? (
+        {/* En Ajustes la tarjeta ya lleva el título, y en la pantalla de inicio el tab «Juegos guardados». */}
+        {variant === "open" && showTitle ? (
           <h2 className={styles.title}>
             <Gamepad2 size={18} aria-hidden="true" /> {t("games.title")}
           </h2>

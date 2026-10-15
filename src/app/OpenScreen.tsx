@@ -2,13 +2,14 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { FolderOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppLogo, PokeballSpinner, Button, cx } from "../ui";
+import { AppLogo, PokeballSpinner, Button, Tabs, tabId, tabPanelId, cx } from "../ui";
 import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
 import { GameLibrary } from "../features/games/GameLibrary";
 import { UpdateBadge } from "../features/updater/UpdateBadge";
+import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
-import { useSettings } from "../stores/settings";
+import { useSettings, type OpenTab } from "../stores/settings";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
 import styles from "./app.module.css";
 
@@ -41,6 +42,11 @@ function useFileDrop(onPath: (p: string) => void, setActive: (a: boolean) => voi
   }, [onPath, setActive]);
 }
 
+/** Pestaña que se ve al entrar: la última elegida o, si no hay, las recientes (si las hay) y si no, los juegos guardados. */
+export function initialOpenTab(saved: OpenTab | null, recentCount: number): OpenTab {
+  return saved ?? (recentCount > 0 ? "recent" : "games");
+}
+
 export function OpenScreen() {
   const { t } = useTranslation();
   const open = useSession((s) => s.open);
@@ -48,7 +54,12 @@ export function OpenScreen() {
   const openError = useSession((s) => s.openError);
   const recent = useSettings((s) => s.recent);
   const removeRecent = useSettings((s) => s.removeRecent);
+  const savedTab = useSettings((s) => s.openTab);
+  const setOpenTab = useSettings((s) => s.setOpenTab);
+  const gamesCount = useGames((s) => s.games.length);
   const [dropActive, setDropActive] = useState(false);
+  // La pestaña se decide al entrar y no salta sola (p. ej. al quitar la última partida reciente se queda en esa pestaña).
+  const [tab, setTab] = useState<OpenTab>(() => initialOpenTab(savedTab, recent.length));
 
   useFileDrop((p) => void open(p), setDropActive);
 
@@ -74,7 +85,7 @@ export function OpenScreen() {
           </div>
           <div className={styles.openTitle}>{t("app.name")}</div>
           <h1 style={{ fontSize: 20 }}>{t("open.title")}</h1>
-          <p className="muted">{t("open.subtitle")}</p>
+          <p className={cx("muted", styles.openSubtitle)}>{t("open.subtitle")}</p>
 
           {opening ? (
             <PokeballSpinner label={t("open.opening")} />
@@ -95,45 +106,76 @@ export function OpenScreen() {
             </p>
           )}
 
-          {recent.length > 0 && !opening && (
-            <div className={styles.recentList}>
-              <strong style={{ fontSize: 13 }}>{t("open.recent")}</strong>
-              {recent.map((p) => (
-                <button key={p} type="button" className={styles.recentItem} onClick={() => void open(p)} title={p}>
-                  <FolderOpen size={16} />
-                  <span style={{ minWidth: 0, flex: 1 }}>
-                    <div className={styles.recentName}>{fileName(p)}</div>
-                    <div className={styles.recentPath}>{`‪${p}`}</div>
-                  </span>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label={t("common.remove")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeRecent(p);
-                    }}
-                    onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), removeRecent(p))}
-                    className="muted"
-                  >
-                    ×
-                  </span>
-                </button>
-              ))}
+          {!opening && (
+            <div className={styles.openTabs} data-testid="open-tabs">
+              <Tabs<OpenTab>
+                idPrefix="open"
+                ariaLabel={t("open.tabsLabel")}
+                value={tab}
+                onChange={(next) => {
+                  setTab(next);
+                  setOpenTab(next);
+                }}
+                tabs={[
+                  { id: "recent", label: t("open.tabRecent"), badge: recent.length },
+                  { id: "games", label: t("open.tabGames"), badge: gamesCount },
+                ]}
+              />
+              <div
+                className={styles.openPanel}
+                role="tabpanel"
+                id={tabPanelId("open", tab)}
+                aria-labelledby={tabId("open", tab)}
+                data-testid="open-panel"
+              >
+                {tab === "recent" ? <RecentList recent={recent} onOpen={(p) => void open(p)} onRemove={removeRecent} /> : <GameLibrary variant="open" showTitle={false} />}
+              </div>
             </div>
           )}
-
-          <p className="muted" style={{ fontSize: 12 }}>
-            {t("open.supported")} · {t("open.backupNote")}
-          </p>
-          <p className={styles.disclaimer}>{t("app.disclaimer")}</p>
         </div>
-        {!opening && (
-          <div className={styles.libraryCard}>
-            <GameLibrary variant="open" />
-          </div>
-        )}
+        <p className={styles.openFoot}>
+          {t("open.supported")} · {t("open.backupNote")}
+          <br />
+          {t("app.disclaimer")}
+        </p>
       </div>
+    </div>
+  );
+}
+
+function RecentList({ recent, onOpen, onRemove }: { recent: string[]; onOpen: (path: string) => void; onRemove: (path: string) => void }) {
+  const { t } = useTranslation();
+  if (recent.length === 0) {
+    return (
+      <p className="muted" style={{ margin: 0 }} data-testid="recent-empty">
+        {t("open.recentEmpty")}
+      </p>
+    );
+  }
+  return (
+    <div className={styles.recentList}>
+      {recent.map((p) => (
+        <button key={p} type="button" className={styles.recentItem} onClick={() => onOpen(p)} title={p}>
+          <FolderOpen size={16} />
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <div className={styles.recentName}>{fileName(p)}</div>
+            <div className={styles.recentPath}>{`\u202a${p}`}</div>
+          </span>
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label={t("common.remove")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(p);
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), onRemove(p))}
+            className="muted"
+          >
+            ×
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

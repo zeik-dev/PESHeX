@@ -234,15 +234,20 @@
 }
 
 /* ── Pantalla de apertura ──────────────────────────────────────────────── */
+/* Sin scroll de pagina: la tarjeta se encoge al alto de la ventana y solo el panel de los tabs (recientes / juegos guardados)
+   hace scroll por dentro cuando hay muchos elementos. */
 .openPage {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background:
     linear-gradient(to bottom, var(--pb-top) 0 50%, var(--pb-ink) 50% calc(50% + var(--seam)), var(--surface) calc(50% + var(--seam)) 100%);
 }
 
 .openTools {
+  flex: none;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -251,27 +256,22 @@
 
 .openCenter {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 16px;
-}
-/* «Mis juegos» bajo la tarjeta de abrir */
-.libraryCard {
-  width: min(560px, 100%);
-  padding: 16px 18px;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
+  gap: 10px;
+  padding: 0 16px 12px;
 }
 
 .openCard {
   position: relative;
-  width: min(560px, 100%);
-  padding: 72px 28px 24px;
+  width: min(600px, 100%);
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-top: 58px; /* hueco para la Poké Ball, que sobresale por arriba */
+  padding: 62px 28px 16px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 2px solid var(--pb-ink);
@@ -279,8 +279,17 @@
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   align-items: center;
+}
+.openCard > * {
+  flex-shrink: 0;
+}
+.openCard > .openTabs {
+  flex-shrink: 1;
+}
+.openSubtitle {
+  margin: 0;
 }
 
 .openBall {
@@ -311,7 +320,7 @@
 
 .dropZone {
   width: 100%;
-  padding: 18px;
+  padding: 10px;
   border: 2px dashed var(--border);
   border-radius: var(--radius);
   color: var(--text-muted);
@@ -322,6 +331,29 @@
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+/* Tabs «Partidas recientes» / «Juegos guardados»: el panel absorbe el alto que sobra y hace scroll por dentro */
+.openTabs {
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.openTabs [role="tablist"] {
+  flex: none;
+  margin-bottom: 10px;
+}
+.openPanel {
+  flex: 1 1 auto;
+  min-height: 96px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
 }
 
 .recentList {
@@ -358,10 +390,14 @@
   text-align: left;
 }
 
-.disclaimer {
-  font-size: 11px;
+/* Notas y descargo: una linea pequena bajo la tarjeta */
+.openFoot {
+  flex: none;
+  max-width: min(780px, 100%);
+  margin: 0;
   color: var(--text-muted);
-  max-width: 460px;
+  font-size: 11px;
+  text-align: center;
 }
 
 .openToolBtn {

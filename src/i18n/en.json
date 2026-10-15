@@ -74,7 +74,11 @@
     "supported": "Works with Essentials v16–v21 and custom bases",
     "dialogFilter": "Essentials save (.rxdata)",
     "error": "The file could not be opened",
-    "backupNote": "A backup is always created before saving."
+    "backupNote": "A backup is always created before saving.",
+    "tabsLabel": "Saves and games",
+    "tabRecent": "Recent saves",
+    "tabGames": "Saved games",
+    "recentEmpty": "You haven't opened any save yet. The ones you open will show up here."
   },
   "banner": {
     "roundtripTitle": "This file does not rebuild byte-for-byte identical",

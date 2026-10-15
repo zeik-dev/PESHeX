@@ -75,7 +75,11 @@
     "supported": "Compatible con Essentials v16–v21 y bases personalizadas",
     "dialogFilter": "Partida de Essentials (.rxdata)",
     "error": "No se pudo abrir el archivo",
-    "backupNote": "Antes de guardar se crea siempre una copia de seguridad."
+    "backupNote": "Antes de guardar se crea siempre una copia de seguridad.",
+    "tabsLabel": "Partidas y juegos",
+    "tabRecent": "Partidas recientes",
+    "tabGames": "Juegos guardados",
+    "recentEmpty": "Aún no has abierto ninguna partida. Las que abras aparecerán aquí."
   },
   "banner": {
     "roundtripTitle": "Este archivo no se reconstruye idéntico byte a byte",

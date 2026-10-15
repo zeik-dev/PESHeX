@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ButtonHTMLAttributes, type ReactNode, type Ref } from "react";
+import { useEffect, useId, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode, type Ref } from "react";
 import styles from "./ui.module.css";
 import { cx } from "./cx";
 
@@ -238,23 +238,49 @@ export function Switch({
   );
 }
 
+/** Id del tab y del panel que controla (`idPrefix` + id): para `aria-labelledby` / `aria-controls` del panel. */
+export const tabId = (prefix: string, id: string) => `${prefix}-tab-${id}`;
+export const tabPanelId = (prefix: string, id: string) => `${prefix}-panel-${id}`;
+
+/** Tabs accesibles: `role=tablist/tab`, un solo tab en el orden de tabulación (flechas, Inicio y Fin cambian de tab y
+ *  lo activan). Con `idPrefix` cada tab lleva `id` y `aria-controls` hacia su panel (`tabId` / `tabPanelId`). */
 export function Tabs<T extends string>({
   tabs,
   value,
   onChange,
+  idPrefix,
+  ariaLabel,
 }: {
   tabs: { id: T; label: string; badge?: ReactNode }[];
   value: T;
   onChange: (id: T) => void;
+  idPrefix?: string;
+  ariaLabel?: string;
 }) {
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+    if (!keys.includes(e.key) || tabs.length === 0) return;
+    e.preventDefault();
+    const i = Math.max(0, tabs.findIndex((t) => t.id === value));
+    const next = e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    const target = tabs[next];
+    if (!target) return;
+    onChange(target.id);
+    // El foco sigue al tab activado (los botones viven dentro del tablist).
+    const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    buttons[next]?.focus();
+  }
   return (
-    <div className={styles.tabs} role="tablist">
+    <div className={styles.tabs} role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          id={idPrefix ? tabId(idPrefix, tab.id) : undefined}
           type="button"
           role="tab"
           aria-selected={tab.id === value}
+          aria-controls={idPrefix ? tabPanelId(idPrefix, tab.id) : undefined}
+          tabIndex={tab.id === value ? 0 : -1}
           className={cx(styles.tab, tab.id === value && styles.tabActive)}
           onClick={() => onChange(tab.id)}
         >
