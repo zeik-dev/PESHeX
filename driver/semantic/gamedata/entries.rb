@@ -48,6 +48,9 @@ module Sem
       end
     end
     Ribbon = Struct.new(:id, :name, :description, :icon, keyword_init: true)
+    # Clase de entrenador: `id` es el numero de las bases <= v18 (nil en v19+), `internal` el nombre interno
+    # ("POKEMONTRAINER_RojoNeutro") y `name` el nombre visible ("Entrenador").
+    TrainerTypeInfo = Struct.new(:id, :internal, :name, keyword_init: true)
 
     STANDARD_TYPES = %w[NORMAL FIGHTING FLYING POISON GROUND ROCK BUG GHOST STEEL QMARKS FIRE WATER GRASS
                         ELECTRIC PSYCHIC ICE DRAGON DARK FAIRY].freeze

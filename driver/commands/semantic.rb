@@ -42,7 +42,7 @@ Commands.register('get_overview') do |ctx, _p|
   bag = m.bag_view
   {
     profile: st.resolved.summary,
-    trainer: trainer && trainer.slice(:name, :id, :trainerType, :gender, :money, :coins, :battlePoints, :soot,
+    trainer: trainer && trainer.slice(:name, :id, :trainerType, :look, :gender, :money, :coins, :battlePoints, :soot,
                                       :badges, :playTime, :lastSaved, :available, :limits),
     party: m.party_summaries,
     counts: { boxes: boxes && boxes[:boxes].size, boxPokemon: boxes && boxes[:total],

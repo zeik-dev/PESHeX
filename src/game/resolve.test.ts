@@ -8,6 +8,7 @@ import { frameInfo } from "./resolve/common";
 import { itemNameCandidates, resolveBallIcon, resolveHeldItemIcon, resolveItemIcon } from "./resolve/item";
 import { resolveCategorySheet } from "./resolve/category";
 import { resolveTypeSheet } from "./resolve/type";
+import { resolveBadgeSheet, resolveTrainerImage, trainerNameCandidates } from "./resolve/trainer";
 import { iconNameCandidates, mapKey, resolvePokemonIcon } from "./resolve/pokemon";
 import type { ScanFile } from "./types";
 
@@ -233,5 +234,57 @@ describe("resolveBallIcon en bases antiguas", () => {
   });
   it("icon_ball_<id> sigue ganando cuando existe", () => {
     expect(resolveBallIcon(ctxOf(MODERN), "POKEBALL", null, 3)?.path).toBe("Graphics/UI/Summary/icon_ball_POKEBALL.png");
+  });
+});
+
+describe("imagen del entrenador", () => {
+  it("replica los nombres de Essentials v16-18: trainer<NOMBRE>[_atuendo], luego trainer%03d[_atuendo]", () => {
+    expect(trainerNameCandidates({ internal: "POKEMONTRAINER_ChicoNegro", number: 4, outfit: 0 })).toEqual([
+      "trainerpokemontrainer_chiconegro_0",
+      "trainerpokemontrainer_chiconegro",
+      "pokemontrainer_chiconegro_0",
+      "pokemontrainer_chiconegro",
+      "trainer004_0",
+      "trainer004",
+    ]);
+    expect(trainerNameCandidates({ number: 12 })).toEqual(["trainer012"]);
+    expect(trainerNameCandidates({})).toEqual([]);
+  });
+
+  it("Z: trainer004.png vive en Graphics/Characters (sin atuendo _0 cae al archivo base)", () => {
+    const ctx = ctxOf([["Graphics/Characters/trainer004.png", 180, 180], ["Graphics/Characters/trchar004.png", 256, 272]]);
+    const r = resolveTrainerImage(ctx, { internal: "POKEMONTRAINER_ChicoNegro", number: 4, outfit: 0 });
+    expect(r?.path).toBe("Graphics/Characters/trainer004.png");
+    expect(r?.via).toBe("fallback");
+    expect(resolveTrainerImage(ctx, { number: 5 })).toBeNull();
+  });
+
+  it("v19+: Graphics/Trainers/<CLASE>.png y con atuendo <CLASE>_<n>.png; Trainers gana a Characters", () => {
+    const ctx = ctxOf([
+      ["Graphics/Trainers/POKEMONTRAINER_RojoNeutro.png", 80, 80],
+      ["Graphics/Trainers/POKEMONTRAINER_RojoNeutro_1.png", 80, 80],
+      ["Graphics/Characters/POKEMONTRAINER_RojoNeutro.png", 128, 192],
+    ]);
+    expect(resolveTrainerImage(ctx, { internal: "POKEMONTRAINER_RojoNeutro", outfit: 0 })?.path).toBe("Graphics/Trainers/POKEMONTRAINER_RojoNeutro.png");
+    expect(resolveTrainerImage(ctx, { internal: "POKEMONTRAINER_RojoNeutro", outfit: 1 })?.path).toBe("Graphics/Trainers/POKEMONTRAINER_RojoNeutro_1.png");
+  });
+
+  it("sin carpeta de entrenadores no hay imagen", () => {
+    expect(resolveTrainerImage(ctxOf(MODERN), { internal: "X", number: 1 })).toBeNull();
+  });
+});
+
+describe("hoja de medallas", () => {
+  it("Z: Pictures/badges.png de 256x64 = 8 columnas x 2 filas de 32 px", () => {
+    expect(resolveBadgeSheet(ctxOf([["Graphics/Pictures/badges.png", 256, 64]]))).toMatchObject({ cell: 32, cols: 8, rows: 2, path: "Graphics/Pictures/badges.png" });
+  });
+  it("v20/21: icon_badges en UI o en Trainer Card", () => {
+    expect(resolveBadgeSheet(ctxOf([["Graphics/UI/Trainer Card/icon_badges.png", 256, 128]]))).toMatchObject({ cols: 8, rows: 4 });
+    expect(resolveBadgeSheet(ctxOf([["Graphics/UI/icon_badges.png", 256, 32]]))?.rows).toBe(1);
+  });
+  it("una imagen que no es una cuadricula de 32 px no vale", () => {
+    expect(resolveBadgeSheet(ctxOf([["Graphics/Pictures/badges.png", 250, 64]]))).toBeNull();
+    expect(resolveBadgeSheet(ctxOf([["Graphics/Pictures/badges.png", 16, 16]]))).toBeNull();
+    expect(resolveBadgeSheet(ctxOf(MODERN))).toBeNull();
   });
 });

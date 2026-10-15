@@ -158,6 +158,8 @@ export class DriverBridge {
 }
 
 const RELEVANT = ["pokemon", "items", "ui", "pictures", "icons", "battlers", "trainers"];
+/** Como en Rust: de `Characters` solo se indexan las imagenes del entrenador (`trainer004.png`, `trchar004.png`). */
+const FILTERED: Record<string, string[]> = { characters: ["trainer", "trchar"] };
 
 function childCi(dir: string, name: string): string | null {
   if (!fs.existsSync(dir)) return null;
@@ -181,17 +183,20 @@ function pngSize(file: string): [number, number] {
 function scanGraphics(root: string) {
   const graphics = childCi(root, "Graphics");
   const files: [string, number, number][] = [];
-  const walk = (dir: string) => {
+  const walk = (dir: string, prefixes?: string[]) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       const full = path.join(dir, e.name);
-      if (e.isDirectory()) walk(full);
-      else if (e.isFile() && /\.(png|jpe?g|gif|bmp)$/i.test(e.name)) {
+      if (e.isDirectory()) walk(full, prefixes);
+      else if (e.isFile() && /\.(png|jpe?g|gif|bmp)$/i.test(e.name) && (!prefixes || prefixes.some((p) => e.name.toLowerCase().startsWith(p)))) {
         const [w, h] = pngSize(full);
         files.push([path.relative(root, full).split(path.sep).join("/"), w, h]);
       }
     }
   };
-  if (graphics) for (const name of RELEVANT) { const sub = childCi(graphics, name); if (sub) walk(sub); }
+  if (graphics) {
+    for (const name of RELEVANT) { const sub = childCi(graphics, name); if (sub) walk(sub); }
+    for (const [name, prefixes] of Object.entries(FILTERED)) { const sub = childCi(graphics, name); if (sub) walk(sub, prefixes); }
+  }
   files.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   return { root, graphics, files, truncated: false };
 }

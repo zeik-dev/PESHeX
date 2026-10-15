@@ -297,6 +297,36 @@ module Sem
         @ribbons ||= pbs_optional('ribbons.txt') { |t| Pbs.ribbons(t) } || []
       end
 
+      # Clases de entrenador (trainertypes.txt / trainer_types.txt; respaldo Data/trainertypes.dat): [TrainerTypeInfo].
+      def trainer_types
+        @trainer_types ||= load_trainer_types
+      end
+
+      # Clase de entrenador por numero (bases <= v18) o por nombre interno, o nil.
+      def trainer_type(key)
+        case key
+        when nil, '' then nil
+        when Integer then trainer_types.find { |t| t.id == key }
+        else trainer_types.find { |t| t.internal.to_s.casecmp?(key.to_s) }
+        end
+      end
+
+      # Clase de entrenador (nombre interno) de un jugador segun metadata.txt, o nil.
+      #   kind :legacy -> `@metaID` de v16-18 (0 = PlayerA); kind :section -> `@character_ID` de v19+ (seccion [N]).
+      def player_trainer_type(kind, id)
+        return nil unless id.is_a?(Integer)
+
+        meta = player_metadata
+        raw = kind == :section ? meta[:sections][id]&.fetch(:trainer_type, nil) : meta[:legacy][id]&.fetch(:trainer_type, nil)
+        raw = trainer_type(raw.to_i)&.internal if raw.is_a?(Integer)
+        raw&.to_s
+      end
+
+      # Jugadores del metadata (ver Pbs.player_metadata); vacio si el juego no trae metadata.txt ni metadata.dat legible.
+      def player_metadata
+        @player_metadata ||= pbs_optional('metadata.txt') { |t| Pbs.player_metadata(t) } || dat_player_metadata
+      end
+
       # Pokédex regionales (regional_dexes.txt, v19+): [{ index:, species: [...] }].
       def regional_dexes
         @regional_dexes ||= pbs_optional('regional_dexes.txt') { |t| Pbs.regional_dexes(t) } || []
@@ -343,6 +373,61 @@ module Sem
       end
 
       private
+
+      def load_trainer_types
+        %w[trainer_types.txt trainertypes.txt].each do |name|
+          list = pbs_optional(name) { |t| Pbs.trainer_types(t) }
+          return list if list && !list.empty?
+        end
+        dat_trainer_types
+      end
+
+      # Data/trainertypes.dat (v16-18): Array de filas [id, interno, nombre, ...]; v19+: Hash de GameData::TrainerType.
+      def dat_trainer_types
+        %w[trainer_types trainertypes].each do |name|
+          path = Locator.resolve(@root, "Data/#{name}.dat")
+          next unless path
+
+          data = DatReader.read(path)
+          rows = data.is_a?(Hash) ? data.values : Array(data)
+          list = rows.each_with_index.filter_map do |r, i|
+            if r.is_a?(Array) && !r[1].to_s.empty?
+              TrainerTypeInfo.new(id: r[0].is_a?(Integer) ? r[0] : i, internal: r[1].to_s, name: r[2]&.to_s)
+            elsif r.is_a?(Obj) && !r['id'].to_s.empty?
+              TrainerTypeInfo.new(id: r['id_number'], internal: r['id'].to_s, name: (r['real_name'] || r['name'])&.to_s)
+            end
+          end
+          return list unless list.empty?
+        rescue StandardError => e
+          @errors << "#{name}.dat: #{e.class}: #{e.message}"[0, 200]
+        end
+        []
+      end
+
+      # Data/metadata.dat (v16-18): Array; la entrada 0 es la global y los jugadores van desde el indice 8 como
+      # [id_de_clase, charset, ...].
+      def dat_player_metadata
+        out = { legacy: [], sections: {} }
+        path = Locator.resolve(@root, 'Data/metadata.dat')
+        return out unless path
+
+        data = DatReader.read(path)
+        if data.is_a?(Array) && data[0].is_a?(Array)
+          data[0][8, 8].to_a.each do |row|
+            break unless row.is_a?(Array)
+
+            out[:legacy] << { trainer_type: row[0], charset: row[1] }
+          end
+        elsif data.is_a?(Hash)
+          data.each do |n, obj|
+            out[:sections][n] = { trainer_type: obj['trainer_type']&.to_s, charset: obj['walk_charset']&.to_s } if n.is_a?(Integer) && n.positive? && obj.is_a?(Obj) && obj.key?('trainer_type')
+          end
+        end
+        out
+      rescue StandardError => e
+        @errors << "metadata.dat: #{e.class}: #{e.message}"[0, 200]
+        { legacy: [], sections: {} }
+      end
 
       def pbs_optional(name)
         path = Locator.resolve(@root, "PBS/#{name}")

@@ -902,3 +902,19 @@
 .genderIcon[data-gender="2"] {
   color: var(--text-muted);
 }
+
+/* Imagen del entrenador y medallas */
+.trainerImage {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+.badgeIcon {
+  display: inline-flex;
+  flex: none;
+}
+.badgeOffIcon {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.55;
+}

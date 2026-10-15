@@ -5,7 +5,7 @@ import { displayName, genderSymbol } from "../../lib/pokemon";
 import { formatDateTime, formatDuration, formatMoney, formatNumber } from "../../lib/format";
 import { useSession } from "../../stores/session";
 import { useSettings } from "../../stores/settings";
-import { Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, Sprite, Chip } from "../../ui";
+import { BadgeIcon, Banner, Button, Card, CoverageMeter, EmptyState, PageTitle, PokeballSpinner, PokemonIcon, TrainerImage, useBadgeSheet, Chip } from "../../ui";
 import { ProfileCard } from "../shared/ProfileCard";
 import shared from "../shared/shared.module.css";
 import { LegalityCard } from "../legality/LegalityCard";
@@ -21,6 +21,7 @@ export function Overview() {
   const openEditor = useSession((s) => s.openEditor);
   const q = useSemanticQuery("overview", semantic.overview);
   const cov = useSemanticQuery("coverage", semantic.coverage);
+  const badgeSheet = useBadgeSheet();
 
   if (!q.data) return <PokeballSpinner />;
   const ov = q.data;
@@ -54,7 +55,7 @@ export function Overview() {
         <Card title={t("overview.trainerCard")}>
           {tr ? (
             <div className={styles.trainer}>
-              <Sprite name={tr.name ?? "?"} id={tr.id ?? tr.name} size={72} />
+              <TrainerImage look={tr.look} name={tr.name ?? "?"} id={tr.id ?? tr.name} size={96} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div className={styles.trainerName}>{tr.name ?? "—"}</div>
                 <div className={shared.kv} style={{ marginTop: 8 }}>
@@ -78,11 +79,15 @@ export function Overview() {
                   <span className={shared.kvValue}>{formatDateTime(tr.lastSaved, locale)}</span>
                 </div>
                 <div className={styles.badges} aria-label={t("overview.badges")}>
-                  {tr.badges.map((got, i) => (
-                    <span key={i} className={got ? styles.badgeOn : styles.badgeOff} title={t("trainer.badge", { n: i + 1 })}>
-                      {i + 1}
-                    </span>
-                  ))}
+                  {tr.badges.map((got, i) =>
+                    badgeSheet ? (
+                      <BadgeIcon key={i} sheet={badgeSheet} index={i} got={got} size={28} label={t("trainer.badge", { n: i + 1 })} />
+                    ) : (
+                      <span key={i} className={got ? styles.badgeOn : styles.badgeOff} title={t("trainer.badge", { n: i + 1 })}>
+                        {i + 1}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
             </div>

@@ -107,6 +107,18 @@ export interface Extra {
   fieldPath: string;
 }
 
+export interface TrainerLook {
+  /** Nombre interno de la clase de entrenador ("POKEMONTRAINER_RojoNeutro"). */
+  internal: string | null;
+  /** Numero de la clase en las bases <= v18 (los archivos se llaman `trainer004`). */
+  number: number | null;
+  /** Nombre visible de la clase ("Entrenador"). */
+  label: string | null;
+  outfit: number | null;
+  /** `@metaID` (v16-18, desde 0) o `@character_ID` (v19+, desde 1). */
+  playerId: number | null;
+}
+
 export interface Trainer {
   ref: string;
   fieldPath: string;
@@ -114,6 +126,8 @@ export interface Trainer {
   name: string | null;
   id: number | null;
   trainerType: string | number | null;
+  /** Con qué imagen se dibuja al entrenador (clase, atuendo y jugador); ver `trainer_look` del driver. */
+  look: TrainerLook;
   gender: number | null;
   language: number | null;
   money: number | null;
@@ -197,7 +211,7 @@ export interface Overview {
   profile: Profile;
   trainer: Pick<
     Trainer,
-    "name" | "id" | "trainerType" | "gender" | "money" | "coins" | "battlePoints" | "soot" | "badges" | "playTime" | "lastSaved" | "available" | "limits"
+    "name" | "id" | "trainerType" | "look" | "gender" | "money" | "coins" | "battlePoints" | "soot" | "badges" | "playTime" | "lastSaved" | "available" | "limits"
   > | null;
   party: PokemonSummary[];
   counts: { boxes: number | null; boxPokemon: number | null; bagItems: number | null; pokemonTotal: number };

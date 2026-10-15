@@ -209,3 +209,24 @@ test("Pokémon Z real: los movimientos muestran el ícono del tipo a la izquierd
   await expect(row).toContainText(/Pot\. \d+|PP \d+/);
   await shot(page, "145-z-editor-move-selector-es-light");
 });
+
+test("Pokémon Z real: la imagen del entrenador (trainer004.png) y las medallas (badges.png) salen del juego", async ({ page }) => {
+  test.setTimeout(180_000);
+  test.skip(!(await openZ(page)), "falta test_pbs/ (Pokémon Z) o test_saves/Game.rxdata");
+
+  for (const view of ["Resumen", "Entrenador"]) {
+    await nav(page, view);
+    // @trainertype = 4 -> PBS/trainertypes.txt -> POKEMONTRAINER_ChicoNegro; el archivo se llama trainer004 (Graphics/Characters)
+    const avatar = page.locator('[data-source="game"][data-via]').first();
+    await expect(avatar).toBeVisible();
+    expect(await gamePath(avatar.locator("img"))).toMatch(/Graphics\/Characters\/trainer004\.png$/i);
+    // Medallas: 8 celdas de badges.png (256x64), 6 conseguidas
+    const badges = page.getByRole("img", { name: /^Medalla \d+$/ });
+    await expect(badges).toHaveCount(8);
+    await expect(page.locator('[role="img"][data-got="true"]')).toHaveCount(6);
+    const first = badges.first().locator("img");
+    expect(await gamePath(first)).toMatch(/Graphics\/Pictures\/badges\.png$/i);
+    await expect.poll(() => first.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(256);
+    await shot(page, view === "Resumen" ? "146-z-overview-trainer-es-light" : "147-z-trainer-es-light");
+  }
+});

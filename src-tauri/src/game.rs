@@ -21,6 +21,10 @@ use crate::state::AppState;
 const RELEVANT_DIRS: &[&str] = &[
     "pokemon", "items", "ui", "pictures", "icons", "battlers", "trainers",
 ];
+/// Subcarpetas de `Graphics/` de las que solo se indexan los archivos cuyo nombre empieza por alguno de estos prefijos:
+/// `Characters` guarda miles de sprites de mapa y de ahi solo interesa la imagen del entrenador (en las bases <= v18:
+/// `trainer004.png`, y `trchar004.png` de su sprite de mapa).
+const FILTERED_DIRS: &[(&str, &[&str])] = &[("characters", &["trainer", "trchar"])];
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "bmp"];
 const MAX_FILES: usize = 50_000;
 const MAX_DEPTH: usize = 8;
@@ -76,12 +80,20 @@ pub fn png_size(path: &Path) -> Option<(u32, u32)> {
     Some((w, h))
 }
 
+/// ¿El nombre del archivo empieza por alguno de los prefijos (sin distinguir mayusculas)? Sin prefijos, siempre.
+fn name_matches(path: &Path, prefixes: Option<&[&str]>) -> bool {
+    let Some(prefixes) = prefixes else { return true };
+    let name = path.file_name().map(|n| n.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
+    prefixes.iter().any(|p| name.starts_with(p))
+}
+
 fn walk(
     base: &Path,
     dir: &Path,
     depth: usize,
     out: &mut Vec<(String, u32, u32)>,
     cap: usize,
+    prefixes: Option<&[&str]>,
 ) -> bool {
     if depth > MAX_DEPTH {
         return false;
@@ -96,10 +108,10 @@ fn walk(
         let Ok(ft) = e.file_type() else { continue };
         let path = e.path();
         if ft.is_dir() {
-            if walk(base, &path, depth + 1, out, cap) {
+            if walk(base, &path, depth + 1, out, cap, prefixes) {
                 return true;
             }
-        } else if ft.is_file() && is_image(&path) {
+        } else if ft.is_file() && is_image(&path) && name_matches(&path, prefixes) {
             if out.len() >= cap {
                 return true;
             }
@@ -131,9 +143,10 @@ pub fn scan_graphics(root: &Path, cap: usize) -> Result<GameScan, DriverErrorDto
     let mut files = Vec::new();
     let mut truncated = false;
     if let Some(g) = &graphics {
-        for name in RELEVANT_DIRS {
+        let dirs = RELEVANT_DIRS.iter().map(|n| (*n, None)).chain(FILTERED_DIRS.iter().map(|(n, p)| (*n, Some(*p))));
+        for (name, prefixes) in dirs {
             if let Some(sub) = child_ci(g, name).filter(|p| p.is_dir()) {
-                if walk(root, &sub, 0, &mut files, cap) {
+                if walk(root, &sub, 0, &mut files, cap, prefixes) {
                     truncated = true;
                     break;
                 }
@@ -340,6 +353,8 @@ mod tests {
         t.write("Graphics/Items/POTION.png", &png_header(48, 48));
         t.write("Graphics/UI/Storage/box_0.png", &png_header(324, 296));
         t.write("Graphics/Characters/hero.png", &png_header(32, 32)); // no relevante
+        t.write("Graphics/Characters/trainer004.png", &png_header(180, 180)); // imagen del entrenador (v16-18)
+        t.write("Graphics/Characters/TRCHAR004.PNG", &png_header(256, 272)); // sprite de mapa del jugador
         t.write("Graphics/Pokemon/readme.txt", b"no es imagen");
         t
     }
@@ -362,6 +377,8 @@ mod tests {
         assert_eq!(
             paths,
             vec![
+                "Graphics/Characters/TRCHAR004.PNG",
+                "Graphics/Characters/trainer004.png",
                 "Graphics/Items/POTION.png",
                 "Graphics/Pokemon/Icons shiny/BULBASAUR.png",
                 "Graphics/Pokemon/Icons/BULBASAUR.png",

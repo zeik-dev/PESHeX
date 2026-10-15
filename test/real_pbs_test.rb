@@ -173,3 +173,90 @@ class RealLearnableTest < Minitest::Test
     assert_includes z[:learnable], 'TACKLE'
   end
 end
+
+# Imagen del entrenador: clases de entrenador y jugadores de metadata.txt (Z = CSV + [000] PlayerA..F; Añil = INI + [N]).
+class RealTrainerLookTest < Minitest::Test
+  include RealGames
+
+  def test_z_clases_de_entrenador_csv_y_jugadores_de_la_seccion_global
+    z = real_store(:z)
+    t = z.trainer_type(4)
+    assert_equal ['POKEMONTRAINER_ChicoNegro', 'Entrenador', 4], [t.internal, t.name, t.id]
+    assert_equal 4, z.trainer_type('pokemontrainer_chiconegro').id, 'por nombre, sin distinguir mayusculas'
+    assert_nil z.trainer_type(9_999)
+    assert_equal 'POKEMONTRAINER_ChicoNegro', z.player_trainer_type(:legacy, 4), 'PlayerE = metaID 4'
+    assert_equal 'POKEMONTRAINER_ChicoNeutro', z.player_trainer_type(:legacy, 0)
+    assert_nil z.player_trainer_type(:legacy, 99)
+  end
+
+  def test_anil_clases_ini_y_jugadores_por_seccion
+    a = real_store(:anil)
+    t = a.trainer_type('POKEMONTRAINER_RojoNeutro')
+    assert_equal 'Entrenador', t.name
+    assert_nil t.id, 'v19+ no numera las clases'
+    assert_equal 'POKEMONTRAINER_RojoNeutro', a.player_trainer_type(:section, 1)
+    assert_equal 'POKEMONTRAINER_HojaNeutra', a.player_trainer_type(:section, 2)
+    assert_nil a.player_trainer_type(:section, 0), 'la seccion [0] es la global, no un jugador'
+  end
+
+  def test_z_sin_pbs_se_leen_los_dat_compilados
+    src = File.expand_path('../test_pbs/Data_POKEMON_Z', __dir__)
+    skip 'falta test_pbs/Data_POKEMON_Z' unless File.exist?(File.join(src, 'trainertypes.dat'))
+    Dir.mktmpdir('peshex_dat') do |root|
+      FileUtils.mkdir_p(File.join(root, 'Data'))
+      %w[trainertypes.dat metadata.dat].each { |f| FileUtils.cp(File.join(src, f), File.join(root, 'Data', f)) }
+      store = Sem::GameData::Store.new(root)
+      assert_equal 'POKEMONTRAINER_ChicoNegro', store.trainer_type(4).internal
+      assert_equal 'POKEMONTRAINER_ChicoNegro', store.player_trainer_type(:legacy, 4), 'metadata.dat: [4, "trchar004", ...]'
+      assert_equal 'POKEMONTRAINER_ChicoNeutro', store.player_trainer_type(:legacy, 0)
+    end
+  end
+
+  def test_parsers_aceptan_las_variantes_de_formato
+    csv = "0,TRAINER_A,Uno,60\n4,TRAINER_B,\"Dos, con coma\",60\n"
+    list = Sem::GameData::Pbs.trainer_types(csv)
+    assert_equal [[0, 'TRAINER_A', 'Uno'], [4, 'TRAINER_B', 'Dos, con coma']], list.map { |x| [x.id, x.internal, x.name] }
+    numbered = "[4]\nInternalName=TRAINER_C\nName=Tres\n"
+    assert_equal [[4, 'TRAINER_C', 'Tres']], Sem::GameData::Pbs.trainer_types(numbered).map { |x| [x.id, x.internal, x.name] }
+    meta = Sem::GameData::Pbs.player_metadata("[000]\nPlayerA=TA,trchar000,bike\nPlayerB=TB,trchar001\n[001]\nName=x\n")
+    assert_equal %w[TA TB], meta[:legacy].map { |m| m[:trainer_type] }
+    assert_equal({}, meta[:sections])
+  end
+
+  def test_z_el_save_trae_el_aspecto_del_entrenador
+    h = Harness.new
+    with_save_copy('Game.rxdata') do |path|
+      h.open(path)
+      h.call('set_game_folder', path: real_game_root(:z), source: 'manual')
+      look = h.call('get_overview')['trainer']['look']
+      assert_equal 'POKEMONTRAINER_ChicoNegro', look['internal']
+      assert_equal 4, look['number'], 'trainer004.png'
+      assert_equal 'Entrenador', look['label']
+      assert_equal 0, look['outfit']
+      assert_equal 4, look['playerId']
+    end
+  end
+
+  def test_anil_el_save_trae_el_nombre_interno_y_el_jugador
+    h = Harness.new
+    with_save_copy('Partida.rxdata') do |path|
+      h.open(path)
+      h.call('set_game_folder', path: real_game_root(:anil), source: 'manual')
+      look = h.call('get_trainer')['trainer']['look']
+      assert_equal 'POKEMONTRAINER_RojoNeutro', look['internal']
+      assert_nil look['number']
+      assert_equal 5, look['playerId']
+      assert_equal 0, look['outfit']
+    end
+  end
+
+  def test_sin_carpeta_de_juego_solo_se_sabe_lo_que_dice_el_save
+    h = Harness.new
+    with_save_copy('Partida.rxdata') do |path|
+      h.open(path)
+      look = h.call('get_trainer')['trainer']['look']
+      assert_equal 'POKEMONTRAINER_RojoNeutro', look['internal'], 'el save de v21 guarda el nombre'
+      assert_nil look['label']
+    end
+  end
+end

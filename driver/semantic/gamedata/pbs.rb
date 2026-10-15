@@ -343,6 +343,46 @@ module Sem
         end
       end
 
+      # Clases de entrenador: v16-18 es CSV (`ID,InternalName,Name,...`); v19+ es INI (`[INTERNAL]` + `Name=`), y alguna
+      # base numera las secciones (`[4]` + `InternalName=`).
+      def trainer_types(text)
+        if csv?(text)
+          csv_rows(text).filter_map do |c|
+            c.size >= 3 && !c[1].to_s.empty? ? TrainerTypeInfo.new(id: c[0].to_i, internal: c[1], name: c[2]) : nil
+          end
+        else
+          ini_sections(text).filter_map do |header, f|
+            numbered = header =~ /\A\d+\z/
+            internal = numbered ? f['InternalName'] : header
+            next if internal.to_s.empty?
+
+            TrainerTypeInfo.new(id: numbered ? header.to_i : nil, internal: internal, name: f['Name'])
+          end
+        end
+      end
+
+      # metadata.txt: los jugadores. v16-18: seccion global `[000]` con `PlayerA..PlayerF = TipoDeEntrenador,charset,...`;
+      # v19+: una seccion por jugador (`[1]`...) con `TrainerType = ...`.
+      #   -> { legacy: [{ trainer_type:, charset: }, ...] (indice 0 = PlayerA), sections: { 1 => { trainer_type:, charset: } } }
+      def player_metadata(text)
+        out = { legacy: [], sections: {} }
+        ini_sections(text).each do |header, f|
+          n = header.to_i
+          if f.key?('TrainerType')
+            out[:sections][n] = { trainer_type: f['TrainerType'], charset: f['WalkCharset'] } if header =~ /\A\d+\z/ && n.positive?
+          elsif n.zero? && header =~ /\A\d+\z/
+            %w[PlayerA PlayerB PlayerC PlayerD PlayerE PlayerF PlayerG PlayerH].each do |key|
+              v = f[key]
+              break if v.nil?
+
+              parts = list(v)
+              out[:legacy] << { trainer_type: parts[0], charset: parts[1] }
+            end
+          end
+        end
+        out
+      end
+
       def ribbons(text)
         ini_sections(text).map do |id, f|
           Ribbon.new(id: id, name: f['Name'], description: f['Description'], icon: num(f['IconPosition']))

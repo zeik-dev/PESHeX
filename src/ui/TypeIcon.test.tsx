@@ -80,3 +80,34 @@ describe("PokemonIcon en bases numeradas", () => {
     expect(container.querySelector("img")).toBeNull();
   });
 });
+
+describe("TrainerImage y medallas", () => {
+  const look = { internal: "POKEMONTRAINER_ChicoNegro", number: 4, label: "Entrenador", outfit: 0, playerId: 4 };
+
+  it("con la imagen del juego la usa; sin ella, el marcador", async () => {
+    const { TrainerImage } = await import("./TrainerImage");
+    withGame([["Graphics/Characters/trainer004.png", 180, 180]]);
+    const { container, unmount } = render(<TrainerImage look={look} name="Kizuga" size={96} />);
+    expect(container.querySelector("img")?.getAttribute("src")).toContain("trainer004.png");
+    expect(container.querySelector("[data-source='game']")).not.toBeNull();
+    unmount();
+    cleanup();
+    useGame.setState({ ctx: null });
+    const none = render(<TrainerImage look={look} name="Kizuga" size={96} />);
+    expect(none.container.querySelector("img")).toBeNull();
+    expect(none.container.textContent).toContain("K");
+  });
+
+  it("BadgeIcon recorta la celda (columna y fila) de la hoja y atenúa las que no se tienen", async () => {
+    const { BadgeIcon } = await import("./TrainerImage");
+    const sheet = { path: "Graphics/Pictures/badges.png", w: 256, h: 64, via: "exact" as const, cell: 32, cols: 8, rows: 2 };
+    withGame([["Graphics/Pictures/badges.png", 256, 64]]);
+    render(<><BadgeIcon sheet={sheet} index={9} got={true} size={32} label="Medalla 10" /><BadgeIcon sheet={sheet} index={0} got={false} size={32} label="Medalla 1" /></>);
+    const got = screen.getByRole("img", { name: "Medalla 10" });
+    const img = got.querySelector("img")!;
+    expect(img.style.marginLeft).toBe("-32px"); // columna 1
+    expect(img.style.marginTop).toBe("-32px"); // fila 1
+    expect(got.getAttribute("data-got")).toBe("true");
+    expect(screen.getByRole("img", { name: "Medalla 1" }).getAttribute("data-got")).toBe("false");
+  });
+});

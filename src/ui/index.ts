@@ -9,6 +9,7 @@ export { TypeChip } from "./TypeChip";
 export { CategoryIcon, type MoveCategory } from "./CategoryIcon";
 export { TypeIcon } from "./TypeIcon";
 export { GenderIcon } from "./GenderIcon";
+export { TrainerImage, BadgeIcon, useBadgeSheet } from "./TrainerImage";
 export { Segmented } from "./Segmented";
 export { Tooltip, placeTooltip, type TooltipPlacement } from "./Tooltip";
 export { Popover, placePopover, type PopoverPlacement, type PopoverPoint } from "./popover";

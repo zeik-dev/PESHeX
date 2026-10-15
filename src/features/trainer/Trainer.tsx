@@ -3,7 +3,7 @@ import { semantic } from "../../api/semantic";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
 import { useSession } from "../../stores/session";
-import { Card, EmptyState, Field, NumberField, PageTitle, PokeballSpinner, SelectField, Switch, TextField } from "../../ui";
+import { BadgeIcon, Card, EmptyState, Field, NumberField, PageTitle, PokeballSpinner, SelectField, Switch, TextField, TrainerImage, useBadgeSheet } from "../../ui";
 import { ExtrasList } from "../shared/ExtrasList";
 import shared from "../shared/shared.module.css";
 import { useSemanticQuery } from "../queries";
@@ -14,6 +14,7 @@ export function Trainer() {
   const apply = useEdit((s) => s.apply);
   const profile = useSession((s) => s.profile);
   const q = useSemanticQuery("trainer", semantic.trainer);
+  const badgeSheet = useBadgeSheet();
 
   if (q.isPending) return <PokeballSpinner />;
   const tr = q.data;
@@ -41,30 +42,35 @@ export function Trainer() {
     <div className={shared.stack}>
       <PageTitle icon={<User />} title={t("trainer.title")} />
       <Card>
-        <div className={shared.formGrid}>
-          <Field label={t("trainer.name")}>
-            {(id) => <TextField id={id} value={tr.name} disabled={!editable || !has("name")} onCommit={(v) => set("name", v ?? "")} />}
-          </Field>
-          <Field label={t("trainer.id")} hint={t("trainer.readOnlyId")}>
-            {(id) => <NumberField id={id} value={tr.id} disabled onCommit={() => undefined} />}
-          </Field>
-          {has("gender") && (
-            <Field label={t("trainer.gender")}>
-              {(id) => (
-                <SelectField
-                  id={id}
-                  value={tr.gender}
-                  disabled={!editable}
-                  options={[0, 1, 2].map((g) => ({ value: g, label: t(`gender.${g}` as never) as string }))}
-                  onChange={(g) => set("gender", g)}
-                />
+        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <TrainerImage look={tr.look} name={tr.name ?? "?"} id={tr.id ?? tr.name} size={120} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className={shared.formGrid}>
+              <Field label={t("trainer.name")}>
+                {(id) => <TextField id={id} value={tr.name} disabled={!editable || !has("name")} onCommit={(v) => set("name", v ?? "")} />}
+              </Field>
+              <Field label={t("trainer.id")} hint={t("trainer.readOnlyId")}>
+                {(id) => <NumberField id={id} value={tr.id} disabled onCommit={() => undefined} />}
+              </Field>
+              {has("gender") && (
+                <Field label={t("trainer.gender")}>
+                  {(id) => (
+                    <SelectField
+                      id={id}
+                      value={tr.gender}
+                      disabled={!editable}
+                      options={[0, 1, 2].map((g) => ({ value: g, label: t(`gender.${g}` as never) as string }))}
+                      onChange={(g) => set("gender", g)}
+                    />
+                  )}
+                </Field>
               )}
-            </Field>
-          )}
-          {num("money", t("trainer.money"), tr.limits.maxMoney)}
-          {has("coins") && num("coins", t("trainer.coins"), tr.limits.maxCoins)}
-          {has("battle_points") && num("battle_points", t("trainer.battlePoints"), tr.limits.maxBattlePoints)}
-          {has("soot") && num("soot", t("trainer.soot"), tr.limits.maxSoot)}
+              {num("money", t("trainer.money"), tr.limits.maxMoney)}
+              {has("coins") && num("coins", t("trainer.coins"), tr.limits.maxCoins)}
+              {has("battle_points") && num("battle_points", t("trainer.battlePoints"), tr.limits.maxBattlePoints)}
+              {has("soot") && num("soot", t("trainer.soot"), tr.limits.maxSoot)}
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -72,9 +78,13 @@ export function Trainer() {
         <div className={overview.badges} style={{ marginTop: 0, gap: 12 }}>
           {tr.badges.map((got, i) => (
             <label key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <span className={got ? overview.badgeOn : overview.badgeOff} style={{ width: 40, height: 40, fontSize: 15 }}>
-                {i + 1}
-              </span>
+              {badgeSheet ? (
+                <BadgeIcon sheet={badgeSheet} index={i} got={got} size={40} label={t("trainer.badge", { n: i + 1 })} />
+              ) : (
+                <span className={got ? overview.badgeOn : overview.badgeOff} style={{ width: 40, height: 40, fontSize: 15 }}>
+                  {i + 1}
+                </span>
+              )}
               <Switch
                 checked={got}
                 disabled={!editable}

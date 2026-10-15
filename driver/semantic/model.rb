@@ -90,6 +90,7 @@ module Sem
         name: Tree.text(trainer_value('name')),
         id: Tree.int_value(trainer_value('id')),
         trainerType: type && Ids.of(type),
+        look: trainer_look(obj, type && Ids.of(type)),
         gender: Tree.int_value(trainer_value('gender')),
         language: Tree.int_value(trainer_value('language')),
         money: Tree.int_value(trainer_value('money')),
@@ -102,6 +103,31 @@ module Sem
         lastSaved: last_saved,
         extras: extras_for(obj, Vanilla::TRAINER_DISPLAYED, Vanilla::TRAINER_OTHER, b.path),
         limits: limits
+      }
+    end
+
+    # Con que imagen se dibuja al entrenador: la clase de entrenador (nombre interno y numero), el atuendo y el jugador del
+    # metadata. El save manda; PBS/metadata.txt rellena lo que el save no dice (p. ej. la clase de un jugador que solo
+    # guarda su indice). Las bases <= v18 nombran el archivo por numero (`trainer004`) y las v19+ por nombre interno.
+    def trainer_look(obj, raw_type)
+      meta_kind, meta_id =
+        if (cid = Tree.int_value(Tree.ivar(obj, '@character_ID')))
+          [:section, cid]
+        elsif (mid = Tree.int_value(Tree.ivar(obj, '@metaID')))
+          [:legacy, mid]
+        end
+      info = @game&.trainer_type(raw_type)
+      internal = info&.internal || (raw_type.is_a?(String) ? raw_type : nil)
+      if internal.nil? && raw_type.nil? && meta_kind
+        internal = @game&.player_trainer_type(meta_kind, meta_id)
+        info = @game&.trainer_type(internal)
+      end
+      {
+        internal: internal,
+        number: raw_type.is_a?(Integer) ? raw_type : info&.id,
+        label: info&.name,
+        outfit: Tree.int_value(Tree.ivar(obj, '@outfit')),
+        playerId: meta_id
       }
     end
 
