@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { initI18n, resolveLang, setLanguage, systemLocales, type Lang, type LangPref } from "../i18n";
 import { applyZoom, clampZoom, ZOOM_DEFAULT } from "../lib/zoom";
 
+export type ZoomMode = "auto" | "manual";
+
 export type ThemePref = "auto" | "light" | "dark";
 export type BallTheme = "classic" | "great" | "ultra" | "master";
 export type EditMode = "hex" | "hax";
@@ -12,8 +14,12 @@ interface SettingsState {
   theme: ThemePref;
   ball: BallTheme;
   backup: boolean;
-  /** Zoom de la app en porcentaje (50-200, por defecto 100). */
+  /** Zoom manual de la app en porcentaje (50-200). Solo cuenta con `zoomMode: "manual"`. */
   zoom: number;
+  /** `auto` (por defecto): la escala sigue al tamaño de la ventana para que quepan todas las pestañas sin scroll. */
+  zoomMode: ZoomMode;
+  /** Se completó el asistente del primer arranque (idioma y carpeta de juego). */
+  firstRunDone: boolean;
   /** Tarjeta "Legalidad" del Resumen (solo existe en HeX): desplegada o plegada. */
   legalityOpen: boolean;
   /** Ficha del Pokémon en el editor: estadísticas base de la especie en este juego o las actuales (con el desglose). */
@@ -35,6 +41,8 @@ interface SettingsState {
   setBall: (ball: BallTheme) => void;
   setBackup: (backup: boolean) => void;
   setZoom: (zoom: number) => void;
+  setZoomMode: (mode: ZoomMode) => void;
+  setFirstRunDone: (done: boolean) => void;
   setLegalityOpen: (open: boolean) => void;
   setCardStatsView: (view: "base" | "current") => void;
   setOnlySpeciesAbilities: (v: boolean) => void;
@@ -84,11 +92,13 @@ const safeStorage = {
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
-      lang: "auto",
+      lang: "es",
       theme: "auto",
       ball: "classic",
       backup: true,
       zoom: ZOOM_DEFAULT,
+      zoomMode: "auto",
+      firstRunDone: false,
       legalityOpen: true,
       cardStatsView: "base",
       onlySpeciesAbilities: true,
@@ -103,6 +113,8 @@ export const useSettings = create<SettingsState>()(
       setBall: (ball) => set({ ball }),
       setBackup: (backup) => set({ backup }),
       setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
+      setZoomMode: (zoomMode) => set({ zoomMode }),
+      setFirstRunDone: (firstRunDone) => set({ firstRunDone }),
       setLegalityOpen: (legalityOpen) => set({ legalityOpen }),
       setCardStatsView: (cardStatsView) => set({ cardStatsView }),
       setOnlySpeciesAbilities: (onlySpeciesAbilities) => set({ onlySpeciesAbilities }),
@@ -130,10 +142,17 @@ export const useSettings = create<SettingsState>()(
     {
       name: STORE_KEY,
       storage: createJSONStorage(() => safeStorage),
-      version: 2,
+      version: 3,
       // v2: el modo por defecto pasa de HeX a HaX. Lo que haya guardado hasta ahora era el valor por defecto, no una
       // eleccion: se restablece (HeX vuelve a elegirse a mano, con su aviso).
-      migrate: (persisted, from) => (from < 2 ? { ...(persisted as object), mode: "hax" } : persisted) as SettingsState,
+      // v3: asistente del primer arranque y zoom automatico. Quien ya usaba la app no vuelve a pasar por el asistente, y
+      // si habia cambiado el zoom a mano lo conserva (modo manual); quien lo tenia en el 100 % por defecto pasa a automatico.
+      migrate: (persisted, from) => {
+        let s = persisted as Partial<SettingsState>;
+        if (from < 2) s = { ...s, mode: "hax" };
+        if (from < 3) s = { ...s, firstRunDone: true, zoomMode: s.zoom != null && s.zoom !== ZOOM_DEFAULT ? "manual" : "auto" };
+        return s as SettingsState;
+      },
     },
   ),
 );
@@ -156,9 +175,10 @@ export function bootstrapSettings() {
   const s = useSettings.getState();
   initI18n(effectiveLang(s.lang));
   applyAppearance(s.theme, s.ball);
-  void applyZoom(s.zoom); // WebView2 no recuerda el zoom entre ejecuciones
+  // WebView2 no recuerda el zoom entre ejecuciones. En modo automático lo calcula `useAutoZoom` con el tamaño de la ventana.
+  if (s.zoomMode === "manual") void applyZoom(s.zoom);
   useSettings.subscribe((state, prev) => {
-    if (state.zoom !== prev.zoom) void applyZoom(state.zoom);
+    if (state.zoomMode === "manual" && (state.zoom !== prev.zoom || prev.zoomMode !== "manual")) void applyZoom(state.zoom);
     if (state.lang !== prev.lang) setLanguage(effectiveLang(state.lang));
     if (state.theme !== prev.theme || state.ball !== prev.ball) applyAppearance(state.theme, state.ball);
   });

@@ -5,6 +5,7 @@ import { useSession } from "../stores/session";
 import { useUi } from "../stores/ui";
 import { ConfirmDialog, Modal, Button, Banner, Chip } from "../ui";
 import { FlagList } from "../features/legality/FlagList";
+import { FirstRunWizard } from "../features/settings/FirstRunWizard";
 import { GameFolderPrompt } from "../features/settings/GameFolderPrompt";
 
 /** Aviso previo a activar HeX: depende de la carpeta del juego y puede equivocarse en algunos fangames. */
@@ -75,6 +76,7 @@ export function Hosts() {
   return (
     <>
       <HexWarning />
+      <FirstRunWizard />
       <GameFolderPrompt />
       <Modal
         open={!!rejected}

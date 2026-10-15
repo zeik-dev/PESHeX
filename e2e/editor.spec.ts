@@ -321,7 +321,8 @@ test("los desplegables de los selectores se abren hacia arriba cuando abajo no c
     await expect(list.getByRole("option").first()).toBeVisible();
     const box = (await list.boundingBox())!;
     const field = (await input.boundingBox())!;
-    const vh = page.viewportSize()!.height;
+    // alto del viewport en px CSS (con la escala automática no es el físico: 560 px de ventana son más px CSS)
+    const vh = await page.evaluate(() => window.innerHeight);
     expect(box.y, `lista del movimiento ${n} por encima del borde superior`).toBeGreaterThanOrEqual(0);
     expect(box.y + box.height, `lista del movimiento ${n} por debajo del borde inferior`).toBeLessThanOrEqual(vh);
     const side = (await list.getAttribute("data-side")) ?? "";

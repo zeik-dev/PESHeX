@@ -43,7 +43,7 @@ async function openSave(page: Page, lang: "es" | "en" = "es", expected = "Furiki
     Object.defineProperty(navigator, "language", { get: () => (l === "es" ? "es-ES" : "en-US") });
   }, lang);
   // Sin carpeta de juego, al abrir un save sale el aviso de agregarla; estas pruebas lo omiten («No volver a preguntar»).
-  await silenceGamePrompt(page, bridge.dialogPath);
+  await silenceGamePrompt(page, bridge.dialogPath, lang);
   await page.goto("/");
   await page.getByRole("button", { name: lang === "es" ? "Abrir partida…" : "Open save…" }).click();
   await expect(page.getByText(expected).first()).toBeVisible({ timeout: 20_000 });
@@ -55,16 +55,38 @@ async function shot(page: Page, name: string) {
 }
 
 test("pantalla de apertura bilingue", async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "languages", { get: () => ["es-ES"] });
-    Object.defineProperty(navigator, "language", { get: () => "es-ES" });
-  });
+  await silenceGamePrompt(page, null, "es"); // sin asistente de primer arranque (tiene su propia prueba)
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Abre una partida" })).toBeVisible();
   await shot(page, "01-open-es-light");
   await page.getByRole("button", { name: "EN" }).first().click();
   await expect(page.getByRole("heading", { name: "Open a save file" })).toBeVisible();
   await shot(page, "02-open-en-light");
+});
+
+test("primer arranque: el idioma por defecto es español, el asistente deja elegir y no vuelve a salir", async ({ page }) => {
+  // Un sistema en inglés NO cambia el idioma por defecto: la app arranca en español.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "languages", { get: () => ["en-US"] });
+    Object.defineProperty(navigator, "language", { get: () => "en-US" });
+  });
+  await page.goto("/");
+  const wizard = page.getByRole("dialog", { name: "Te damos la bienvenida a PESHeX" });
+  await expect(wizard).toBeVisible();
+  await expect(wizard.getByRole("radio", { name: "Español" })).toHaveAttribute("aria-checked", "true");
+  await shot(page, "03-first-run-es-light");
+  // Elegir English cambia el propio asistente al instante
+  await wizard.getByRole("radio", { name: "English" }).click();
+  const welcome = page.getByRole("dialog", { name: "Welcome to PESHeX" });
+  await expect(welcome).toBeVisible();
+  await welcome.getByRole("button", { name: "Get started" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Open a save file" })).toBeVisible();
+  // Se recuerda (el resto de pruebas vacían el almacenamiento en cada carga, por eso se comprueba lo guardado):
+  // idioma elegido y asistente completado, para que no vuelva a salir.
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("peshex-settings") ?? "{}"));
+  expect(saved.state).toMatchObject({ lang: "en", firstRunDone: true });
+  expect(saved.version).toBe(3);
 });
 
 test("resumen detecta la base y muestra al entrenador y su equipo", async ({ page }) => {

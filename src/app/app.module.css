@@ -107,7 +107,8 @@
   justify-content: center;
   border-radius: 50%;
   border: 6px solid var(--pb-ink);
-  background: var(--pb-white);
+  background-color: var(--pb-white); /* sólido: el logo es PNG con esquinas transparentes */
+  background-clip: padding-box;
   padding: 0;
   z-index: 2;
   transition: transform 0.1s;
@@ -116,6 +117,11 @@
   transform: scale(1.06);
 }
 .centerBtn:disabled {
+  cursor: default;
+}
+/* El apagado va SOLO en la imagen: si fuera del botón entero (opacity), el círculo se volvería translúcido y dejaría ver la
+   franja roja y la barra de pestañas de detrás, deformando la Honor Ball. El fondo es un disco sólido siempre. */
+.centerBtn:disabled > img {
   filter: grayscale(0.85);
   opacity: 0.8;
 }
@@ -150,12 +156,17 @@
 }
 
 .bottom {
-  display: flex;
-  gap: 2px;
   padding: 0 12px 0 92px;
   background: var(--surface);
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
+}
+/* Las pestañas ocupan su ancho natural (no se encogen ni se estiran): la escala automática mide este ancho; en manual, si no
+   caben, hay scroll. */
+.navInner {
+  display: flex;
+  gap: 2px;
+  width: max-content;
 }
 
 .navBtn {

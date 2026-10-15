@@ -30,3 +30,31 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Asistente del primer arranque: elección de idioma */
+.langChoices {
+  display: flex;
+  gap: 12px;
+}
+.langChoice {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.langChoice:hover {
+  border-color: var(--text-muted);
+}
+.langChoiceOn {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}

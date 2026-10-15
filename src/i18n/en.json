@@ -698,7 +698,9 @@
       "increase": "Zoom in",
       "slider": "App zoom",
       "value": "{{percent}}%",
-      "reset": "Reset ({{percent}}%)"
+      "reset": "Reset ({{percent}}%)",
+      "auto": "Automatic (fit to the window)",
+      "autoHelp": "Scales the app so that every tab is visible without scrolling, and readjusts when the window is resized or maximized."
     }
   },
   "game": {
@@ -822,7 +824,8 @@
       "add": "Add game folder",
       "cancel": "Cancel",
       "dontAsk": "Don't ask again for this save"
-    }
+    },
+    "progressHint": "This can take several minutes; please keep the app open meanwhile."
   },
   "errors": {
     "title": "Something went wrong",
@@ -1353,5 +1356,12 @@
   },
   "type": {
     "unknown": "Unknown type"
+  },
+  "firstRun": {
+    "title": "Welcome to PESHeX",
+    "langBody": "Choose the language of the app. You can change it later in Settings.",
+    "langLabel": "Language",
+    "next": "Continue",
+    "finish": "Get started"
   }
 }

@@ -33,6 +33,8 @@ export class DriverBridge {
   private assetMaps = new Map<string, unknown>();
   /** Factores que la app pidio con `getCurrentWebview().setZoom(...)` (el zoom nativo del WebView). */
   zoomCalls: number[] = [];
+  /** Se llama con cada zoom nativo pedido (lo usa `ZoomEmulator` para reproducir el efecto del zoom del WebView). */
+  onZoom?: (factor: number) => void;
 
   constructor(repoRoot: string) {
     this.proc = spawn("ruby", ["-E", "UTF-8", path.join(repoRoot, "driver", "rxdata_driver.rb")], {
@@ -135,6 +137,7 @@ export class DriverBridge {
         return { value: 1 };
       case "plugin:webview|set_webview_zoom":
         this.zoomCalls.push(Number(args.value));
+        this.onZoom?.(Number(args.value));
         return { value: null };
       default:
         return { value: null };

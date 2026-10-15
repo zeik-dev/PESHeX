@@ -69,3 +69,54 @@ describe("applyZoom", () => {
     expect(typeof applyZoom).toBe("function");
   });
 });
+
+describe("fitZoom (escala automática)", () => {
+  const base = { naturalWidth: 1420, availableWidth: 1280, availableHeight: 820 };
+
+  it("es el menor entre lo que hace falta para que quepan las pestañas y lo que permite el alto", async () => {
+    const { fitZoom } = await import("./zoom");
+    expect(fitZoom(base)).toBe(90); // 1280 / 1420 = 0,901
+    expect(fitZoom({ ...base, availableWidth: 1100, availableHeight: 690 })).toBe(77); // la ventana por defecto
+    expect(fitZoom({ ...base, availableWidth: 1920, availableHeight: 1040 })).toBe(135); // Full HD maximizada
+    // el alto limita aunque el ancho sobre
+    expect(fitZoom({ ...base, availableWidth: 1920, availableHeight: 420 })).toBe(60);
+  });
+
+  it("redondea hacia abajo: nunca se pasa de ancho", async () => {
+    const { fitZoom } = await import("./zoom");
+    for (const w of [900, 1000, 1234, 1500, 1999]) {
+      const percent = fitZoom({ ...base, availableWidth: w });
+      expect((1420 * percent) / 100).toBeLessThanOrEqual(w + 1e-9);
+    }
+  });
+
+  it("se mantiene en los límites 50-200 y vuelve a 100 con medidas inválidas", async () => {
+    const { fitZoom, ZOOM_MAX, ZOOM_MIN } = await import("./zoom");
+    expect(fitZoom({ ...base, availableWidth: 300, availableHeight: 200 })).toBe(ZOOM_MIN);
+    expect(fitZoom({ ...base, availableWidth: 9000, availableHeight: 9000 })).toBe(ZOOM_MAX);
+    expect(fitZoom({ ...base, naturalWidth: 0 })).toBe(100);
+    expect(fitZoom({ ...base, availableWidth: Number.NaN })).toBe(100);
+  });
+
+  it("es proporcional: al doblar la ventana (ancho y alto) se dobla la escala", async () => {
+    const { fitZoom } = await import("./zoom");
+    const small = fitZoom({ naturalWidth: 1400, availableWidth: 800, availableHeight: 400 });
+    const big = fitZoom({ naturalWidth: 1400, availableWidth: 1600, availableHeight: 800 });
+    expect(big).toBeGreaterThanOrEqual(small * 2 - 1);
+    expect(big).toBeLessThanOrEqual(small * 2 + 1);
+  });
+});
+
+describe("zoom aplicado", () => {
+  it("applyZoom recuerda el valor aplicado (clampeado) y avisa a los suscriptores", async () => {
+    vi.resetModules();
+    vi.doMock("@tauri-apps/api/webview", () => ({ getCurrentWebview: () => ({ setZoom: vi.fn().mockResolvedValue(undefined) }) }));
+    const z = await import("./zoom");
+    expect(z.appliedZoom()).toBe(100);
+    await z.applyZoom(83);
+    expect(z.appliedZoom()).toBe(83);
+    await z.applyZoom(999);
+    expect(z.appliedZoom()).toBe(200);
+    vi.doUnmock("@tauri-apps/api/webview");
+  });
+});

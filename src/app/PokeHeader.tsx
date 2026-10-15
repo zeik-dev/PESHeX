@@ -1,4 +1,4 @@
-import { Redo2, Search, Undo2, X } from "lucide-react";
+import { Redo2, Save, Search, Undo2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AppLogo } from "../ui";
 import { useSession } from "../stores/session";
@@ -52,6 +52,15 @@ export function PokeHeader() {
         <ModeSwitch />
         <LangSwitch />
         <ThemeToggle />
+        <button
+          type="button"
+          className={styles.hbtn}
+          disabled={!dirty || saving}
+          onClick={() => void save()}
+          title={dirty ? t("header.saveHint") : t("header.nothingToSave")}
+        >
+          <Save size={16} /> <span className={styles.hideNarrow}>{t("common.save")}</span>
+        </button>
         <button type="button" className={styles.hbtn} onClick={() => void close()}>
           <X size={16} /> {t("header.closeFile")}
         </button>
@@ -73,20 +82,23 @@ export function PokeHeader() {
           )}
         </button>
       </div>
-      <nav className={styles.bottom} aria-label="Principal">
-        {visibleNav(roles).map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            className={styles.navBtn}
-            aria-current={view === n.id ? "page" : undefined}
-            onClick={() => setView(n.id)}
-          >
-            {n.icon}
-            {t(`nav.${n.id}` as never) as string}
-            {n.id === "changes" && dirty && <span className={styles.navBadge}>{pending}</span>}
-          </button>
-        ))}
+      {/* `data-fit-nav`: la escala automática mide el ancho del contenido (`navInner`) para que quepan todas las pestañas. */}
+      <nav className={styles.bottom} aria-label="Principal" data-fit-nav>
+        <div className={styles.navInner}>
+          {visibleNav(roles).map((n) => (
+            <button
+              key={n.id}
+              type="button"
+              className={styles.navBtn}
+              aria-current={view === n.id ? "page" : undefined}
+              onClick={() => setView(n.id)}
+            >
+              {n.icon}
+              {t(`nav.${n.id}` as never) as string}
+              {n.id === "changes" && dirty && <span className={styles.navBadge}>{pending}</span>}
+            </button>
+          ))}
+        </div>
       </nav>
     </header>
   );

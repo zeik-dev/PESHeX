@@ -701,7 +701,9 @@
       "increase": "Aumentar el zoom",
       "slider": "Zoom de la aplicación",
       "value": "{{percent}} %",
-      "reset": "Restablecer ({{percent}} %)"
+      "reset": "Restablecer ({{percent}} %)",
+      "auto": "Automático (ajustar a la ventana)",
+      "autoHelp": "Escala la aplicación para que se vean todas las pestañas sin scroll y se reajusta al cambiar el tamaño de la ventana o al maximizarla."
     }
   },
   "game": {
@@ -825,7 +827,8 @@
       "add": "Agregar directorio de juego",
       "cancel": "Cancelar",
       "dontAsk": "No volver a preguntar para esta partida"
-    }
+    },
+    "progressHint": "Esta acción puede tardar varios minutos; no cierres la aplicación mientras tanto."
   },
   "errors": {
     "title": "Algo salió mal",
@@ -1356,5 +1359,12 @@
   },
   "type": {
     "unknown": "Tipo desconocido"
+  },
+  "firstRun": {
+    "title": "Te damos la bienvenida a PESHeX",
+    "langBody": "Elige el idioma de la aplicación. Podrás cambiarlo después en Ajustes.",
+    "langLabel": "Idioma",
+    "next": "Continuar",
+    "finish": "Empezar"
   }
 }

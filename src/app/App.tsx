@@ -20,6 +20,7 @@ import { ShortcutsHost } from "../features/palette/ShortcutsHost";
 import { Hosts } from "./Hosts";
 import { OpenScreen } from "./OpenScreen";
 import { PokeHeader } from "./PokeHeader";
+import { useAutoZoom } from "./useAutoZoom";
 import styles from "./app.module.css";
 
 function CurrentView() {
@@ -46,6 +47,7 @@ const FILL_VIEWS = new Set(["party", "boxes", "pokedex"]);
 export default function App() {
   const filePath = useSession((s) => s.filePath);
   const fill = useSession((s) => FILL_VIEWS.has(s.view));
+  useAutoZoom();
   return (
     <>
       {filePath ? (

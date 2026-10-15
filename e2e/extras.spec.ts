@@ -180,6 +180,29 @@ test("atajos: Ctrl+S guarda, Ctrl+Z deshace y Ctrl+Y rehace", async ({ page }) =
   await noPending(page);
 });
 
+test("el botón Guardar junto a «Cerrar archivo» se activa con cambios y guarda como Ctrl+S", async ({ page }) => {
+  env = await setup(page);
+  await openSave(page, env);
+  const save = page.getByRole("button", { name: "Guardar", exact: true });
+  const close = page.getByRole("button", { name: "Cerrar archivo" });
+  await expect(save).toBeVisible();
+  await expect(save).toBeDisabled(); // sin cambios no hay nada que guardar
+  // Está justo antes de «Cerrar archivo» en el encabezado
+  const [s, c] = [await save.boundingBox(), await close.boundingBox()];
+  expect(s!.x).toBeLessThan(c!.x);
+  expect(Math.abs(s!.y - c!.y)).toBeLessThan(8);
+
+  await nav(page, "Entrenador");
+  const money = page.getByRole("textbox", { name: "Dinero" });
+  await money.fill("12345");
+  await money.press("Enter");
+  await expect(page.getByRole("button", { name: /^Cambios 1/ })).toBeVisible();
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect(page.getByText(/Guardado|copia de seguridad/i).first()).toBeVisible();
+  await expect(save).toBeDisabled();
+});
+
 test("el encabezado tiene deshacer y rehacer", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
@@ -397,13 +420,17 @@ test("el preset de EV sugerido sale de los stats más altos de cada Pokémon y s
   await expect(drawer.getByTestId("ev-presets")).toBeVisible(); // también en la pestaña IV y EV
 });
 
-test("zoom de la app en Ajustes: 100 % por defecto, sube, baja, se restablece y se recuerda", async ({ page }) => {
+test("zoom manual de la app en Ajustes: sube, baja, se restablece y se recuerda", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
   await nav(page, "Ajustes");
   const card = page.locator("section", { has: page.getByRole("heading", { name: "Zoom de la aplicación" }) });
   const value = card.getByTestId("zoom-value");
+  // Por defecto es automático (se ajusta a la ventana); estas pruebas parten del modo manual.
+  await card.getByRole("switch", { name: "Automático (ajustar a la ventana)" }).click();
+  await card.getByRole("button", { name: "Restablecer (100 %)" }).click();
   await expect(value).toHaveText("100 %");
+  await expect.poll(() => env!.bridge.zoomCalls.at(-1)).toBe(1);
   await expect(card.getByRole("button", { name: /^Restablecer/ })).toBeDisabled();
 
   await card.getByRole("button", { name: "Aumentar el zoom" }).click();

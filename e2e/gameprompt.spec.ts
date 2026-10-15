@@ -40,6 +40,8 @@ test("al abrir una partida sin carpeta de juego se ofrece agregarla, con progres
   await expect(bar).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Cancelar" })).toBeDisabled();
   await expect(bar).toHaveAttribute("aria-valuetext", /Leyendo|Comprobando|Indexando|Preparando|Cargando/);
+  // Se avisa de que cargar la carpeta puede tardar varios minutos.
+  await expect(dialog.getByTestId("game-progress-hint")).toHaveText(/puede tardar varios minutos/);
   await shot(page, "91-game-progress-es-light");
   const seen = new Set<string>();
   await expect
