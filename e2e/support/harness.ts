@@ -48,24 +48,28 @@ export interface Env {
   window: ZoomEmulator;
   /** Deja salir el aviso de "agregar la carpeta del juego" al abrir (por defecto se silencia). */
   gamePrompt: boolean;
+  /** Zoom manual fijo (en %) en vez del automático (lo usan las capturas del README). */
+  manualZoom?: number;
 }
 
 /** Marca «No volver a preguntar» para `savePath` antes de cargar la app (el aviso no estorba a las pruebas que no lo ejercitan).
  *  Los ajustes se guardan en versión 2 a propósito: la migración a la 3 da por hecho el asistente del primer arranque, y el
  *  zoom queda en automático (el valor por defecto). `lang` fija el idioma (el por defecto de la app es el español). */
-export async function silenceGamePrompt(page: Page, savePath: string | null, lang: "es" | "en" = "es") {
+export async function silenceGamePrompt(page: Page, savePath: string | null, lang: "es" | "en" = "es", manualZoom?: number) {
   await page.addInitScript(
-    ([p, l]) => {
-      localStorage.setItem("peshex-settings", JSON.stringify({ state: { ...(p ? { noGamePrompt: { [p]: true } } : {}), lang: l }, version: 2 }));
+    ([p, l, z]) => {
+      // Con `manualZoom` los ajustes se guardan ya en la versión 3: zoom manual fijo (las capturas del README no usan la escala automática).
+      const state = { ...(p ? { noGamePrompt: { [p]: true } } : {}), lang: l, ...(z ? { firstRunDone: true, zoomMode: "manual", zoom: z } : {}) };
+      localStorage.setItem("peshex-settings", JSON.stringify({ state, version: z ? 3 : 2 }));
     },
-    [savePath, lang] as const,
+    [savePath, lang, manualZoom ?? 0] as const,
   );
 }
 
 /** Prepara la pagina con el puente al driver real y una COPIA del save (nunca se toca test_saves/).
  *  Por defecto se marca «No volver a preguntar» para esa partida: el aviso de "agregar la carpeta del juego" que sale
  *  al abrir un save sin carpeta no estorba a las pruebas que no lo ejercitan (`gamePrompt: true` lo deja salir). */
-export async function setup(page: Page, save = "Partida_2.rxdata", opts: { gamePrompt?: boolean } = {}): Promise<Env> {
+export async function setup(page: Page, save = "Partida_2.rxdata", opts: { gamePrompt?: boolean; manualZoom?: number } = {}): Promise<Env> {
   fs.mkdirSync(SHOTS, { recursive: true });
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "peshex-e2e-"));
   const savePath = path.join(workDir, save);
@@ -79,7 +83,7 @@ export async function setup(page: Page, save = "Partida_2.rxdata", opts: { gameP
   // Si la página ya se cerró (el último ajuste de zoom llega tarde), se ignora el fallo.
   bridge.emit = (event, payload) => page.evaluate(([e, p]) => (window as unknown as { __pwEmit?: (e: string, p: unknown) => void }).__pwEmit?.(e, p), [event, payload] as const).catch(() => undefined);
   bridge.onZoom = (z) => void window.setZoom(z).catch(() => undefined);
-  return { bridge, workDir, savePath, window, gamePrompt: !!opts.gamePrompt };
+  return { bridge, workDir, savePath, window, gamePrompt: !!opts.gamePrompt, manualZoom: opts.manualZoom };
 }
 
 export async function teardown(env: Env | undefined) {
@@ -94,7 +98,7 @@ export async function openSave(page: Page, env: Env, lang: "es" | "en" = "es", e
     Object.defineProperty(navigator, "language", { get: () => (l === "es" ? "es-ES" : "en-US") });
   }, lang);
   // Con `gamePrompt` el aviso de la carpeta del juego sale; el asistente del primer arranque y el idioma se fijan siempre.
-  await silenceGamePrompt(page, env.gamePrompt ? null : env.bridge.dialogPath, lang);
+  await silenceGamePrompt(page, env.gamePrompt ? null : env.bridge.dialogPath, lang, env.manualZoom);
   await page.goto("/");
   await page.getByRole("button", { name: lang === "es" ? "Abrir partida…" : "Open save…" }).click();
   await expect(page.getByText(expected).first()).toBeVisible({ timeout: 20_000 });

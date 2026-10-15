@@ -68,6 +68,9 @@ principales; la tabla del final resume el resto.
   <img src="docs/screenshots/editor.png" alt="Hoja de edición ancha con los stats base de la especie, deslizadores de IV y Poder oculto" width="100%" />
 </p>
 <p align="center">
+  <img src="docs/screenshots/editor-stats.png" alt="Ficha fija del Pokémon con las estadísticas actuales en barras apiladas: base y nivel en rojo, IV en azul, EV en naranja y naturaleza en verde, con el tooltip de un tramo" width="100%" />
+</p>
+<p align="center">
   <img src="docs/screenshots/editor-movimientos.png" alt="Selector de movimientos con todos los movimientos del juego, su tipo, potencia, PP e ícono de categoría" width="100%" />
 </p>
 

@@ -39,7 +39,7 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   };
   const nav = (name: string) => page.getByRole("button", { name, exact: true }).click();
 
-  env = await setup(page, DEMO.save);
+  env = await setup(page, DEMO.save, { manualZoom: 100 }); // zoom fijo al 100 %: la escala automática no entra en las capturas
   await serveGameAssets(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
 
@@ -100,6 +100,15 @@ test("capturas del README con la carpeta del juego analizada", async ({ page }) 
   await expect(drawer.getByText(/Poder oculto/).first()).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1180 });
   await shot("editor");
+  // Estadísticas actuales: barra apilada por colores (base y nivel, IV, EV, naturaleza) con el tooltip de un tramo
+  await drawer.getByRole("radio", { name: "Estadísticas actuales" }).click();
+  const meters = drawer.getByTestId("base-stats").getByRole("meter");
+  await expect(meters).toHaveCount(6);
+  await meters.nth(4).locator("> *").nth(2).hover(); // At. Esp.: con 252 EV el tercer tramo (EV, naranja) es grande
+  await expect(page.getByRole("tooltip")).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: path.join(OUT, "editor-stats.png"), clip: { x: 610, y: 0, width: 830, height: 380 } });
+  await drawer.getByRole("radio", { name: "Estadísticas base en este juego" }).click(); // la preferencia se recuerda: se deja como estaba
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.keyboard.press("Escape");
 
