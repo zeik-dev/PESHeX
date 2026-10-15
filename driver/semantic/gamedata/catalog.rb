@@ -33,8 +33,10 @@ module Sem
 
       def items_list(store)
         store.table(:items).values.map do |i|
+          # Bases <= v18: los iconos de bola se nombran por el indice de `$BallTypes` (summaryball00...), no por el id.
+          ball = i.pocket == 3 && !i.number.nil? ? Derived.ball_index_of(store, i.id) : nil
           { id: i.id, number: i.number, name: i.name, pocket: i.pocket, machine: i.machine?, move: i.move,
-            fieldUse: i.field_use }
+            fieldUse: i.field_use, ballIndex: ball }
         end
       end
 
@@ -45,7 +47,7 @@ module Sem
       def types_list(store)
         store.types.map do |t|
           { id: t.id, name: t.name, weaknesses: t.weaknesses, resistances: t.resistances, immunities: t.immunities,
-            special: t.special == true }
+            special: t.special == true, iconPosition: t.icon_position }
         end
       end
 

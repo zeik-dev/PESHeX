@@ -56,6 +56,62 @@ test("la hoja de edición es ancha, muestra los stats base del juego y la pesta�
   await expect(page.getByRole("dialog").getByRole("tab", { name: /Legalidad/ })).toBeVisible();
 });
 
+test("la ficha, las acciones rápidas y las pestañas quedan fijas; solo hace scroll el contenido de la pestaña", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  const drawer = await openEditor(page);
+
+  // El preset de EV sugerido ya no está en la cabecera: solo vive en la pestaña IV y EV.
+  await expect(drawer.getByTestId("ev-presets")).toHaveCount(0);
+  const card = drawer.getByTestId("base-stats");
+  const tabs = drawer.getByRole("tab", { name: "IV y EV" });
+  const before = { card: (await card.boundingBox())!.y, tabs: (await tabs.boundingBox())!.y };
+
+  await tabs.click();
+  await expect(drawer.getByTestId("ev-presets")).toHaveCount(1);
+  const scroll = drawer.getByTestId("editor-scroll");
+  await scroll.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  expect(await scroll.evaluate((el) => el.scrollTop), "el contenido sí hace scroll").toBeGreaterThan(0);
+  const after = { card: (await card.boundingBox())!.y, tabs: (await tabs.boundingBox())!.y };
+  expect(after.card, "la ficha no se mueve").toBe(before.card);
+  expect(after.tabs, "las pestañas no se mueven").toBe(before.tabs);
+  await expect(drawer.getByRole("button", { name: "Curar" }).first()).toBeInViewport();
+});
+
+test("la ficha alterna entre stats base y actuales; las actuales se desglosan por color con un globo en cada tramo", async ({ page }) => {
+  env = await setup(page);
+  await serveGameAssets(page);
+  await openSave(page, env);
+  await linkGame(page, env);
+  const drawer = await openEditor(page);
+
+  const card = drawer.getByTestId("base-stats");
+  await expect(card).toContainText("Stats base en este juego");
+  await card.getByRole("radio", { name: "Estadísticas actuales" }).click();
+  await expect(card.getByRole("radio", { name: "Estadísticas actuales" })).toHaveAttribute("aria-checked", "true");
+  const bars = card.getByRole("meter");
+  await expect(bars).toHaveCount(6);
+  // Cada stat lleva su total a la derecha y la leyenda nombra los cuatro factores (el color no es lo único que informa).
+  for (const f of ["Base y nivel", "IV", "EV", "Naturaleza"]) await expect(card.getByText(f, { exact: true })).toBeVisible();
+  const seg = bars.first().locator("> span").first();
+  await seg.hover();
+  await expect(page.getByRole("tooltip")).toContainText(/Base y nivel: \+\d+/);
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  // Los tramos son de colores distintos (base, IV, EV).
+  const colors = await bars.first().locator("> span").evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundColor));
+  expect(new Set(colors).size).toBeGreaterThanOrEqual(2);
+  await shot(page, "124-editor-stats-actuales-es-light");
+
+  // La preferencia se recuerda al volver a la vista base.
+  await card.getByRole("radio", { name: "Estadísticas base en este juego" }).click();
+  await expect(card).toContainText("Stats base en este juego");
+});
+
 test("nivel, felicidad y PS tienen deslizador y campo; un gesto es UNA edición; 0 PS es debilitado", async ({ page }) => {
   env = await setup(page);
   await openSave(page, env);
@@ -172,13 +228,25 @@ test("naturaleza por menta (Pokémon Añil): se lee, se cambia y la original no 
   await openSave(page, env, "es", "Resumen");
   const drawer = await openEditor(page);
   const mint = drawer.getByLabel("Naturaleza por menta");
-  await expect(mint).toHaveValue("SERIOUS");
-  await expect(drawer.getByLabel("Naturaleza", { exact: true })).toHaveValue("MODEST");
-  await mint.selectOption("ADAMANT");
+  const nature = drawer.getByLabel("Naturaleza", { exact: true });
+  await expect(mint).toHaveValue(/Seria|Serious/);
+  await expect(nature).toHaveValue(/Modesta|Modest/);
+  // El selector enseña a la derecha qué sube (+) y qué baja (−) y el nombre efectivo va en negrita.
+  await nature.click();
+  const firme = page.getByRole("option", { name: /Firme|Adamant/ });
+  await expect(firme).toContainText(/\+Atq/);
+  await expect(firme).toContainText(/−AtE/);
+  const colorOf = (txt: string) => firme.getByText(txt, { exact: true }).evaluate((el) => getComputedStyle(el).color);
+  expect(await colorOf("+Atq"), "lo que sube (rojo) y lo que baja (azul) no comparten color").not.toBe(await colorOf("−AtE"));
+  await page.keyboard.press("Escape");
+  await mint.click();
+  await page.getByRole("option", { name: /Firme|Adamant/ }).click();
   await pending(page, 1);
   await expect(drawer.getByTestId("nature-effective")).toContainText(/Firme|Adamant/);
-  await expect(drawer.getByLabel("Naturaleza", { exact: true })).toHaveValue("MODEST");
-  await mint.selectOption("");
+  await expect(drawer.getByTestId("nature-effective").locator("strong")).toHaveText(/Firme|Adamant/);
+  await expect(nature).toHaveValue(/Modesta|Modest/);
+  await mint.click();
+  await page.getByRole("option", { name: /sin menta|No mint/i }).click();
   await expect(drawer.getByTestId("nature-effective")).toContainText(/Modesta|Modest/);
 });
 

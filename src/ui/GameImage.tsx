@@ -83,9 +83,13 @@ export function PokemonIcon({
   species, form, gender, shiny, shadow, egg, number, name, size = 48, className,
 }: PokemonKey & { name: string; size?: number; className?: string }) {
   const ctx = useGame((s) => s.ctx);
+  const catalog = useGame((s) => s.catalogIndex);
+  // Las bases numeradas (v16-18) nombran los iconos por el numero de especie: si quien llama solo tiene el id interno
+  // ("ARCANINE", como las evoluciones de la Pokédex o el selector de especies), se busca en el catalogo.
+  const num = number ?? (typeof species === "string" ? catalog?.species.get(species)?.number : undefined);
   const resolved = useMemo(
-    () => (ctx && species != null ? resolvePokemonIcon(ctx, { species, form, gender, shiny, shadow, egg, number }) : null),
-    [ctx, species, form, gender, shiny, shadow, egg, number],
+    () => (ctx && species != null ? resolvePokemonIcon(ctx, { species, form, gender, shiny, shadow, egg, number: num }) : null),
+    [ctx, species, form, gender, shiny, shadow, egg, num],
   );
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [resolved?.path]);
@@ -122,8 +126,8 @@ export function BallIcon({ ball, size = 24, className }: { ball: string | number
   const catalog = useGame((s) => s.catalogIndex);
   const resolved = useMemo(() => {
     if (!ctx) return null;
-    const number = typeof ball === "string" ? catalog?.items.get(ball)?.number : null;
-    return resolveBallIcon(ctx, ball, number);
+    const item = typeof ball === "string" ? catalog?.items.get(ball) : undefined;
+    return resolveBallIcon(ctx, ball, item?.number, item?.ballIndex);
   }, [ctx, ball, catalog]);
   if (!resolved) return null;
   return <GameImage rel={resolved.path} size={size} className={className} />;

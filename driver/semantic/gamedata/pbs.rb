@@ -336,8 +336,10 @@ module Sem
           id = header =~ /\A\d+\z/ ? f['InternalName'] : header
           next if id.to_s.empty?
 
+          # Fila del tipo en `types.png`: `IconPosition` (v19+) o, en v16-18, el numero de la seccion.
+          icon = num(f['IconPosition']) || (header =~ /\A\d+\z/ ? header.to_i : nil)
           TypeInfo.new(id: id, name: f['Name'], weaknesses: list(f['Weaknesses']), resistances: list(f['Resistances']),
-                       immunities: list(f['Immunities']), special: truthy?(f['IsSpecialType']))
+                       immunities: list(f['Immunities']), special: truthy?(f['IsSpecialType']), icon_position: icon)
         end
       end
 

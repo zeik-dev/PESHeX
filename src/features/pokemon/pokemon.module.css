@@ -14,8 +14,8 @@
   flex: 1 1 280px;
 }
 .baseStats {
-  flex: 0 1 320px;
-  min-width: 240px;
+  flex: 0 1 380px;
+  min-width: 260px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -32,9 +32,32 @@
   letter-spacing: 0.04em;
   color: var(--text-muted);
 }
+.cardView {
+  margin-bottom: 8px;
+}
+.statLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.statLegend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
 .baseStatRow {
   display: grid;
-  grid-template-columns: 74px 1fr 34px;
+  grid-template-columns: 74px 1fr 36px;
   align-items: center;
   gap: 8px;
   font-size: 12px;
@@ -46,6 +69,31 @@
 }
 .body {
   padding: 0 24px 32px;
+}
+/* Hoja de edición: parte fija (ficha + acciones + pestañas) y parte con scroll */
+.editorRoot {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.editorFixed {
+  flex: none;
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--border);
+}
+.fixedBody {
+  padding: 0 24px;
+}
+.fixedBody > div[role="tablist"],
+.fixedBody > :last-child {
+  margin-bottom: 0;
+}
+.editorScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 24px 32px;
+  overflow: auto;
 }
 .statRow {
   display: grid;
@@ -101,6 +149,22 @@
   margin: -6px 0 0;
   font-size: 13px;
   color: var(--text-muted);
+}
+.natureEffective strong {
+  color: var(--text);
+  font-weight: 800;
+}
+/* Naturalezas del selector: lo que sube en rojo, lo que baja en azul (con signo y nombre: no solo color) */
+.natureDelta {
+  display: inline-flex;
+  gap: 8px;
+  font-weight: 700;
+}
+.natureUp {
+  color: var(--danger);
+}
+.natureDown {
+  color: var(--info);
 }
 .moveInfo {
   display: flex;

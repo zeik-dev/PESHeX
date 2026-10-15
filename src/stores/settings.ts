@@ -16,6 +16,8 @@ interface SettingsState {
   zoom: number;
   /** Tarjeta "Legalidad" del Resumen (solo existe en HeX): desplegada o plegada. */
   legalityOpen: boolean;
+  /** Ficha del Pokémon en el editor: estadísticas base de la especie en este juego o las actuales (con el desglose). */
+  cardStatsView: "base" | "current";
   /** Editor de Pokémon (solo HaX; en HeX siempre se filtra): mostrar solo las habilidades / los movimientos de la especie. */
   onlySpeciesAbilities: boolean;
   onlySpeciesMoves: boolean;
@@ -34,6 +36,7 @@ interface SettingsState {
   setBackup: (backup: boolean) => void;
   setZoom: (zoom: number) => void;
   setLegalityOpen: (open: boolean) => void;
+  setCardStatsView: (view: "base" | "current") => void;
   setOnlySpeciesAbilities: (v: boolean) => void;
   setOnlySpeciesMoves: (v: boolean) => void;
   setMode: (mode: EditMode) => void;
@@ -87,6 +90,7 @@ export const useSettings = create<SettingsState>()(
       backup: true,
       zoom: ZOOM_DEFAULT,
       legalityOpen: true,
+      cardStatsView: "base",
       onlySpeciesAbilities: true,
       onlySpeciesMoves: true,
       mode: "hax",
@@ -100,6 +104,7 @@ export const useSettings = create<SettingsState>()(
       setBackup: (backup) => set({ backup }),
       setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
       setLegalityOpen: (legalityOpen) => set({ legalityOpen }),
+      setCardStatsView: (cardStatsView) => set({ cardStatsView }),
       setOnlySpeciesAbilities: (onlySpeciesAbilities) => set({ onlySpeciesAbilities }),
       setOnlySpeciesMoves: (onlySpeciesMoves) => set({ onlySpeciesMoves }),
       setMode: (mode) => set({ mode }),

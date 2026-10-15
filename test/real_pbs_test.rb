@@ -108,6 +108,18 @@ end
 class RealCatalogTest < Minitest::Test
   include RealGames
 
+  def test_catalogo_lleva_la_fila_del_icono_de_cada_tipo_y_el_indice_de_bola
+    %i[z anil].each do |key|
+      types = Sem::GameData::Catalog.types_list(real_store(key))
+      assert_equal 10, types.find { |t| t[:id] == 'FIRE' }[:iconPosition], "#{key}: fila de FIRE en types.png"
+      assert_equal 9, types.find { |t| t[:id] == 'QMARKS' }[:iconPosition]
+    end
+    z_items = Sem::GameData::Catalog.items_list(real_store(:z))
+    assert_equal 1, z_items.find { |i| i[:id] == 'GREATBALL' }[:ballIndex], 'Z: indice de $BallTypes (summaryball01)'
+    assert_nil z_items.find { |i| i[:id] == 'POTION' }[:ballIndex], 'solo las bolas lo llevan'
+    assert(Sem::GameData::Catalog.items_list(real_store(:anil)).all? { |i| i[:ballIndex].nil? }, 'v21 nombra los iconos por id, no por indice')
+  end
+
   def test_catalogo_lleva_numeros_y_orden_para_resolver_ids_enteros
     cat = Sem::GameData::Catalog.build(real_store(:z))
     bulba = cat[:species].find { |s| s[:id] == 'BULBASAUR' }

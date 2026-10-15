@@ -53,7 +53,7 @@ describe("contraste de tokens", () => {
 
     it(`tema ${name}: acento y estados legibles sobre la superficie`, () => {
       const surface = resolve(vars, "--surface");
-      for (const t of ["--accent", "--success", "--warning", "--danger", "--info"]) {
+      for (const t of ["--accent", "--success", "--warning", "--danger", "--info", "--stat-ev"]) {
         expect(ratio(resolve(vars, t), surface), t).toBeGreaterThanOrEqual(4.5);
       }
     });

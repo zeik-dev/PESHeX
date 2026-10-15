@@ -17,17 +17,15 @@ export function useRecalcAvailable(): boolean {
 
 /** Acciones rápidas de un Pokémon (curar, IV al máximo, recalcular, presets de EV, exportar).
  *  `variant="popover"`: un único botón «Acciones rápidas» que abre un desplegable HACIA LA IZQUIERDA (panel de datos);
- *  `"inline"`: las mismas acciones en línea (hoja de edición).
- *  `hideEv`: la pestaña IV y EV del editor ya trae su propio selector de presets (no se duplica). */
+ *  `"inline"`: las mismas acciones en línea (hoja de edición); los presets de EV no van aquí: la pestaña IV y EV del editor
+ *  trae su propio selector. */
 export function QuickActions({
   pk,
   editable,
-  hideEv,
   variant = "inline",
 }: {
   pk: PokemonDetail;
   editable: boolean;
-  hideEv?: boolean;
   variant?: "inline" | "popover";
 }) {
   const { t } = useT();
@@ -66,7 +64,7 @@ export function QuickActions({
           <Download size={14} /> {t("quick.export")}
         </Button>
       </div>
-      {!hideEv && <EvPresetControl pk={pk} editable={editable} />}
+      {variant === "popover" && <EvPresetControl pk={pk} editable={editable} />}
     </>
   );
 

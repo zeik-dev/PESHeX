@@ -9,10 +9,34 @@ export interface ComboOption {
   label: string;
   /** Texto secundario (el ID interno, el tipo...). */
   sub?: string;
+  /** Texto extra que solo sirve para buscar (no se muestra). */
+  search?: string;
+  /** Icono a la izquierda; el de la opción elegida también se ve dentro del campo cerrado. */
   icon?: ReactNode;
+  /** Contenido a la derecha de la fila (ícono de categoría, +Atq/−Def, potencia y PP...). */
+  right?: ReactNode;
 }
 
 const MAX_RESULTS = 60;
+
+/** Ancho (px) de un elemento decorativo del campo; se actualiza si cambia (las imágenes del juego cargan después). */
+function useWidth(el: React.RefObject<HTMLElement | null>, active: boolean): number {
+  const [w, setW] = useState(0);
+  useLayoutEffect(() => {
+    const node = el.current;
+    if (!active || !node) {
+      setW(0);
+      return;
+    }
+    const read = () => setW(node.offsetWidth);
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(read);
+    ro.observe(node);
+    return () => ro.disconnect();
+  }, [el, active]);
+  return w;
+}
 
 const LIST_MAX_HEIGHT = 320; // = max-height de .comboList
 const LIST_MIN_WIDTH = 240;
@@ -104,7 +128,7 @@ export function ComboBox({
   }, [shown, open]);
 
   const results = useMemo(
-    () => (open ? rankSearch(options, text === shown ? "" : text, (o) => [o.label, o.id, o.sub], limit) : []),
+    () => (open ? rankSearch(options, text === shown ? "" : text, (o) => [o.label, o.id, o.sub, o.search], limit) : []),
     [open, options, text, shown, limit],
   );
 
@@ -175,52 +199,69 @@ export function ComboBox({
   }
 
   const activeId = open && results[active] ? `${autoId}-opt-${active}` : undefined;
+  // El icono de la opción elegida se ve dentro del campo mientras no se esté escribiendo otra cosa.
+  const fieldIcon = current?.icon && text === shown ? current.icon : null;
+  const fieldRight = current?.right && text === shown ? current.right : null;
+  const iconRef = useRef<HTMLSpanElement>(null);
+  const rightRef = useRef<HTMLSpanElement>(null);
+  const iconW = useWidth(iconRef, !!fieldIcon);
+  const rightW = useWidth(rightRef, !!fieldRight);
 
   return (
     <>
-      <input
-        ref={inputRef}
-        id={id}
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listId}
-        aria-autocomplete="list"
-        aria-activedescendant={activeId}
-        aria-label={ariaLabel}
-        autoComplete="off"
-        spellCheck={false}
-        className={cx(styles.input, mono && "mono")}
-        value={text}
-        placeholder={placeholder}
-        disabled={disabled}
-        onFocus={(e) => {
-          setOpen(true);
-          e.target.select();
-        }}
-        onChange={(e) => {
-          setText(e.target.value);
-          setOpen(true);
-        }}
-        onBlur={commitText}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
+      <span className={styles.comboField}>
+        {fieldIcon && <span ref={iconRef} className={styles.comboFieldIcon}>{fieldIcon}</span>}
+        {fieldRight && <span ref={rightRef} className={styles.comboFieldRight}>{fieldRight}</span>}
+        <input
+          ref={inputRef}
+          id={id}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={activeId}
+          aria-label={ariaLabel}
+          autoComplete="off"
+          spellCheck={false}
+          className={cx(styles.input, mono && "mono", !!fieldIcon && styles.inputWithIcon)}
+          style={{
+            ...(fieldIcon && iconW ? { paddingLeft: iconW + 16 } : null),
+            ...(fieldRight && rightW ? { paddingRight: rightW + 20 } : null),
+          }}
+          value={text}
+          placeholder={placeholder}
+          disabled={disabled}
+          onFocus={(e) => {
             setOpen(true);
-            setActive((a) => Math.min(a + 1, Math.max(0, results.length - 1)));
-          } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setActive((a) => Math.max(a - 1, 0));
-          } else if (e.key === "Enter") {
-            e.preventDefault();
-            if (open && results[active]) choose(results[active]);
-            else inputRef.current?.blur();
-          } else if (e.key === "Escape" && open) {
-            e.stopPropagation(); // no cierra el panel que contiene el campo
-            setOpen(false);
-            setText(shown);
-          }
-        }}
-      />
+            e.target.select();
+          }}
+          // Tras elegir, el campo conserva el foco: un clic debe volver a abrir la lista (onFocus no se repite).
+          onClick={() => setOpen(true)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setOpen(true);
+          }}
+          onBlur={commitText}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setOpen(true);
+              setActive((a) => Math.min(a + 1, Math.max(0, results.length - 1)));
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setActive((a) => Math.max(a - 1, 0));
+            } else if (e.key === "Enter") {
+              e.preventDefault();
+              if (open && results[active]) choose(results[active]);
+              else inputRef.current?.blur();
+            } else if (e.key === "Escape" && open) {
+              e.stopPropagation(); // no cierra el panel que contiene el campo
+              setOpen(false);
+              setText(shown);
+            }
+          }}
+        />
+      </span>
       {open &&
         createPortal(
           <ul
@@ -252,6 +293,7 @@ export function ComboBox({
                 {o.icon && <span className={styles.comboIcon}>{o.icon}</span>}
                 <span className={styles.comboLabel}>{o.label}</span>
                 {o.sub && <span className={cx(styles.comboSub, "mono")}>{o.sub}</span>}
+                {o.right && <span className={styles.comboRight}>{o.right}</span>}
               </li>
             ))}
           </ul>,

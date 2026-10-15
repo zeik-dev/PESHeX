@@ -1,10 +1,7 @@
 import { Calculator, Eraser } from "lucide-react";
-import { useMemo } from "react";
 import { STAT_IDS, type PokemonDetail, type PokemonPatch, type StatId } from "../../api/types";
 import type { SpeciesDetail } from "../../game/types";
 import { hiddenPower } from "../../lib/hiddenPower";
-import { calcAllStats } from "../../lib/stats";
-import { NATURE_IDS } from "../../lib/pokemon";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
@@ -12,6 +9,7 @@ import { Button, Chip, SliderField, TypeChip } from "../../ui";
 import { EvPresetControl } from "./EvPresets";
 import { useRecalcAvailable } from "./QuickActions";
 import { usePatch } from "./editorShared";
+import { useStatMath } from "./useStatMath";
 import styles from "./pokemon.module.css";
 
 /** Pestaña IV y EV, en este orden: IV → Poder oculto → acciones de IV → EV → presets + limpiar EV → estadísticas
@@ -42,17 +40,7 @@ export function StatsTab({ pk, editable, species }: { pk: PokemonDetail; editabl
   const hpType = hp ? catalog?.types.find((ty) => ty.id === hp.type)?.name : null;
 
   // Estadísticas totales con la formula del juego (la naturaleza efectiva es la de menta si la hay).
-  const base = species?.baseStats;
-  const natureId = (pk.natureForStats?.id ?? pk.nature?.id) as string | undefined;
-  const nature = useMemo(() => {
-    const n = catalog?.natures.find((x) => x.id === natureId);
-    return n ?? (natureId && (NATURE_IDS as readonly string[]).includes(natureId) ? { up: null, down: null } : null);
-  }, [catalog, natureId]);
-  const computed = useMemo(() => {
-    const hasBase = !!base && STAT_IDS.every((s) => typeof base[s] === "number");
-    if (!hasBase || pk.level == null || STAT_IDS.some((s) => pk.iv[s] == null || pk.ev[s] == null)) return null;
-    return calcAllStats(base, pk.level, pk.iv, pk.ev, nature);
-  }, [base, pk.level, pk.iv, pk.ev, nature]);
+  const { computed } = useStatMath(pk, species);
 
   return (
     <div className={styles.statsTab}>

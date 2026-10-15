@@ -36,6 +36,8 @@
   --danger-soft: #fbe0e0;
   --info: #1f5aa6;
   --info-soft: #e0ecfa;
+  /* Aporte de los EV en las barras de estadísticas actuales (naranja; rojo = base, azul = IV, verde = naturaleza) */
+  --stat-ev: #b45309;
 
   --radius-sm: 8px;
   --radius: 14px;
@@ -73,6 +75,7 @@
   --danger-soft: #3d1c1c;
   --info: #8db7f3;
   --info-soft: #1a2b43;
+  --stat-ev: #f5a352;
   --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 4px 14px rgb(0 0 0 / 30%);
   color-scheme: dark;
 }
@@ -99,6 +102,7 @@
     --danger-soft: #3d1c1c;
     --info: #8db7f3;
     --info-soft: #1a2b43;
+    --stat-ev: #f5a352;
     color-scheme: dark;
   }
 }

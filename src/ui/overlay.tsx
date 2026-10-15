@@ -51,6 +51,7 @@ export function Drawer({
   onClose,
   children,
   wide,
+  split,
 }: {
   open: boolean;
   title: string;
@@ -58,6 +59,8 @@ export function Drawer({
   children: ReactNode;
   /** Hoja ancha (algo más de la mitad de la pantalla): para editar con comodidad. */
   wide?: boolean;
+  /** La hoja no hace scroll: los hijos reparten el alto (una parte fija arriba y otra que sí hace scroll). */
+  split?: boolean;
 }) {
   const { t } = useTranslation();
   useEscape(open, onClose);
@@ -68,8 +71,8 @@ export function Drawer({
   if (!open) return null;
   return (
     <div className={cx(styles.overlay, styles.overlayRight)} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <aside ref={ref} tabIndex={-1} className={cx(styles.drawer, wide && styles.drawerWide)} role="dialog" aria-modal="true" aria-label={title}>
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 8px 0" }}>
+      <aside ref={ref} tabIndex={-1} className={cx(styles.drawer, wide && styles.drawerWide, split && styles.drawerSplit)} role="dialog" aria-modal="true" aria-label={title}>
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: "8px 8px 0", flex: "none" }}>
           <Button variant="ghost" size="sm" icon onClick={onClose} aria-label={t("pokemon.close")} title={t("pokemon.close")}>
             <X size={18} />
           </Button>

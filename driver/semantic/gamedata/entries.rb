@@ -39,7 +39,7 @@ module Sem
       end
     end
     Ability = Struct.new(:id, :number, :name, :description, keyword_init: true)
-    TypeInfo = Struct.new(:id, :name, :weaknesses, :resistances, :immunities, :special, keyword_init: true) do
+    TypeInfo = Struct.new(:id, :name, :weaknesses, :resistances, :immunities, :special, :icon_position, keyword_init: true) do
       def initialize(**kw)
         super
         self.weaknesses ||= []
@@ -187,7 +187,8 @@ module Sem
         id = s(iv['id'] || key)
         id && TypeInfo.new(id: id, name: s(iv['real_name']) || s(iv['name']), weaknesses: symbols(iv['weaknesses']),
                            resistances: symbols(iv['resistances']), immunities: symbols(iv['immunities']),
-                           special: iv['special_type'] == true || iv['pseudo_type'] == true)
+                           special: iv['special_type'] == true || iv['pseudo_type'] == true,
+                           icon_position: iv['icon_position'].is_a?(Integer) ? iv['icon_position'] : nil)
       end
     end
   end

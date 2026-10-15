@@ -220,7 +220,7 @@ module Sem
 
       def types
         list = table(:types).values
-        list = STANDARD_TYPES.map { |t| TypeInfo.new(id: t, name: nil) } if list.empty?
+        list = STANDARD_TYPES.each_with_index.map { |t, i| TypeInfo.new(id: t, name: nil, icon_position: i) } if list.empty?
         list
       end
 

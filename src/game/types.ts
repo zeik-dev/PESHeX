@@ -79,6 +79,8 @@ export interface CatItem {
   machine: boolean;
   move: string | null;
   fieldUse: number | null;
+  /** Bases <= v18: indice en `$BallTypes` (los iconos de bola se llaman `summaryball00`...). */
+  ballIndex?: number | null;
 }
 export interface CatAbility {
   id: string;
@@ -89,6 +91,8 @@ export interface CatAbility {
 export interface CatType {
   id: string;
   name: string | null;
+  /** Fila del tipo en `types.png` (`IconPosition` del PBS; en v16-18, el numero de la seccion). */
+  iconPosition?: number | null;
   weaknesses?: string[];
   resistances?: string[];
   immunities?: string[];

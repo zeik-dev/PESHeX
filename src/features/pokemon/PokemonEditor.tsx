@@ -27,7 +27,7 @@ export function PokemonEditorHost() {
   const ref = useSession((s) => s.editorRef);
   const close = useSession((s) => s.closeEditor);
   return (
-    <Drawer open={!!ref} title={t("nav.party")} onClose={close} wide>
+    <Drawer open={!!ref} title={t("nav.party")} onClose={close} wide split>
       {ref && <PokemonEditor key={ref} ref_={ref} />}
     </Drawer>
   );
@@ -52,27 +52,32 @@ function PokemonEditor({ ref_ }: { ref_: string }) {
   const editable = profile?.editable ?? false;
 
   return (
-    <div>
-      <SpeciesCard pk={pk} species={species} />
+    <div className={styles.editorRoot}>
+      {/* Parte fija: la ficha, las acciones rápidas y las pestañas no se mueven; solo hace scroll el contenido de la pestaña. */}
+      <div className={styles.editorFixed}>
+        <SpeciesCard pk={pk} species={species} />
+        <div className={styles.fixedBody}>
+          <QuickActions pk={pk} editable={editable} />
+          <Tabs
+            value={tab}
+            onChange={setTab}
+            tabs={[
+              { id: "general", label: t("pokemon.tabs.general") },
+              { id: "stats", label: t("pokemon.tabs.stats") },
+              { id: "moves", label: t("pokemon.tabs.moves"), badge: pk.moves.filter((m) => !m.empty).length },
+              ...(hex ? [{ id: "legality" as const, label: t("legality.tab"), badge: pk.flags.filter((f) => f.severity !== "info").length || undefined }] : []),
+              { id: "info", label: t("pokemon.tabs.info") },
+            ]}
+          />
+        </div>
+      </div>
 
-      <div className={styles.body}>
+      <div className={styles.editorScroll} data-testid="editor-scroll">
         {pk.shared.length > 0 && (
           <Banner tone="info" title={t("banner.sharedTitle")}>
             {t("banner.sharedBody", { paths: pk.shared.join(", ") })}
           </Banner>
         )}
-        <QuickActions pk={pk} editable={editable} hideEv={tab === "stats"} />
-        <Tabs
-          value={tab}
-          onChange={setTab}
-          tabs={[
-            { id: "general", label: t("pokemon.tabs.general") },
-            { id: "stats", label: t("pokemon.tabs.stats") },
-            { id: "moves", label: t("pokemon.tabs.moves"), badge: pk.moves.filter((m) => !m.empty).length },
-            ...(hex ? [{ id: "legality" as const, label: t("legality.tab"), badge: pk.flags.filter((f) => f.severity !== "info").length || undefined }] : []),
-            { id: "info", label: t("pokemon.tabs.info") },
-          ]}
-        />
         {tab === "general" && <GeneralTab pk={pk} editable={editable} species={species} />}
         {tab === "stats" && <StatsTab pk={pk} editable={editable} species={species} />}
         {tab === "moves" && <MovesTab pk={pk} editable={editable} species={species} />}

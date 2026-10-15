@@ -1,6 +1,6 @@
 // Pokémon Z REAL (test_saves/Game.rxdata + test_pbs/*_POKEMON_Z: Data, Graphics, PBS): Essentials v16-18, ids enteros,
 // sprites del propio juego. Se omite si falta test_pbs/ (no entra en el paquete ni es necesario para desarrollar).
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { loadedGameImages, openSave, ROOT, serveGameAssets, setup, shot, teardown, type Env } from "./support/harness";
@@ -14,6 +14,12 @@ test.afterEach(async () => {
 });
 
 const nav = (page: Page, name: string) => page.getByRole("button", { name, exact: true }).click();
+
+/** Ruta relativa de la imagen de la carpeta del juego: el protocolo simulado sirve `/__game/<ruta en base64url>`. */
+async function gamePath(img: Locator): Promise<string> {
+  const src = (await img.getAttribute("src")) ?? "";
+  return Buffer.from(src.split("/").pop() ?? "", "base64url").toString("utf8");
+}
 
 /** Abre Game.rxdata (Z) y vincula la carpeta real. Devuelve false (omitir) si falta test_pbs/. */
 async function openZ(page: Page): Promise<boolean> {
@@ -125,4 +131,81 @@ test("Pokémon Z real: agregar un Pokémon por nombre en una casilla vacía del 
   await expect(page.getByRole("button", { name: "Cambios 1" })).toBeVisible();
   await page.keyboard.press("Control+z");
   await expect(total).toHaveText(`${before} Pokémon en total`);
+});
+
+test("Pokémon Z real: cambiar la naturaleza de un Pokémon sin @natureflag se refleja en el selector (bug 1.1.0)", async ({ page }) => {
+  test.setTimeout(180_000);
+  test.skip(!(await openZ(page)), "falta test_pbs/ (Pokémon Z) o test_saves/Game.rxdata");
+
+  await nav(page, "PC");
+  // party/2 no trae @natureflag: su naturaleza sale del ID personal; antes el cambio creaba un @nature que nadie lee.
+  await page.locator('[data-cell="party/2"]').click();
+  await page.getByTestId("pc-info").getByRole("button", { name: "Editar", exact: true }).click();
+  const drawer = page.getByRole("dialog");
+  const nature = drawer.getByLabel("Naturaleza", { exact: true });
+  await expect(nature).toBeVisible();
+  const before = await nature.inputValue();
+  await nature.click();
+  const target = before.startsWith("Modesta") ? /^Alegre/ : /^Modesta/;
+  await page.getByRole("option", { name: target }).click();
+  await expect(page.getByRole("button", { name: /^Cambios \d/ })).toBeVisible();
+  const after = await nature.inputValue();
+  expect(after, "el selector cambia a lo elegido").not.toBe(before);
+  expect(after).toMatch(target);
+  // Y se queda así tras volver a leer el Pokémon (cerrar y reabrir el editor).
+  await page.keyboard.press("Escape");
+  await page.locator('[data-cell="party/2"]').click();
+  await page.getByTestId("pc-info").getByRole("button", { name: "Editar", exact: true }).click();
+  await expect(page.getByRole("dialog").getByLabel("Naturaleza", { exact: true })).toHaveValue(after);
+});
+
+test("Pokémon Z real: las evoluciones de la Pokédex y el campo Especie de «Agregar Pokémon» llevan su sprite", async ({ page }) => {
+  test.setTimeout(180_000);
+  test.skip(!(await openZ(page)), "falta test_pbs/ (Pokémon Z) o test_saves/Game.rxdata");
+
+  await nav(page, "Pokédex");
+  await page.getByRole("textbox", { name: "Buscar por nombre o número" }).fill("growlithe");
+  await page.getByRole("button", { name: "Ver la ficha de Growlithe" }).click();
+  const evo = page.getByTestId("species-sheet").getByTestId("sheet-evolution").getByRole("button", { name: /Arcanine/ }).first();
+  await expect(evo).toBeVisible();
+  // El icono de la evolución sale de Graphics/Icons/icon059.png (Z nombra los iconos por número de especie).
+  await expect(evo.locator("img")).toBeVisible();
+  expect(await gamePath(evo.locator("img"))).toMatch(/icon059\.png$/);
+
+  await nav(page, "PC");
+  await page.locator('[data-cell^="box/"]:not([data-ref])').first().click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Agregar Pokémon" }).click();
+  const dlg = page.getByRole("dialog", { name: "Agregar Pokémon" });
+  const species = dlg.getByRole("combobox", { name: "Especie" });
+  await species.fill("pikachu");
+  const option = page.getByRole("option", { name: /Pikachu/ }).first();
+  await expect(option.locator("img")).toBeVisible();
+  expect(await gamePath(option.locator("img"))).toMatch(/icon025\.png$/);
+  await option.click();
+  const inField = dlg.locator("img").first(); // el valor elegido también muestra su sprite dentro del campo
+  await expect(inField).toBeVisible();
+  expect(await gamePath(inField)).toMatch(/icon025\.png$/);
+});
+
+test("Pokémon Z real: los movimientos muestran el ícono del tipo a la izquierda y la categoría a la derecha", async ({ page }) => {
+  test.setTimeout(180_000);
+  test.skip(!(await openZ(page)), "falta test_pbs/ (Pokémon Z) o test_saves/Game.rxdata");
+
+  await nav(page, "PC");
+  await page.locator('[data-cell="party/0"]').click();
+  await page.getByTestId("pc-info").getByRole("button", { name: "Editar", exact: true }).click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByRole("tab", { name: "Movimientos" }).click();
+  const slot = drawer.getByRole("combobox", { name: "Movimiento 1" });
+  await expect(slot).toHaveValue(/Envite Ígneo/);
+  // Z trae Graphics/Pictures/types.png (64x672): el tipo sale de esa hoja, no de la etiqueta de color.
+  const typeIcon = drawer.locator('[role="img"][data-type]').first();
+  await expect(typeIcon).toHaveAttribute("data-source", "game");
+  await expect.poll(() => typeIcon.locator("img").evaluate((i: HTMLImageElement) => i.naturalWidth)).toBe(64);
+  await slot.click();
+  const row = page.getByRole("option", { name: /Envite Ígneo/ });
+  await expect(row.locator('[data-type]')).toHaveCount(1);
+  await expect(row.locator('[data-category]')).toHaveCount(1);
+  await expect(row).toContainText(/Pot\. \d+|PP \d+/);
+  await shot(page, "145-z-editor-move-selector-es-light");
 });

@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { useT } from "../lib/useT";
 import { useGame } from "../stores/game";
 import { CategoryIcon } from "../ui/CategoryIcon";
-import { ItemIcon, PokemonIcon } from "../ui/GameImage";
+import { BallIcon, ItemIcon, PokemonIcon } from "../ui/GameImage";
+import { TypeIcon } from "../ui/TypeIcon";
 import { itemDisplayName } from "./lookup";
 import type { ComboOption } from "../ui/combobox";
 
@@ -30,7 +31,7 @@ export function useSpeciesOptions(withIcons = true): ComboOption[] | null {
         id: s.id,
         label: s.formName && s.form > 0 ? `${name} (${s.formName})` : name,
         sub: s.id,
-        icon: withIcons ? <PokemonIcon name={name} species={s.species} form={s.form} size={28} /> : undefined,
+        icon: withIcons ? <PokemonIcon name={name} species={s.species} form={s.form} number={s.number} size={28} /> : undefined,
       };
     });
   }, [catalog, withIcons]);
@@ -39,16 +40,27 @@ export function useSpeciesOptions(withIcons = true): ComboOption[] | null {
 /** `allowed` (ids internos) limita la lista a los movimientos que la especie puede aprender. */
 export function useMoveOptions(allowed?: ReadonlySet<string> | null): ComboOption[] | null {
   const catalog = useGame((s) => s.catalog);
+  const { t } = useT();
   return useMemo(() => {
     if (!catalog) return null;
     const list = allowed ? catalog.moves.filter((m) => allowed.has(m.id)) : catalog.moves;
-    return list.map((m) => ({
-      id: m.id,
-      label: m.name ?? prettyId(m.id),
-      sub: [m.type, m.power ? `Pot. ${m.power}` : null, m.pp ? `PP ${m.pp}` : null].filter(Boolean).join(" · ") || m.id,
-      icon: <CategoryIcon category={m.category} />,
-    }));
-  }, [catalog, allowed]);
+    return list.map((m) => {
+      const stats = [m.power ? t("pokemon.moves.power", { n: m.power }) : null, m.pp ? t("pokemon.moves.ppShort", { n: m.pp }) : null].filter(Boolean).join(" · ");
+      return {
+        id: m.id,
+        label: m.name ?? prettyId(m.id),
+        // El tipo va a la izquierda (también dentro del campo cerrado); la categoría, la potencia y los PP, a la derecha.
+        icon: <TypeIcon type={m.type} />,
+        right: (
+          <>
+            <CategoryIcon category={m.category} />
+            {stats && <span className="mono">{stats}</span>}
+          </>
+        ),
+        search: [m.type, m.power, m.id].filter(Boolean).join(" "),
+      };
+    });
+  }, [catalog, allowed, t]);
 }
 
 /** `pocket` filtra por bolsillo del motor (1-8); sin el, todos los objetos. Busca por nombre, id interno y numero
@@ -66,6 +78,23 @@ export function useItemOptions(pocket?: number | null): ComboOption[] | null {
       icon: <ItemIcon item={{ id: i.id }} size={24} />,
     }));
   }, [catalog, index, pocket]);
+}
+
+/** Poké Balls (bolsillo 3) con el icono de bola del juego (o el del objeto si no lo trae). */
+export function useBallOptions(): ComboOption[] | null {
+  const catalog = useGame((s) => s.catalog);
+  const index = useGame((s) => s.catalogIndex);
+  return useMemo(() => {
+    if (!catalog) return null;
+    return catalog.items
+      .filter((i) => i.pocket === 3)
+      .map((i) => ({
+        id: i.id,
+        label: itemDisplayName(i, index, prettyId(i.id)),
+        sub: i.number != null ? `${i.id} · #${i.number}` : i.id,
+        icon: <BallIcon ball={i.id} size={24} />,
+      }));
+  }, [catalog, index]);
 }
 
 /** `allowed` pone primero las habilidades de la especie; con `onlyAllowed` la lista se limita a ellas; `hidden` marca

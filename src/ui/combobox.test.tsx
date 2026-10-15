@@ -37,6 +37,45 @@ describe("ComboBox", () => {
   });
 });
 
+describe("ComboBox: iconos, contenido a la derecha y texto de búsqueda", () => {
+  const opts: ComboOption[] = [
+    { id: "ADAMANT", label: "Firme", icon: <i data-testid="icon-adamant" />, right: <b data-testid="right-adamant">+Atq −AtE</b>, search: "Ataque" },
+    { id: "BOLD", label: "Osada", icon: <i data-testid="icon-bold" />, right: <b data-testid="right-bold">+Def −Atq</b>, search: "Defensa" },
+  ];
+
+  it("el campo cerrado muestra el icono y lo de la derecha de la opción elegida", () => {
+    render(<ComboBox ariaLabel="Naturaleza" value="BOLD" options={opts} onChange={vi.fn()} />);
+    expect(screen.getByTestId("icon-bold")).toBeTruthy();
+    expect(screen.getByTestId("right-bold")).toBeTruthy();
+    expect(screen.queryByTestId("icon-adamant")).toBeNull();
+  });
+
+  it("al abrir, cada fila lleva su contenido a la derecha", () => {
+    render(<ComboBox ariaLabel="Naturaleza" value="BOLD" options={opts} onChange={vi.fn()} />);
+    fireEvent.focus(screen.getByRole("combobox", { name: "Naturaleza" }));
+    const rows = screen.getAllByRole("option");
+    expect(rows).toHaveLength(2);
+    expect(rows[0].textContent).toContain("+Atq −AtE");
+  });
+
+  it("busca por el texto extra (`search`) aunque no se vea", () => {
+    render(<ComboBox ariaLabel="Naturaleza" value="" options={opts} onChange={vi.fn()} />);
+    const input = screen.getByRole("combobox", { name: "Naturaleza" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "defensa" } });
+    const rows = screen.getAllByRole("option");
+    expect(rows[0].textContent).toContain("Osada");
+  });
+
+  it("al escribir otra cosa el icono de la opción elegida se oculta", () => {
+    render(<ComboBox ariaLabel="Naturaleza" value="BOLD" options={opts} onChange={vi.fn()} />);
+    const input = screen.getByRole("combobox", { name: "Naturaleza" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Fir" } });
+    expect(screen.queryByTestId("icon-bold")).toBeNull();
+  });
+});
+
 describe("placeDropdown: el desplegable no se sale de la ventana", () => {
   const view = { width: 1000, height: 700 };
   const field = (top: number, left = 100, width = 200) => ({ left, width, top, bottom: top + 32 });

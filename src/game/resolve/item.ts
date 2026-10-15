@@ -1,5 +1,5 @@
 import { lookup } from "../assetmap";
-import { pad3 } from "../normalize";
+import { pad2, pad3 } from "../normalize";
 import { firstHit, resolved, type Resolved, type ResolveCtx } from "./common";
 
 export interface ItemKey {
@@ -43,7 +43,7 @@ export function resolveItemIcon(ctx: ResolveCtx, k: ItemKey): Resolved | null {
 
 /** Icono de la Poké Ball en las pantallas de resumen (icon_ball_<ID>); si el juego
  *  no lo trae, el icono de objeto de esa ball. */
-export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number, number?: number | null): Resolved | null {
+export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number, number?: number | null, ballIndex?: number | null): Resolved | null {
   const { index, layout } = ctx;
   const id = String(ballId).toLowerCase();
   const mapped = lookup(ctx.map, "balls", String(ballId));
@@ -51,6 +51,11 @@ export function resolveBallIcon(ctx: ResolveCtx, ballId: string | number, number
   if (mappedEntry) return resolved(mappedEntry, "map");
   const hit = firstHit(index, layout.summary, [`icon_ball_${id}`]);
   if (hit) return resolved(hit.entry, "exact");
+  // Bases <= v18: summaryballNN.png, con NN = indice de la bola en $BallTypes.
+  if (ballIndex != null && ballIndex >= 0) {
+    const legacy = firstHit(index, [...layout.summary, "graphics/pictures", "graphics/ui"], [`summaryball${pad2(ballIndex)}`]);
+    if (legacy) return resolved(legacy.entry, "fallback");
+  }
   return resolveItemIcon(ctx, { id: ballId, number });
 }
 

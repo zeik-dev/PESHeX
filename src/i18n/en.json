@@ -410,7 +410,8 @@
       "special": "Special",
       "status": "Status",
       "power": "Pow. {{n}}",
-      "accuracy": "Acc. {{n}}"
+      "accuracy": "Acc. {{n}}",
+      "ppShort": "PP {{n}}"
     },
     "info": {
       "owner": "Original trainer",
@@ -430,7 +431,7 @@
     "natureMint": "Mint nature",
     "natureMintNone": "No mint: stats use the original nature.",
     "natureMintOption": "— No mint —",
-    "natureEffective": "Effective nature for stats: {{nature}}",
+    "natureEffective": "Effective nature for stats: <b>{{nature}}</b>",
     "onlySpeciesAbilities": "Show only the species' abilities",
     "onlySpeciesMoves": "Show only moves the species learns",
     "abilityHidden": "hidden",
@@ -440,7 +441,27 @@
     "totalStatsHint": "Computed with the game's formula (base + IV + EV + level + effective nature).",
     "totalStatsSavedOnly": "Values saved in the file (link the game folder to compute them).",
     "totalStatsSaved": "saved: {{n}}",
-    "totalStatsDiff": "The value saved in the file differs from the computed one; \"Recalculate stats\" makes them match."
+    "totalStatsDiff": "The value saved in the file differs from the computed one; \"Recalculate stats\" makes them match.",
+    "cardView": {
+      "label": "Card statistics",
+      "base": "Base stats in this game",
+      "current": "Current stats"
+    },
+    "currentStats": "Current stats",
+    "statParts": {
+      "base": "Base and level",
+      "iv": "IV",
+      "ev": "EV",
+      "nature": "Nature"
+    },
+    "statTip": {
+      "base": "Base and level: +{{value}} (base {{base}}, level {{level}})",
+      "iv": "IV: +{{value}} (IV {{iv}})",
+      "ev": "EV: +{{value}} (EV {{ev}})",
+      "natureUp": "{{nature}} nature: +{{value}} (+10% {{stat}})",
+      "natureDown": "{{nature}} nature: −{{value}} (−10% {{stat}}); the striped part is not counted in the total",
+      "total": "{{stat}} total: {{value}}"
+    }
   },
   "stat": {
     "HP": "HP",
@@ -448,7 +469,15 @@
     "DEFENSE": "Defense",
     "SPECIAL_ATTACK": "Sp. Atk",
     "SPECIAL_DEFENSE": "Sp. Def",
-    "SPEED": "Speed"
+    "SPEED": "Speed",
+    "short": {
+      "HP": "HP",
+      "ATTACK": "Atk",
+      "DEFENSE": "Def",
+      "SPECIAL_ATTACK": "SpA",
+      "SPECIAL_DEFENSE": "SpD",
+      "SPEED": "Spe"
+    }
   },
   "gender": {
     "0": "Male",
@@ -1321,5 +1350,8 @@
     "manual_one": "{{count}} manual assignment",
     "manual_other": "{{count}} manual assignments",
     "remove": "Remove assignment"
+  },
+  "type": {
+    "unknown": "Unknown type"
   }
 }

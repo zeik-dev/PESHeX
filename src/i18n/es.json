@@ -412,7 +412,8 @@
       "special": "Especial",
       "status": "Estado",
       "power": "Pot. {{n}}",
-      "accuracy": "Prec. {{n}}"
+      "accuracy": "Prec. {{n}}",
+      "ppShort": "PP {{n}}"
     },
     "info": {
       "owner": "Entrenador original",
@@ -432,7 +433,7 @@
     "natureMint": "Naturaleza por menta",
     "natureMintNone": "Sin menta: los stats usan la naturaleza original.",
     "natureMintOption": "— Sin menta —",
-    "natureEffective": "Naturaleza efectiva para las estadísticas: {{nature}}",
+    "natureEffective": "Naturaleza efectiva para las estadísticas: <b>{{nature}}</b>",
     "onlySpeciesAbilities": "Mostrar solo habilidades de la Especie",
     "onlySpeciesMoves": "Mostrar solo movimientos aprendidos por la especie",
     "abilityHidden": "oculta",
@@ -442,7 +443,27 @@
     "totalStatsHint": "Calculadas con la fórmula del juego (base + IV + EV + nivel + naturaleza efectiva).",
     "totalStatsSavedOnly": "Valores guardados en la partida (vincula la carpeta del juego para calcularlos).",
     "totalStatsSaved": "guardado: {{n}}",
-    "totalStatsDiff": "El valor guardado en la partida es distinto del calculado; «Recalcular estadísticas» los iguala."
+    "totalStatsDiff": "El valor guardado en la partida es distinto del calculado; «Recalcular estadísticas» los iguala.",
+    "cardView": {
+      "label": "Estadísticas de la ficha",
+      "base": "Estadísticas base en este juego",
+      "current": "Estadísticas actuales"
+    },
+    "currentStats": "Estadísticas actuales",
+    "statParts": {
+      "base": "Base y nivel",
+      "iv": "IV",
+      "ev": "EV",
+      "nature": "Naturaleza"
+    },
+    "statTip": {
+      "base": "Base y nivel: +{{value}} (base {{base}}, nivel {{level}})",
+      "iv": "IV: +{{value}} (IV {{iv}})",
+      "ev": "EV: +{{value}} (EV {{ev}})",
+      "natureUp": "Naturaleza {{nature}}: +{{value}} (+10 % {{stat}})",
+      "natureDown": "Naturaleza {{nature}}: −{{value}} (−10 % {{stat}}); el recorte rayado no cuenta en el total",
+      "total": "{{stat}} total: {{value}}"
+    }
   },
   "stat": {
     "HP": "PS",
@@ -450,7 +471,15 @@
     "DEFENSE": "Defensa",
     "SPECIAL_ATTACK": "At. Esp.",
     "SPECIAL_DEFENSE": "Def. Esp.",
-    "SPEED": "Velocidad"
+    "SPEED": "Velocidad",
+    "short": {
+      "HP": "PS",
+      "ATTACK": "Atq",
+      "DEFENSE": "Def",
+      "SPECIAL_ATTACK": "AtE",
+      "SPECIAL_DEFENSE": "DfE",
+      "SPEED": "Vel"
+    }
   },
   "gender": {
     "0": "Macho",
@@ -1324,5 +1353,8 @@
     "manual_one": "{{count}} asignación manual",
     "manual_other": "{{count}} asignaciones manuales",
     "remove": "Quitar asignación"
+  },
+  "type": {
+    "unknown": "Tipo desconocido"
   }
 }

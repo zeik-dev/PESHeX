@@ -7,6 +7,7 @@ import type { ResolveCtx } from "./resolve/common";
 import { frameInfo } from "./resolve/common";
 import { itemNameCandidates, resolveBallIcon, resolveHeldItemIcon, resolveItemIcon } from "./resolve/item";
 import { resolveCategorySheet } from "./resolve/category";
+import { resolveTypeSheet } from "./resolve/type";
 import { iconNameCandidates, mapKey, resolvePokemonIcon } from "./resolve/pokemon";
 import type { ScanFile } from "./types";
 
@@ -195,5 +196,42 @@ describe("hoja de categorías de movimiento", () => {
     expect(resolveCategorySheet(ctxOf(MODERN))).toBeNull();
     expect(resolveCategorySheet(ctxOf([["Graphics/Pictures/category.png", 64, 80]]))).toBeNull(); // 80 no se divide en 3
     expect(resolveCategorySheet(ctxOf([["Graphics/Pictures/category.png", 8, 84]]))).toBeNull(); // cuadros más altos que anchos
+  });
+});
+
+describe("resolveTypeSheet", () => {
+  it("encuentra types.png (cuadros de 64x28 apilados) en Pictures (v16-v20) y en UI (v21)", () => {
+    const z = resolveTypeSheet(ctxOf([["Graphics/Pictures/types.png", 64, 672]]));
+    expect(z).toMatchObject({ path: "Graphics/Pictures/types.png", frameW: 64, frameH: 28, rows: 24 });
+    const modern = resolveTypeSheet(ctxOf([["Graphics/UI/types.png", 64, 532], ["Graphics/Pictures/types.png", 64, 672]]));
+    expect(modern?.path).toBe("Graphics/UI/types.png");
+    expect(modern?.rows).toBe(19);
+  });
+
+  it("no confunde otras hojas (pokedexTypes, types_ico) ni imagenes de otra forma", () => {
+    expect(resolveTypeSheet(ctxOf([["Graphics/Pictures/pokedexTypes.png", 96, 608]]))).toBeNull();
+    expect(resolveTypeSheet(ctxOf([["Graphics/Pictures/types_ico.png", 24, 532]]))).toBeNull();
+    expect(resolveTypeSheet(ctxOf([["Graphics/Pictures/types.png", 64, 30]]))).toBeNull(); // un solo cuadro
+    expect(resolveTypeSheet(ctxOf([["Graphics/Pictures/types.png", 64, 100]]))).toBeNull(); // el alto no es multiplo del cuadro
+  });
+});
+
+describe("resolveBallIcon en bases antiguas", () => {
+  const legacy = ctxOf([
+    ["Graphics/Pictures/summaryball00.png", 32, 32],
+    ["Graphics/Pictures/summaryball12.png", 32, 32],
+    ["Graphics/Icons/icon001.png", 128, 64],
+    ["Graphics/Icons/item004.png", 24, 24],
+  ]);
+  it("usa summaryballNN con NN = indice de $BallTypes", () => {
+    expect(resolveBallIcon(legacy, "GREATBALL", 4, 12)?.path).toBe("Graphics/Pictures/summaryball12.png");
+    expect(resolveBallIcon(legacy, "MASTERBALL", 1, 0)?.path).toBe("Graphics/Pictures/summaryball00.png");
+  });
+  it("sin indice o sin ese archivo cae al icono del objeto", () => {
+    expect(resolveBallIcon(legacy, "ULTRABALL", 4, 99)?.path).toBe("Graphics/Icons/item004.png");
+    expect(resolveBallIcon(legacy, "ULTRABALL", 4)?.path).toBe("Graphics/Icons/item004.png");
+  });
+  it("icon_ball_<id> sigue ganando cuando existe", () => {
+    expect(resolveBallIcon(ctxOf(MODERN), "POKEBALL", null, 3)?.path).toBe("Graphics/UI/Summary/icon_ball_POKEBALL.png");
   });
 });

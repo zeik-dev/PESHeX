@@ -5,6 +5,7 @@ import styles from "./ui.module.css";
 import { cx } from "./cx";
 import { hueFromString } from "../lib/format";
 import type { Bucket } from "../api/types";
+import { Tooltip } from "./Tooltip";
 
 /** Marcador de posicion del sprite de un Pokemon/objeto: circulo de color
  *  estable por especie con su inicial. (Con la carpeta del juego se cambiara
@@ -53,6 +54,37 @@ export function StatBar({ value, max, label }: { value: number | null | undefine
   return (
     <div className={styles.bar} role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={v} aria-label={label}>
       <div className={cx(styles.barFill, v > max && styles.barOver)} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+/** Un tramo de `StackedStatBar`: su valor, su color y el globo que lo explica. */
+export interface StatSegment {
+  key: string;
+  value: number;
+  /** Color de relleno (un token del tema). */
+  color: string;
+  tip: ReactNode;
+  /** Tramo «fantasma» (rayado): lo que se resta y no cuenta en el total. */
+  ghost?: boolean;
+}
+
+/** Barra apilada de un stat: un tramo por factor (base, IV, EV, naturaleza), en la misma escala `max` para todos los stats
+ *  de la ficha. Cada tramo tiene su globo al pasar el ratón; el resumen accesible va en `label`. */
+export function StackedStatBar({ segments, max, label }: { segments: StatSegment[]; max: number; label: string }) {
+  const total = segments.filter((s) => !s.ghost).reduce((sum, s) => sum + s.value, 0);
+  return (
+    <div className={styles.stackBar} role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={total} aria-label={label}>
+      {segments
+        .filter((s) => s.value > 0)
+        .map((s) => (
+          <Tooltip
+            key={s.key}
+            content={s.tip}
+            className={cx(styles.stackSeg, s.ghost && styles.stackGhost)}
+            style={{ width: `${Math.min(100, (s.value / max) * 100)}%`, ["--seg" as string]: s.color }}
+          />
+        ))}
     </div>
   );
 }

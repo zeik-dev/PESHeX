@@ -1,14 +1,16 @@
 import { useMemo } from "react";
+import { Trans } from "react-i18next";
 import { PokemonDetail } from "../../api/types";
 import { internalId, speciesEntry } from "../../game/lookup";
 import type { SpeciesDetail } from "../../game/types";
-import { speciesFormId, useAbilityOptions, useItemOptions, useSpeciesOptions } from "../../game/useCatalog";
+import { speciesFormId, useAbilityOptions, useBallOptions, useSpeciesOptions } from "../../game/useCatalog";
 import { NATURE_IDS, STATUS_IDS } from "../../lib/pokemon";
+import { NATURE_EFFECTS } from "../../lib/stats";
 import { useT } from "../../lib/useT";
 import { useEdit } from "../../stores/edit";
 import { useGame } from "../../stores/game";
 import { useHexMode, useSettings } from "../../stores/settings";
-import { Chip, ComboBox, Field, NumberField, SelectField, SliderField, Switch, TextField } from "../../ui";
+import { Chip, ComboBox, Field, GenderIcon, NumberField, SelectField, SliderField, Switch, TextField, type ComboOption } from "../../ui";
 import { ItemPicker } from "../shared/ItemPicker";
 import shared from "../shared/shared.module.css";
 import { usePatch } from "./editorShared";
@@ -25,7 +27,7 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
   const onlyAbilities = useSettings((s) => s.onlySpeciesAbilities);
   const setOnlyAbilities = useSettings((s) => s.setOnlySpeciesAbilities);
   const speciesOptions = useSpeciesOptions();
-  const ballOptions = useItemOptions(3);
+  const ballOptions = useBallOptions();
 
   // Bases <= v18 guardan la habilidad como indice de casilla: solo caben las de la especie.
   const legacy = typeof pk.species?.id === "number";
@@ -35,11 +37,31 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
   const filter = canFilter && (hex || legacy || onlyAbilities);
   const abilityOptions = useAbilityOptions(allowed, filter, species?.hiddenAbilities);
 
+  // Sin carpeta de juego también se sabe qué stat sube y cuál baja cada naturaleza (tabla del motor).
   const natures = useMemo(
-    () => (catalog?.natures.length ? catalog.natures : NATURE_IDS.map((id) => ({ id, up: null, down: null }))),
+    () => (catalog?.natures.length ? catalog.natures : NATURE_IDS.map((id) => ({ id, ...NATURE_EFFECTS[id] }))),
     [catalog],
   );
-  const natureOptions = natures.map((n) => ({ value: n.id as string, label: dynOr("nature", n.id, n.id) }));
+  // Cada naturaleza dice a la derecha qué sube (rojo) y qué baja (azul); el signo y el nombre del stat van siempre escritos.
+  const natureOptions: ComboOption[] = natures.map((n) => ({
+    id: n.id as string,
+    label: dynOr("nature", n.id, n.id),
+    search: [n.up, n.down].filter(Boolean).map((s) => dyn(`stat.${s}`)).join(" "),
+    right: n.up && n.down ? (
+      <span className={styles.natureDelta}>
+        <span className={styles.natureUp}>+{dyn(`stat.short.${n.up}`)}</span>
+        <span className={styles.natureDown}>−{dyn(`stat.short.${n.down}`)}</span>
+      </span>
+    ) : (
+      <span className="muted">{t("pokemon.natureNeutral")}</span>
+    ),
+  }));
+  const mintOptions: ComboOption[] = [{ id: "", label: t("pokemon.natureMintOption") }, ...natureOptions];
+  const genderOptions: ComboOption[] = [0, 1, 2].map((g) => ({
+    id: String(g),
+    label: t(`gender.${g}` as never) as string,
+    icon: <GenderIcon gender={g} />,
+  }));
   const statusOptions = STATUS_IDS.map((s) => ({ value: s as string, label: dynOr("status", s, s) }));
   const natureText = (id: string | null | undefined) => {
     const n = natures.find((x) => x.id === id);
@@ -106,16 +128,15 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
 
         <Field label={t("pokemon.nature")} hint={natureText(pk.nature ? String(pk.nature.id) : null) ?? undefined}>
           {(id) => (
-            <SelectField id={id} value={pk.nature ? String(pk.nature.id) : null} options={natureOptions} disabled={!editable}
-              onChange={(n) => patch({ nature: n })} />
+            <ComboBox id={id} value={pk.nature ? String(pk.nature.id) : null} options={natureOptions} disabled={!editable} limit={Infinity}
+              onChange={(n) => n && patch({ nature: n })} />
           )}
         </Field>
         {pk.capabilities?.natureForStats ? (
           <Field label={t("pokemon.natureMint")} hint={mint ? (natureText(mint) ?? undefined) : t("pokemon.natureMintNone")}>
             {(id) => (
-              <SelectField id={id} value={mint} disabled={!editable}
-                options={[{ value: "", label: t("pokemon.natureMintOption") }, ...natureOptions]}
-                onChange={(n) => patch({ natureForStats: n === "" ? null : n })} />
+              <ComboBox id={id} value={mint} disabled={!editable} options={mintOptions} limit={Infinity}
+                onChange={(n) => n != null && patch({ natureForStats: n === "" ? null : n })} />
             )}
           </Field>
         ) : (
@@ -123,7 +144,7 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
         )}
         {effective && (
           <p className={styles.natureEffective} data-testid="nature-effective">
-            {t("pokemon.natureEffective", { nature: dynOr("nature", effective, effective) })}
+            <Trans i18nKey="pokemon.natureEffective" values={{ nature: dynOr("nature", effective, effective) }} components={{ b: <strong /> }} />
           </p>
         )}
 
@@ -168,9 +189,8 @@ export function GeneralTab({ pk, editable, species }: { pk: PokemonDetail; edita
         </Field>
         <Field label={t("pokemon.gender")}>
           {(id) => (
-            <SelectField id={id} value={pk.gender} disabled={!editable || pk.gender == null}
-              options={[0, 1, 2].map((g) => ({ value: g, label: t(`gender.${g}` as never) as string }))}
-              onChange={(g) => patch({ gender: g })} />
+            <ComboBox id={id} value={pk.gender == null ? null : String(pk.gender)} disabled={!editable || pk.gender == null}
+              options={genderOptions} limit={Infinity} onChange={(g) => g != null && patch({ gender: Number(g) })} />
           )}
         </Field>
         <Field label={t("pokemon.status")}>
