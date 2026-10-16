@@ -44,7 +44,7 @@ beforeEach(() => {
   vi.useRealTimers();
   resetUpdaterForTests();
   useToasts.setState({ toasts: [] });
-  useSettings.setState({ updateCheckOnStart: true, updateLastCheck: 0, updateSkipped: null });
+  useSettings.setState({ updateCheckOnStart: true, updateSkipped: null });
   useSession.setState({ pendingCount: 0 });
   api.available.mockResolvedValue(true);
   api.lastResult.mockResolvedValue(null);
@@ -77,19 +77,18 @@ describe("actualizador: arranque", () => {
     expect(useToasts.getState().toasts[0]?.text).toContain("disco lleno");
   });
 
-  it("busca sola al iniciar como mucho una vez al dia", async () => {
+  it("busca sola en cada inicio, sin limite diario", async () => {
     vi.useFakeTimers();
     api.check.mockResolvedValue({ status: "upToDate", current: "1.2.0", latest: "1.2.0" });
-    useSettings.setState({ updateLastCheck: Date.now() - 60 * 60 * 1000 }); // hace una hora
-    await useUpdater.getState().init();
-    await vi.advanceTimersByTimeAsync(10_000);
-    expect(api.check).not.toHaveBeenCalled();
-
-    resetUpdaterForTests();
-    useSettings.setState({ updateLastCheck: Date.now() - 25 * 60 * 60 * 1000 }); // hace mas de un dia
     await useUpdater.getState().init();
     await vi.advanceTimersByTimeAsync(10_000);
     expect(api.check).toHaveBeenCalledTimes(1);
+
+    // Otro inicio poco despues (la app se cierra y se vuelve a abrir): vuelve a buscar.
+    resetUpdaterForTests();
+    await useUpdater.getState().init();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(api.check).toHaveBeenCalledTimes(2);
   });
 
   it("no busca sola si el usuario lo desactivo", async () => {
@@ -113,7 +112,6 @@ describe("actualizador: busqueda", () => {
     expect(s.phase).toBe("available");
     expect(s.release?.version).toBe("1.2.0");
     expect(s.dialogOpen).toBe(true);
-    expect(useSettings.getState().updateLastCheck).toBeGreaterThan(0);
   });
 
   it("una version omitida no abre el dialogo sola, pero si al buscar a mano", async () => {
@@ -271,5 +269,61 @@ describe("actualizador: descarga e instalacion", () => {
     expect(useUpdater.getState().phase).toBe("ready");
     await useUpdater.getState().apply(true);
     expect(api.apply).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("actualizador: aviso de la busqueda al iniciar", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    useSettings.setState({ updateCheckOnStart: false }); // las busquedas las lanza cada prueba
+    await useUpdater.getState().init();
+  });
+
+  it("buscando: el aviso se ve mientras dura la busqueda automatica", async () => {
+    let done: (r: CheckResult) => void = () => undefined;
+    api.check.mockReturnValue(new Promise<CheckResult>((resolve) => (done = resolve)));
+    const pending = useUpdater.getState().check(false);
+    expect(useUpdater.getState().notice).toEqual({ kind: "checking" });
+    done({ status: "upToDate", current: "1.2.0", latest: "1.2.0" });
+    await pending;
+  });
+
+  it("al dia: avisa y se retira solo", async () => {
+    api.check.mockResolvedValue({ status: "upToDate", current: "1.2.0", latest: "1.2.0" });
+    await useUpdater.getState().check(false);
+    expect(useUpdater.getState().notice).toEqual({ kind: "upToDate", version: "1.2.0" });
+    await vi.advanceTimersByTimeAsync(4100);
+    expect(useUpdater.getState().notice).toBeNull();
+  });
+
+  it("error: avisa con el motivo y se queda mas tiempo", async () => {
+    api.check.mockResolvedValue({ status: "error", code: "network", message: "sin red" });
+    await useUpdater.getState().check(false);
+    expect(useUpdater.getState().notice).toEqual({ kind: "error", code: "network", message: "sin red" });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(useUpdater.getState().notice).not.toBeNull();
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(useUpdater.getState().notice).toBeNull();
+  });
+
+  it("version nueva: no deja aviso (el boton de actualizacion toma el relevo)", async () => {
+    api.check.mockResolvedValue(available());
+    await useUpdater.getState().check(false);
+    expect(useUpdater.getState().notice).toBeNull();
+    expect(useUpdater.getState().phase).toBe("available");
+  });
+
+  it("la busqueda a mano no usa el aviso de la pantalla de inicio", async () => {
+    api.check.mockResolvedValue({ status: "upToDate", current: "1.2.0", latest: "1.2.0" });
+    await useUpdater.getState().check(true);
+    expect(useUpdater.getState().notice).toBeNull();
+    expect(useUpdater.getState().lastCheck).toEqual({ status: "upToDate", version: "1.2.0" });
+  });
+
+  it("dismissNotice lo quita al momento", async () => {
+    api.check.mockResolvedValue({ status: "upToDate", current: "1.2.0", latest: "1.2.0" });
+    await useUpdater.getState().check(false);
+    useUpdater.getState().dismissNotice();
+    expect(useUpdater.getState().notice).toBeNull();
   });
 });

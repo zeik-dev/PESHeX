@@ -203,6 +203,30 @@ test("instalar con cambios sin guardar pregunta antes", async ({ page }) => {
   expect(env.bridge.updater.calls.at(-1)).toBe("apply");
 });
 
+test("la busqueda al iniciar se ve en la pantalla de inicio: buscando, al dia y se retira sola", async ({ page }) => {
+  env = await setup(page);
+  env.bridge.updater.available = true;
+  env.bridge.updater.check = { status: "upToDate", current: "1.0.0", latest: "1.0.0" };
+  await silenceGamePrompt(page, null, "es");
+  await page.goto("/");
+  const status = page.getByTestId("update-status");
+  await expect(status).toHaveText("Estás al día", { timeout: 15_000 }); // sale unos segundos despues de arrancar
+  await expect(status).toHaveAttribute("data-kind", "upToDate");
+  await expect(status).toHaveCount(0, { timeout: 10_000 }); // se retira sola
+  expect(env.bridge.updater.calls.filter((c) => c === "check")).toHaveLength(1);
+});
+
+test("si la busqueda al iniciar falla, el inicio lo avisa con el motivo", async ({ page }) => {
+  env = await setup(page);
+  env.bridge.updater.available = true;
+  env.bridge.updater.check = { status: "error", code: "network", message: "sin red" };
+  await silenceGamePrompt(page, null, "es");
+  await page.goto("/");
+  const status = page.getByTestId("update-status");
+  await expect(status).toHaveText("No se pudo buscar actualizaciones", { timeout: 15_000 });
+  await expect(status).toHaveAttribute("title", /sin red/);
+});
+
 test("Ajustes: buscar a mano dice si estas al dia o por que no se pudo", async ({ page }) => {
   env = await setup(page);
   env.bridge.updater.available = true;

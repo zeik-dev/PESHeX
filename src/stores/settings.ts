@@ -40,10 +40,8 @@ interface SettingsState {
   noGamePrompt: Record<string, true>;
   /** Última pestaña elegida en la pantalla de inicio; `null` = automática (recientes si las hay, si no, juegos). */
   openTab: OpenTab | null;
-  /** Buscar actualizaciones al iniciar (como mucho una vez al dia). */
+  /** Buscar actualizaciones al iniciar. */
   updateCheckOnStart: boolean;
-  /** Ultima busqueda de actualizaciones (ms desde 1970; 0 = nunca). */
-  updateLastCheck: number;
   /** Version que el usuario eligio omitir (no se vuelve a avisar de ella). */
   updateSkipped: string | null;
   setLang: (lang: LangPref) => void;
@@ -66,7 +64,6 @@ interface SettingsState {
   setNoGamePrompt: (savePath: string, dontAsk: boolean) => void;
   setOpenTab: (tab: OpenTab | null) => void;
   setUpdateCheckOnStart: (v: boolean) => void;
-  setUpdateLastCheck: (at: number) => void;
   setUpdateSkipped: (version: string | null) => void;
 }
 
@@ -124,7 +121,6 @@ export const useSettings = create<SettingsState>()(
       noGamePrompt: {},
       openTab: null,
       updateCheckOnStart: true,
-      updateLastCheck: 0,
       updateSkipped: null,
       setLang: (lang) => set({ lang }),
       setTheme: (theme) => set({ theme }),
@@ -140,7 +136,6 @@ export const useSettings = create<SettingsState>()(
       setMode: (mode) => set({ mode }),
       setOpenTab: (openTab) => set({ openTab }),
       setUpdateCheckOnStart: (updateCheckOnStart) => set({ updateCheckOnStart }),
-      setUpdateLastCheck: (updateLastCheck) => set({ updateLastCheck }),
       setUpdateSkipped: (updateSkipped) => set({ updateSkipped }),
       pushRecent: (path) =>
         set((s) => ({ recent: [path, ...s.recent.filter((p) => p !== path)].slice(0, 6) })),

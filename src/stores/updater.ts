@@ -23,6 +23,12 @@ export interface UpdateFailure {
 /** Resultado de la ultima busqueda (para la tarjeta de Ajustes). */
 export type LastCheck = { status: "upToDate"; version: string } | { status: "error"; code: string; message: string } | null;
 
+/** Estado visible de la busqueda automatica al iniciar (el chip de la pantalla de inicio); `null` = nada que mostrar. */
+export type UpdateNotice =
+  | { kind: "checking" }
+  | { kind: "upToDate"; version: string }
+  | { kind: "error"; code: string; message: string };
+
 interface UpdaterState {
   /** Hay actualizador junto a la app (solo en la version instalada de Windows). Hasta saberlo, `null`. */
   supported: boolean | null;
@@ -34,6 +40,8 @@ interface UpdaterState {
   /** Se pidio instalar con cambios sin guardar: se pregunta antes. */
   confirmUnsaved: boolean;
   lastCheck: LastCheck;
+  /** Feedback de la busqueda automatica al iniciar; se borra solo unos segundos despues del resultado. */
+  notice: UpdateNotice | null;
   init: () => Promise<void>;
   /** `manual`: lo pidio el usuario (siempre abre el dialogo si hay version nueva, aunque la haya omitido). */
   check: (manual: boolean) => Promise<void>;
@@ -50,9 +58,11 @@ interface UpdaterState {
   skip: () => void;
   /** Acepta el fallo mostrado y vuelve a ofrecer la descarga. */
   clearFailure: () => void;
+  dismissNotice: () => void;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+/** Cuanto se queda en pantalla el resultado de la busqueda automatica (el error, mas, para poder leerlo). */
+const NOTICE_MS = { upToDate: 4000, error: 8000 };
 const NO_PROGRESS: UpdateProgress = { downloaded: 0, total: 0, bytesPerSec: 0 };
 /** Fases en las que el actualizador esta trabajando (no se puede lanzar otra busqueda ni descarga). */
 const BUSY: UpdatePhase[] = ["checking", "downloading", "paused", "verifying", "extracting", "ready", "applying"];
@@ -65,6 +75,7 @@ function failureOf(e: unknown): UpdateFailure {
 }
 
 let started = false;
+let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 
 export const useUpdater = create<UpdaterState>((set, get) => {
   /** Mensajes del actualizador. */
@@ -90,6 +101,15 @@ export const useUpdater = create<UpdaterState>((set, get) => {
     }
   }
 
+  /** Muestra (o quita) el aviso de la busqueda automatica; los resultados se retiran solos. */
+  function setNotice(notice: UpdateNotice | null) {
+    clearTimeout(noticeTimer);
+    set({ notice });
+    if (notice && notice.kind !== "checking") {
+      noticeTimer = setTimeout(() => set({ notice: null }), NOTICE_MS[notice.kind]);
+    }
+  }
+
   return {
     supported: null,
     phase: "idle",
@@ -99,6 +119,7 @@ export const useUpdater = create<UpdaterState>((set, get) => {
     dialogOpen: false,
     confirmUnsaved: false,
     lastCheck: null,
+    notice: null,
 
     async init() {
       if (started) return;
@@ -118,7 +139,7 @@ export const useUpdater = create<UpdaterState>((set, get) => {
         );
       }
       const st = useSettings.getState();
-      if (st.updateCheckOnStart && Date.now() - st.updateLastCheck > DAY_MS) {
+      if (st.updateCheckOnStart) {
         // Un poco despues de arrancar, para no competir con la carga de la partida.
         setTimeout(() => void get().check(false), 4000);
       }
@@ -129,20 +150,28 @@ export const useUpdater = create<UpdaterState>((set, get) => {
       if (isBusy(get().phase)) return;
       const prev = get().phase;
       set({ phase: "checking", lastCheck: manual ? null : get().lastCheck });
+      // La busqueda automatica avisa en la pantalla de inicio; la manual ya se ve en Ajustes.
+      setNotice(manual ? null : { kind: "checking" });
       let res;
       try {
         res = await updaterApi.check();
       } catch (e) {
         res = { status: "error" as const, ...failureOf(e) };
       }
-      if (res.status === "unavailable") return set({ supported: false, phase: "idle" });
-      useSettings.getState().setUpdateLastCheck(Date.now());
+      if (res.status === "unavailable") {
+        setNotice(null);
+        return set({ supported: false, phase: "idle" });
+      }
       if (res.status === "available") {
+        // El boton de actualizacion de la pantalla de inicio toma el relevo del aviso.
+        setNotice(null);
         const skipped = useSettings.getState().updateSkipped === res.release.version;
         set({ release: res.release, phase: "available", lastCheck: null, progress: NO_PROGRESS, error: null, dialogOpen: manual || !skipped });
       } else if (res.status === "upToDate") {
+        setNotice(manual ? null : { kind: "upToDate", version: res.current });
         set({ phase: prev === "available" ? "available" : "idle", lastCheck: { status: "upToDate", version: res.current } });
       } else {
+        setNotice(manual ? null : { kind: "error", code: res.code, message: res.message });
         set({ phase: prev === "available" ? "available" : "idle", lastCheck: { status: "error", code: res.code, message: res.message } });
       }
     },
@@ -190,11 +219,13 @@ export const useUpdater = create<UpdaterState>((set, get) => {
     },
 
     clearFailure: () => set({ error: null, phase: get().release ? "available" : "idle", progress: NO_PROGRESS }),
+    dismissNotice: () => setNotice(null),
   };
 });
 
 /** Solo para las pruebas: permite volver a inicializar el store. */
 export function resetUpdaterForTests() {
   started = false;
-  useUpdater.setState({ supported: null, phase: "idle", release: null, progress: NO_PROGRESS, error: null, dialogOpen: false, confirmUnsaved: false, lastCheck: null });
+  clearTimeout(noticeTimer);
+  useUpdater.setState({ supported: null, phase: "idle", release: null, progress: NO_PROGRESS, error: null, dialogOpen: false, confirmUnsaved: false, lastCheck: null, notice: null });
 }

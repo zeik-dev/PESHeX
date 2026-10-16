@@ -7,6 +7,7 @@ import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
 import { GameLibrary } from "../features/games/GameLibrary";
 import { UpdateBadge } from "../features/updater/UpdateBadge";
+import { UpdateStatus } from "../features/updater/UpdateStatus";
 import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
 import { useSettings, type OpenTab } from "../stores/settings";
@@ -74,6 +75,7 @@ export function OpenScreen() {
   return (
     <div className={styles.openPage}>
       <div className={styles.openTools}>
+        <UpdateStatus />
         <UpdateBadge />
         <LangSwitch />
         <ThemeToggle />
