@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useEdit } from "../stores/edit";
 import { useGame } from "../stores/game";
 import { useGames } from "../stores/games";
+import { useSaveSync } from "../stores/saveSync";
 import { useSession } from "../stores/session";
 import { useUpdater } from "../stores/updater";
 import { useUi } from "../stores/ui";
@@ -11,6 +12,31 @@ import { FlagList } from "../features/legality/FlagList";
 import { FirstRunWizard } from "../features/settings/FirstRunWizard";
 import { GameFolderPrompt } from "../features/settings/GameFolderPrompt";
 import { UpdateDialog } from "../features/updater/UpdateDialog";
+
+/** El save cambio en el disco (lo guardo el juego) y hay cambios sin guardar en PESHeX: recargar o mantenerlos. */
+function SaveChangedDialog() {
+  const { t } = useTranslation();
+  const filePath = useSession((s) => s.filePath);
+  const conflict = useSaveSync((s) => s.conflict);
+  const reloading = useSaveSync((s) => s.reloading);
+  const reload = useSaveSync((s) => s.reload);
+  const keepMine = useSaveSync((s) => s.keepMine);
+  return (
+    <Modal
+      open={conflict && !!filePath}
+      title={t("saveSync.conflictTitle")}
+      onClose={keepMine}
+      footer={
+        <>
+          <Button onClick={keepMine}>{t("saveSync.keep")}</Button>
+          <Button variant="danger" disabled={reloading} onClick={() => void reload()}>{t("saveSync.reload")}</Button>
+        </>
+      }
+    >
+      <p>{t("saveSync.conflictBody")}</p>
+    </Modal>
+  );
+}
 
 /** Aviso previo a activar HeX: depende de la carpeta del juego y puede equivocarse en algunos fangames. */
 function HexWarning() {
@@ -80,7 +106,8 @@ export function Hosts() {
   // Biblioteca «Mis juegos»: se carga al arrancar (y escucha el progreso de «Precargar»).
   useEffect(() => {
     void useGames.getState().init();
-    void useUpdater.getState().init(); // actualizaciones: ¿hay actualizador?, resultado del ultimo reemplazo y busqueda diaria
+    void useUpdater.getState().init(); // actualizaciones: ¿hay actualizador?, resultado del ultimo reemplazo y busqueda al iniciar
+    void useSaveSync.getState().init(); // el save abierto cambio en el disco (lo guardo el juego): recarga en caliente
   }, []);
 
   return (
@@ -89,6 +116,7 @@ export function Hosts() {
       <FirstRunWizard />
       <GameFolderPrompt />
       <UpdateDialog />
+      <SaveChangedDialog />
       <Modal
         open={!!rejected}
         title={rejected?.where === "save" ? t("mode.rejectedSaveTitle") : t("mode.rejectedTitle")}

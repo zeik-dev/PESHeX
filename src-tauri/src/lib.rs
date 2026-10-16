@@ -82,6 +82,7 @@ pub fn run() {
             commands::check_file,
             commands::open_save,
             commands::close_save,
+            commands::reload_save,
             commands::driver_call,
             game::scan_game_folder,
             game::forget_game_folder,

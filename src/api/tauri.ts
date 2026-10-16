@@ -54,3 +54,25 @@ export async function closeSave(): Promise<void> {
     throw toApiError(e);
   }
 }
+
+/** Vuelve a leer del disco el save abierto (lo guardo otro programa, p. ej. el juego). La sesion del motor sigue (conserva la
+ *  carpeta del juego y el modo) y se pierden los cambios sin guardar; si el archivo esta a medio escribir, rechaza y todo queda
+ *  como estaba. */
+export async function reloadSave(): Promise<OpenResult> {
+  try {
+    return await invoke<OpenResult>("reload_save");
+  } catch (e) {
+    throw toApiError(e);
+  }
+}
+
+/** Aviso de Rust: otro programa reescribio el save abierto (`path`). Devuelve la funcion para dejar de escuchar (no hace nada
+ *  fuera de Tauri). */
+export async function onSaveChanged(cb: (e: { path: string }) => void): Promise<() => void> {
+  try {
+    const { listen } = await import("@tauri-apps/api/event");
+    return await listen<{ path: string }>("save://changed", (e) => cb(e.payload));
+  } catch {
+    return () => undefined;
+  }
+}

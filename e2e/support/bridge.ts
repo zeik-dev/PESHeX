@@ -109,6 +109,11 @@ export class DriverBridge {
         const res = await this.send("open", { path: args.path, autodetect: false });
         return this.wrap(res);
       }
+      case "reload_save": {
+        // Rust: vuelve a leer el save del disco sin cerrar el driver (conserva la carpeta del juego y el modo)
+        if (this.dead) return { error: { kind: "NoSessionOpen", message: "No hay ningun archivo abierto. Abre un archivo primero.", params: null, fatal: false } };
+        return this.wrap(await this.send("reload", {}));
+      }
       case "close_save":
         await this.send("close");
         return { value: null };

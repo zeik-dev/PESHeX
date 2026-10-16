@@ -40,6 +40,8 @@ interface SettingsState {
   noGamePrompt: Record<string, true>;
   /** Última pestaña elegida en la pantalla de inicio; `null` = automática (recientes si las hay, si no, juegos). */
   openTab: OpenTab | null;
+  /** Recargar el save abierto cuando otro programa (el juego) lo reescribe. */
+  autoReload: boolean;
   /** Buscar actualizaciones al iniciar. */
   updateCheckOnStart: boolean;
   /** Version que el usuario eligio omitir (no se vuelve a avisar de ella). */
@@ -63,6 +65,7 @@ interface SettingsState {
   forgetGameFor: (savePath: string) => void;
   setNoGamePrompt: (savePath: string, dontAsk: boolean) => void;
   setOpenTab: (tab: OpenTab | null) => void;
+  setAutoReload: (v: boolean) => void;
   setUpdateCheckOnStart: (v: boolean) => void;
   setUpdateSkipped: (version: string | null) => void;
 }
@@ -120,6 +123,7 @@ export const useSettings = create<SettingsState>()(
       recentGames: [],
       noGamePrompt: {},
       openTab: null,
+      autoReload: true,
       updateCheckOnStart: true,
       updateSkipped: null,
       setLang: (lang) => set({ lang }),
@@ -135,6 +139,7 @@ export const useSettings = create<SettingsState>()(
       setOnlySpeciesMoves: (onlySpeciesMoves) => set({ onlySpeciesMoves }),
       setMode: (mode) => set({ mode }),
       setOpenTab: (openTab) => set({ openTab }),
+      setAutoReload: (autoReload) => set({ autoReload }),
       setUpdateCheckOnStart: (updateCheckOnStart) => set({ updateCheckOnStart }),
       setUpdateSkipped: (updateSkipped) => set({ updateSkipped }),
       pushRecent: (path) =>

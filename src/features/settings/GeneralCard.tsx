@@ -47,6 +47,10 @@ export function GeneralCard() {
         <Switch checked={s.backup} onChange={s.setBackup} label={t("settings.backup")} />
         {t("settings.backup")}
       </label>
+      <label style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+        <Switch checked={s.autoReload} onChange={s.setAutoReload} label={t("settings.autoReload")} />
+        {t("settings.autoReload")}
+      </label>
     </Card>
   );
 }

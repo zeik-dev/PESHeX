@@ -33,8 +33,10 @@ function confClass(c: string | null | undefined): string {
 export function Advanced() {
   const { t } = useT();
   const filePath = useSession((s) => s.filePath);
+  // Si el save se recarga del disco, el indice de campos se reconstruye (no se usa `revision`: sube con cada edicion).
+  const reloads = useSession((s) => s.reloads);
   const [tab, setTab] = useState<Tab>("fields");
-  const index = useQuery({ queryKey: ["index", filePath], queryFn: advanced.buildIndex, enabled: !!filePath, staleTime: Infinity });
+  const index = useQuery({ queryKey: ["index", filePath, reloads], queryFn: advanced.buildIndex, enabled: !!filePath, staleTime: Infinity });
 
   return (
     <div>

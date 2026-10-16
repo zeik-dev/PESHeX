@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Mutex as StdMutex;
 
+use peshex_core::watch::SaveWatcher;
 use rxdriver::DriverSession;
 use tokio::sync::Mutex;
 
@@ -14,4 +15,6 @@ pub struct AppState {
     /// Raiz de la carpeta del juego vinculada (la fija `scan_game_folder`);
     /// `read_game_file` solo lee dentro de ella.
     pub game_root: StdMutex<Option<PathBuf>>,
+    /// Vigila el save abierto por si otro programa (el juego) lo reescribe.
+    pub watcher: SaveWatcher,
 }

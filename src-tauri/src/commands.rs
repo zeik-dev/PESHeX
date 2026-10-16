@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use peshex_core::watch::stamp;
 use rxdriver::{DriverCallError, DriverErrorDto, DriverSession};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::state::AppState;
 
@@ -82,6 +83,21 @@ const NO_SESSION: &str = "No hay ningun archivo abierto. Abre un archivo primero
 /// de atras (el Mutex y el proceso hijo los gestiona este modulo).
 const LIFECYCLE_COMMANDS: &[&str] = &["open", "close", "shutdown", "ping", "check"];
 
+/// Evento hacia la interfaz con `{ path }`: otro programa reescribio el save abierto.
+const SAVE_CHANGED_EVENT: &str = "save://changed";
+
+/// Unicas ordenes que escriben el archivo del save: mientras duran, la vigilancia no mira (ver `peshex_core::watch`).
+const SAVE_WRITERS: &[&str] = &["save", "restore_backup"];
+
+/// ¿La respuesta de una orden de `SAVE_WRITERS` dice que SI escribio el archivo?
+fn wrote_save(cmd: &str, data: &Value) -> bool {
+    match cmd {
+        "save" => data.get("applied").and_then(Value::as_bool).unwrap_or(false),
+        "restore_backup" => data.get("restored").is_some(),
+        _ => false,
+    }
+}
+
 pub(crate) async fn spawn_session(app: &AppHandle) -> Result<DriverSession, DriverErrorDto> {
     let (ruby_bin, driver_script) = resolve_ruby_paths(app)?;
     DriverSession::spawn(&ruby_bin, &driver_script)
@@ -118,6 +134,9 @@ pub async fn open_save(
     if let Some(mut old) = guard.take() {
         old.shutdown().await;
     }
+    state.watcher.stop();
+    // La huella se toma ANTES de que Ruby lea el archivo: si el juego guarda mientras se abre, el siguiente sondeo lo ve.
+    let baseline = stamp(std::path::Path::new(&path));
 
     let mut session = spawn_session(&app).await?;
     let params = json!({
@@ -129,6 +148,11 @@ pub async fn open_save(
     match session.call("open", params).await {
         Ok(data) => {
             *guard = Some(session);
+            // Rust avisa a la interfaz de que otro programa (el juego) reescribio el save abierto.
+            let handle = app.clone();
+            state.watcher.start(PathBuf::from(&path), baseline, move |p| {
+                let _ = handle.emit(SAVE_CHANGED_EVENT, json!({ "path": p }));
+            });
             Ok(data)
         }
         Err(e) => {
@@ -141,10 +165,32 @@ pub async fn open_save(
 #[tauri::command]
 pub async fn close_save(state: State<'_, AppState>) -> Result<(), DriverErrorDto> {
     let mut guard = state.driver.lock().await;
+    state.watcher.stop();
     if let Some(mut session) = guard.take() {
         session.shutdown().await;
     }
     Ok(())
+}
+
+/// Vuelve a leer el save abierto del disco (lo guardo otro programa, p. ej. el juego) sin cerrar el proceso Ruby: se
+/// conservan la carpeta del juego vinculada y el modo, y se pierden los cambios sin guardar. Si el archivo esta a medio
+/// escribir, el driver responde con error y la sesion queda como estaba (a diferencia de `open_save`, que cierra la anterior
+/// antes de saber si el archivo se puede leer).
+#[tauri::command]
+pub async fn reload_save(state: State<'_, AppState>) -> Result<Value, DriverErrorDto> {
+    let mut guard = state.driver.lock().await;
+    let session = guard
+        .as_mut()
+        .ok_or_else(|| DriverErrorDto::new(NO_SESSION_KIND, NO_SESSION))?;
+    // Igual que al abrir: la huella de antes de leer, para no tragarse un guardado que ocurra durante la lectura.
+    let before = state.watcher.path().and_then(|p| stamp(&p));
+    match session.call("reload", json!({})).await {
+        Ok(v) => {
+            state.watcher.set_baseline(before);
+            Ok(v)
+        }
+        Err(e) => Err(finish(&mut guard, e)),
+    }
 }
 
 /// Puerta unica hacia el driver Ruby: el frontend manda el nombre del comando
@@ -167,7 +213,17 @@ pub async fn driver_call(
     let session = guard
         .as_mut()
         .ok_or_else(|| DriverErrorDto::new(NO_SESSION_KIND, NO_SESSION))?;
-    match session.call(&cmd, params.unwrap_or_else(|| json!({}))).await {
+    // Una escritura propia no es un cambio ajeno: la vigilancia no mira mientras dura (el lock del driver sigue tomado, asi
+    // que nada mas puede tocar la sesion) y despues anota como referencia la huella que dejo el guardado.
+    let own_write = SAVE_WRITERS.contains(&cmd.as_str());
+    if own_write {
+        state.watcher.pause();
+    }
+    let result = session.call(&cmd, params.unwrap_or_else(|| json!({}))).await;
+    if own_write {
+        state.watcher.resume(matches!(&result, Ok(v) if wrote_save(&cmd, v)));
+    }
+    match result {
         Ok(v) => Ok(v),
         Err(e) => Err(finish(&mut guard, e)),
     }

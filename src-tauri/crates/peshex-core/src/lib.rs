@@ -4,12 +4,14 @@
 //! * [`logfile`]: el registro de diagnostico (`updater.log`), que nunca falla y se recorta solo.
 //! * [`registry`]: la biblioteca de juegos registrados (`games.json`).
 //! * [`savescan`]: donde guarda las partidas un juego y que archivos son partidas (nunca las copias `.bak`).
+//! * [`watch`]: detectar que otro programa reescribio el save abierto (huella del archivo y espera a que deje de cambiar).
 //! * [`winstate`]: estado de la ventana (maximizada, monitor, tamano) y su colocacion centrada al arrancar.
 
 pub mod fsutil;
 pub mod logfile;
 pub mod registry;
 pub mod savescan;
+pub mod watch;
 pub mod winstate;
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import i18n from "../i18n";
-import { onRevision, openSave, closeSave, toApiError } from "../api/tauri";
+import { onRevision, openSave, closeSave, reloadSave, toApiError } from "../api/tauri";
 import { gameApi } from "../api/game";
 import { semantic } from "../api/semantic";
 import type { ApiError, Mode, OpenResult, Profile, RoundtripResult } from "../api/types";
@@ -8,6 +8,7 @@ import { errorText } from "../lib/errors";
 import { fileName } from "../lib/format";
 import { useEdit } from "./edit";
 import { useGame } from "./game";
+import { usePc } from "./pc";
 import { useSettings } from "./settings";
 import { useToasts } from "./toasts";
 import { useUi } from "./ui";
@@ -28,6 +29,8 @@ interface SessionState {
   openError: ApiError | null;
   roundtrip: RoundtripResult | null;
   revision: number;
+  /** Cuantas veces se ha recargado el save desde el disco desde que se abrio (para invalidar lo que no depende de `revision`). */
+  reloads: number;
   pendingCount: number;
   redoCount: number;
   saving: boolean;
@@ -39,6 +42,8 @@ interface SessionState {
   editorRef: string | null;
 
   open: (path: string) => Promise<void>;
+  /** Vuelve a leer del disco el save abierto (otro programa lo reescribio). Rechaza si no se pudo: la sesion queda como estaba. */
+  reloadFromDisk: () => Promise<void>;
   close: (force?: boolean) => Promise<void>;
   dismissCloseConfirm: () => void;
   setView: (v: ViewId) => void;
@@ -68,6 +73,7 @@ const initial = {
   openError: null,
   roundtrip: null,
   revision: 0,
+  reloads: 0,
   pendingCount: 0,
   redoCount: 0,
   saving: false,
@@ -112,6 +118,33 @@ export const useSession = create<SessionState>((set, get) => ({
       return;
     }
     set({ opening: false });
+  },
+
+  async reloadFromDisk() {
+    const path = get().filePath;
+    if (!path) return;
+    const info = await reloadSave();
+    if (get().filePath !== path) return; // se cerro o se abrio otro mientras tanto
+    // A diferencia de `open`: la vista, la carpeta del juego y el modo se quedan; lo que dependia del documento viejo no.
+    set({
+      openInfo: info,
+      profile: info.profile,
+      revision: Math.max(info.revision ?? 0, get().revision),
+      reloads: get().reloads + 1,
+      pendingCount: 0,
+      redoCount: 0,
+      saveConfirm: null,
+      closeConfirm: false,
+      roundtrip: null,
+      editorRef: null,
+    });
+    usePc.getState().reset();
+    void semantic
+      .verifyRoundtrip()
+      .then((r) => {
+        if (get().filePath === path) set({ roundtrip: r });
+      })
+      .catch(() => undefined);
   },
 
   async close(force = false) {

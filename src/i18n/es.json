@@ -692,6 +692,7 @@
     "ballUltra": "Ultra Ball",
     "ballMaster": "Master Ball",
     "backup": "Crear copia de seguridad al guardar",
+    "autoReload": "Recargar el save si cambia en el disco (p. ej. al guardar en el juego)",
     "detection": "Detección de la base",
     "detectionBody": "Si la base detectada no es la correcta, elige otro perfil.",
     "noFile": "Abre una partida para ver la detección.",
@@ -1412,6 +1413,14 @@
     "renamePrompt": "Nombre del juego",
     "manage": "Gestiona aquí tus juegos y sus carpetas de guardado. Para abrir una partida, ve a la pantalla de inicio (Cerrar archivo).",
     "added": "«{{name}}» agregado a Mis juegos"
+  },
+  "saveSync": {
+    "reloaded": "El save cambió en el disco y se recargó.",
+    "failed": "El save cambió en el disco, pero no se pudo recargar. Se conserva la versión abierta.",
+    "conflictTitle": "El save cambió en el disco",
+    "conflictBody": "Otro programa (p. ej. el juego) guardó esta partida, pero en PESHeX tienes cambios sin guardar. Puedes recargar los datos del disco y descartar tus cambios, o mantener los tuyos: si luego guardas, se sobrescribirá lo que guardó el juego (se hace una copia de seguridad antes).",
+    "reload": "Recargar y descartar mis cambios",
+    "keep": "Mantener los míos"
   },
   "updater": {
     "title": "Actualizaciones",

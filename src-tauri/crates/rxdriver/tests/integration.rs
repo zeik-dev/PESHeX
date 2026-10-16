@@ -146,3 +146,47 @@ async fn los_errores_logicos_conservan_tipo_y_la_sesion_sigue_sana() {
     assert_eq!(pong["pong"], json!(true));
     session.shutdown().await;
 }
+
+#[tokio::test]
+async fn reload_relee_lo_que_guardo_otro_programa_y_un_archivo_a_medias_no_tumba_la_sesion() {
+    // Un fixture distinto al de las demas pruebas: `copy_fixture` da el mismo archivo temporal por nombre y se ejecutan en paralelo.
+    let fixture = copy_fixture("Partida.rxdata");
+    let fixture_str = fixture.to_str().expect("path UTF-8").to_string();
+    let original = std::fs::read(&fixture).expect("leer el fixture");
+    let otro = std::fs::read(repo_root().join("test_saves").join("Partida_2.rxdata")).expect("leer otro save");
+    assert_ne!(original.len(), otro.len(), "el test necesita dos saves de distinto tamano");
+
+    let mut session = spawn_test_session().await;
+    let opened = session
+        .call("open", json!({ "path": fixture_str, "autodetect": false }))
+        .await
+        .expect("open");
+    assert_eq!(opened["fileSize"], json!(original.len()));
+
+    // El juego guarda encima: reload devuelve el payload de open con el contenido nuevo y la sesion sigue
+    std::fs::write(&fixture, &otro).expect("reemplazar el save");
+    let reloaded = session.call("reload", json!({})).await.expect("reload tras un cambio externo");
+    assert_eq!(reloaded["fileSize"], json!(otro.len()));
+    assert!(reloaded["profile"].is_object(), "{reloaded}");
+    let rev_after = reloaded["revision"].as_u64().expect("revision en la respuesta");
+
+    // Archivo a medias (el juego aun escribe): error logico NO fatal y la sesion queda como estaba
+    std::fs::write(&fixture, &original[..100]).expect("truncar");
+    let err = session.call("reload", json!({})).await.expect_err("un archivo truncado no se puede recargar");
+    match &err {
+        DriverCallError::Logical { kind, .. } => assert_eq!(kind, "FormatError"),
+        other => panic!("se esperaba un error logico, llego {other:?}"),
+    }
+    assert!(!err.is_fatal(), "no debe dar la sesion por perdida");
+    let still = session.call("get_overview", json!({})).await.expect("la sesion sigue sana");
+    assert!(still.is_object());
+
+    // Termina de escribirse: ahora si, y la revision sigue subiendo
+    std::fs::write(&fixture, &original).expect("restaurar");
+    let again = session.call("reload", json!({})).await.expect("reload con el archivo completo");
+    assert_eq!(again["fileSize"], json!(original.len()));
+    assert!(again["revision"].as_u64().unwrap() > rev_after);
+
+    session.shutdown().await;
+    cleanup_fixture(&fixture);
+}

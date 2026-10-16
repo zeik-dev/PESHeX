@@ -689,6 +689,7 @@
     "ballUltra": "Ultra Ball",
     "ballMaster": "Master Ball",
     "backup": "Create a backup when saving",
+    "autoReload": "Reload the save when it changes on disk (e.g. when you save in the game)",
     "detection": "Base detection",
     "detectionBody": "If the detected base is wrong, pick another profile.",
     "noFile": "Open a save to see the detection.",
@@ -1409,6 +1410,14 @@
     "renamePrompt": "Game name",
     "manage": "Manage your games and their saves folders here. To open a save, go to the start screen (Close file).",
     "added": "\"{{name}}\" added to My games"
+  },
+  "saveSync": {
+    "reloaded": "The save changed on disk and was reloaded.",
+    "failed": "The save changed on disk, but it couldn't be reloaded. The open version was kept.",
+    "conflictTitle": "The save changed on disk",
+    "conflictBody": "Another program (e.g. the game) saved this file, but you have unsaved changes in PESHeX. You can reload the data from disk and discard your changes, or keep yours: if you save later, what the game saved will be overwritten (a backup is made first).",
+    "reload": "Reload and discard my changes",
+    "keep": "Keep mine"
   },
   "updater": {
     "title": "Updates",
