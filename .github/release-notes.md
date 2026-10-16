@@ -2,6 +2,12 @@
 
 Editor visual de partidas guardadas (`.rxdata`) de **Pokémon Essentials** y fangames basados en él.
 
+### Novedades de la 1.2.2
+- **La búsqueda de actualizaciones se ve**: al iniciar, la pantalla de inicio muestra «Buscando actualizaciones…» y después «Estás al día» (o el motivo si falló). Ya **no hay límite de una vez al día**: busca en cada inicio (el interruptor de Ajustes pasa a llamarse «Buscar actualizaciones al iniciar»).
+- **Botón de actualización**: en la pantalla de inicio aparece —solo cuando hay una versión nueva— un botón «Nueva versión X disponible» que abre la descarga y la instalación.
+- **Ajustes en la pantalla de inicio**: botón **Ajustes** sin necesidad de abrir una partida, con lo que no depende de ninguna: idioma, tema y color de la Poké Ball, copia de seguridad, zoom, *Mis juegos*, actualizaciones e información de la aplicación (versión, autor, licencia y enlaces).
+- **Recarga automática del save**: si guardas la partida en el juego mientras PESHeX la tiene abierta, PESHeX detecta el cambio y **recarga los datos solo** (conservando la vista, la carpeta del juego y el modo). Con cambios sin guardar te pregunta si recargar y descartarlos o mantener los tuyos; lo que guarda PESHeX no cuenta como un cambio externo, y se puede apagar en Ajustes.
+
 ### Novedades de la 1.2.1
 - **Pantalla de inicio sin scroll**: «Mis juegos» ya no queda debajo de la tarjeta. Ahora la tarjeta lleva dos tabs, **«Partidas recientes»** y **«Juegos guardados»**, y es el panel de cada tab el que se desplaza por dentro cuando hay muchos elementos: la página nunca hace scroll, a ningún tamaño de ventana. Recuerda el último tab elegido y, la primera vez, abre el de recientes (o el de juegos si todavía no has abierto nada). Los tabs se manejan también con el teclado (flechas, Inicio y Fin).
 - **Actualizador más fácil de diagnosticar**: cada actualización deja un registro, `updater.log` (en `%APPDATA%\com.zeik.peshex\updates\`), con lo que hizo y por qué falló si falla; el aviso de error trae el botón **«Mostrar el registro»**. El instalador de actualizaciones también puede aplicar un zip ya descargado (`PESHeX-Updater.exe apply-local`), y el build de Windows prueba ahora una actualización completa con los ejecutables reales —con el `.exe` en uso, rutas con espacios y `ñ`, y retirada de los archivos que ya no existen— antes de publicar el Release.

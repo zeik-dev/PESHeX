@@ -140,7 +140,7 @@ pestaña hace scroll.
 | **Cambios** | Cambios sin guardar, con deshacer/rehacer |
 | **Copias** | Las copias `.bak` que se crean al guardar: **comparar** (entrenador, mochila, Pokémon, Pokédex, mundo) con la partida actual o con otro archivo, y **restaurar** |
 | **Avanzado** | Todos los campos crudos del archivo (el explorador original), con filtro por ruta/tipo |
-| **Ajustes** | Idioma (ES por defecto), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (automático o manual 50 %–200 %), carpeta del juego (con **barra de progreso**), **Mis juegos**, **Actualizaciones**, modo HaX/HeX y detección de la base |
+| **Ajustes** | Idioma (ES por defecto), tema, color de Poké Ball, copia de seguridad, **zoom de la aplicación** (automático o manual 50 %–200 %), carpeta del juego (con **barra de progreso**), **Mis juegos**, **Actualizaciones**, modo HaX/HeX, **recarga automática del save** y detección de la base. Los que no dependen de ninguna partida (apariencia, zoom, Mis juegos, Actualizaciones y «Acerca de») también están en el botón **Ajustes** de la pantalla de inicio |
 
 Además: **búsqueda global y comandos** (`Ctrl+K`), `Ctrl+S` / `Ctrl+Z` / `Ctrl+Y` y
 **clonar / importar / exportar** Pokémon (texto de Pokémon Showdown y JSON propio).
@@ -172,7 +172,8 @@ comprobar. Si te estorba, vuelve a HaX en cualquier momento.
 
 ### Mis juegos y Save Scan
 
-La pantalla de inicio no hace scroll: una sola tarjeta con el botón de abrir, la zona de soltar y dos tabs —**Partidas
+La pantalla de inicio tiene un botón **Ajustes** (sin necesidad de abrir ninguna partida: apariencia, zoom, *Mis juegos*,
+actualizaciones e información de la aplicación) y no hace scroll: una sola tarjeta con el botón de abrir, la zona de soltar y dos tabs —**Partidas
 recientes** y **Juegos guardados**— cuyo panel se desplaza por dentro si hay muchos elementos. PESHeX recuerda tus fangames en
 una biblioteca (*Mis juegos*, en el tab *Juegos guardados* y en Ajustes):
 
@@ -194,7 +195,9 @@ PESHeX solo **lee** las carpetas de tus juegos; nunca escribe en ellas (salvo la
 ### Actualizaciones automáticas
 
 PESHeX busca en [GitHub Releases](https://github.com/zeik-dev/PESHeX/releases) si hay una versión nueva (al iniciar,
-como mucho una vez al día, o a mano en **Ajustes → Actualizaciones**) y te avisa con las notas de la versión:
+o a mano en **Ajustes → Actualizaciones**) y te avisa con las notas de la versión. Mientras busca, la pantalla de inicio
+lo dice («Buscando actualizaciones…» → «Estás al día»), y si hay una versión nueva aparece, solo entonces, un botón
+**Nueva versión X disponible** que abre la descarga:
 
 - **Descargar e instalar** baja el zip con barra de progreso, velocidad y tiempo restante, y se puede **pausar,
   reanudar y cancelar**. Si la red se corta o cierras PESHeX, lo descargado se conserva y se continúa desde ahí.
@@ -213,6 +216,22 @@ como mucho una vez al día, o a mano en **Ajustes → Actualizaciones**) y te av
 > **Límite honesto:** la comprobación detecta descargas corruptas o incompletas, pero como el ejecutable **no está
 > firmado** no prueba quién publicó el Release: confía en el repositorio `zeik-dev/PESHeX`. La carpeta de PESHeX debe
 > ser escribible (no la instales en *Archivos de programa*).
+
+### Recarga automática del save
+
+Si dejas PESHeX abierto mientras juegas y guardas la partida en el juego, PESHeX lo detecta y **recarga los datos solo**,
+sin cerrar nada ni perder la vista en la que estabas (en 1–2 segundos; la carpeta del juego vinculada y el modo HaX/HeX se
+conservan):
+
+- **Sin cambios sin guardar** en PESHeX: recarga en silencio y lo avisa.
+- **Con cambios sin guardar**: te pregunta —*Recargar y descartar mis cambios* o *Mantener los míos*—. Si los mantienes y
+  luego guardas, se sobrescribe lo que guardó el juego (la copia `.bak` de antes de guardar lo conserva).
+- Lo que PESHeX guarda él mismo (`Ctrl+S`, restaurar una copia) **no** cuenta como un cambio externo.
+- Si el juego aún está escribiendo el archivo, espera a que termine y reintenta; si no consigue leerlo, avisa y conserva lo
+  que tenías abierto. Se puede apagar en **Ajustes → Recargar el save si cambia en el disco**.
+
+Por dentro vigila el **tamaño y la fecha** del archivo abierto cada ~0,75 s (más robusto que las notificaciones del sistema
+con carpetas sincronizadas o de red) y el driver lo vuelve a leer con el comando `reload`.
 
 ### Escala y ventana
 
@@ -383,6 +402,9 @@ publica el Release con `SHA256SUMS.txt`.
 - **Hecho en la 1.2.1:** pantalla de inicio sin scroll con los tabs *Partidas recientes* / *Juegos guardados* (el panel
   desplaza por dentro), registro `updater.log` del actualizador con botón para mostrarlo, `PESHeX-Updater apply-local` y
   prueba de una actualización completa con los binarios reales en el build de Windows.
+- **Hecho en la 1.2.2:** la búsqueda de actualizaciones al iniciar se ve en la pantalla de inicio y ya no tiene límite
+  diario, botón **Ajustes** en el inicio con las opciones que no dependen de una partida, botón de **actualización
+  disponible** en el inicio y **recarga automática del save** cuando el juego lo reescribe.
 - **Pendiente / ideas:** firma de código del ejecutable (el flujo ya la admite
   con los secretos `WINDOWS_CERT_PFX_B64` y `WINDOWS_CERT_PASSWORD`), perfiles
   afinados con más saves reales de otras bases (Reborn, Rejuvenation, v16–v18…)

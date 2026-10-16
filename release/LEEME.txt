@@ -15,6 +15,13 @@ La escala de la aplicacion es automatica (se ajusta a la ventana); en Ajustes pu
 relativo a la legalidad (insignias, tarjeta del Resumen, pestana Legalidad, filtro "Solo ilegales")
 solo aparece con el modo HeX activo.
 
+Novedades de la 1.2.2: la busqueda de actualizaciones al iniciar se ve en la pantalla de inicio ("Buscando
+actualizaciones..." y despues "Estas al dia") y ya no tiene limite diario; la pantalla de inicio tiene un boton
+"Ajustes" (idioma, tema, zoom, Mis juegos, actualizaciones e informacion de la aplicacion, sin abrir ninguna partida) y
+un boton "Nueva version X disponible" que solo aparece cuando la hay; y si guardas la partida en el juego mientras
+PESHeX la tiene abierta, PESHeX recarga los datos solo (si tienes cambios sin guardar, te pregunta; se puede apagar en
+Ajustes).
+
 Novedades de la 1.2.1: la pantalla de inicio ya no hace scroll: "Mis juegos" pasa a un tab ("Juegos
 guardados") junto a "Partidas recientes", y cada tab se desplaza por dentro si tiene muchos elementos.
 Ademas, cada actualizacion deja un registro (updater.log) para saber que paso si algo falla.
@@ -79,8 +86,9 @@ Las partidas de Essentials v19 en adelante suelen estar en %APPDATA%\<NombreDelJ
 ACTUALIZACIONES
 ---------------
 PESHeX busca solo si hay una version nueva en https://github.com/zeik-dev/PESHeX/releases (al
-iniciar, como mucho una vez al dia; tambien a mano en Ajustes > Actualizaciones, donde puedes
-apagar la busqueda automatica). Si la hay, te muestra las novedades y te deja:
+iniciar, con el estado a la vista en la pantalla de inicio; tambien a mano en Ajustes >
+Actualizaciones, donde puedes apagar la busqueda automatica). Si la hay, te muestra las
+novedades y te deja:
 
   * Descargar e instalar: descarga con barra de progreso y puedes pausar, reanudar o cancelar. Si
     se corta la red o cierras PESHeX, lo descargado se conserva.
