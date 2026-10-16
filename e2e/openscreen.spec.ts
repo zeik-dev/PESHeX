@@ -202,3 +202,37 @@ test("English: tabs translated", async ({ page }) => {
   await expect(panel(page).getByRole("button", { name: "Add game folder" }).or(panel(page).getByRole("button", { name: /Add .*game/i }))).toBeVisible();
   await shot(page, "178-open-tabs-games-en-light");
 });
+
+test("Ajustes en el inicio: se abren sin ninguna partida, solo con lo que no depende de una, y «Atrás» vuelve", async ({ page }) => {
+  env = await setup(page);
+  await silenceGamePrompt(page, null, "es");
+  await page.goto("/");
+  await page.getByTestId("home-settings-button").click();
+  const settings = page.getByTestId("home-settings");
+  await expect(settings.getByRole("heading", { name: "Ajustes" })).toBeVisible();
+  await expect(settings.getByText("Actualizaciones")).toBeVisible();
+  await expect(settings.getByText("Acerca de")).toBeVisible();
+  await expect(settings.getByText("Randy A. Germosén (zeik-dev)")).toBeVisible();
+  await expect(settings.getByText("Detección de la base")).toHaveCount(0);
+  await shot(page, "180-home-settings-es-light");
+
+  // El idioma cambia en vivo y no hace falta ninguna partida
+  await settings.getByLabel("Idioma").selectOption("en");
+  await expect(settings.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await settings.getByRole("button", { name: "Back" }).click();
+  await expect(settings).toHaveCount(0);
+  await expect(page.getByTestId("open-tabs")).toBeVisible();
+});
+
+test("el botón de Ajustes del inicio no hace scroll a ningún tamaño", async ({ page }) => {
+  env = await setup(page);
+  await silenceGamePrompt(page, null, "es");
+  for (const size of [{ width: 900, height: 600 }, { width: 1280, height: 820 }, { width: 1920, height: 1080 }]) {
+    await page.setViewportSize(size);
+    await page.goto("/");
+    await expect(page.getByTestId("home-settings-button")).toBeVisible();
+    const sc = await pageScrolls(page);
+    expect(sc.doc, `scroll de página a ${size.width}×${size.height}`).toBe(false);
+    expect(sc.openPage, `scroll de la pantalla de inicio a ${size.width}×${size.height}`).toBe(false);
+  }
+});

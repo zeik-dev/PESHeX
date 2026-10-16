@@ -94,6 +94,7 @@ export const useSession = create<SessionState>((set, get) => ({
         view: "overview",
       });
       useSettings.getState().pushRecent(path);
+      useUi.getState().closeHomeSettings();
       // El modo (HeX/HaX) se recuerda entre sesiones: el driver arranca en HaX.
       if (useSettings.getState().mode !== (info.mode ?? "hax")) void semantic.setMode(useSettings.getState().mode).catch(() => undefined);
       // Carpeta del juego (nombres + sprites): en segundo plano, no bloquea el primer render.

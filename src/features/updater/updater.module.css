@@ -107,3 +107,46 @@
     transform: rotate(360deg);
   }
 }
+
+/* Boton de la pantalla de inicio (sobre la mitad roja): hay una version nueva, descargala e instalala */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--pb-ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgb(255 255 255 / 60%);
+  animation: updaterPulse 2.4s ease-out 3;
+}
+.pill:hover {
+  background: var(--surface-2, #f5f5f2);
+}
+.pill:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.pillReady {
+  background: var(--success, #1f9d55);
+  color: #fff;
+}
+.pillReady:hover {
+  background: var(--success, #1f9d55);
+  filter: brightness(1.08);
+}
+@keyframes updaterPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 60%);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgb(255 255 255 / 0%);
+  }
+}

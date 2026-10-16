@@ -695,6 +695,12 @@
     "gameFolder": "Game folder",
     "about": "About",
     "version": "v{{version}}",
+    "homeHint": "These are the app settings that don't depend on any save. Per-save options (detection, game folder, HeX/HaX mode…) appear once you open one.",
+    "aboutAuthor": "Author",
+    "aboutLicense": "License",
+    "aboutLinks": "Links",
+    "aboutRepo": "Source code",
+    "aboutReleases": "Releases",
     "zoom": {
       "title": "App zoom",
       "help": "Enlarges or shrinks the whole interface (50%–200%). It applies instantly and is remembered; the default is 100%.",
@@ -1476,6 +1482,9 @@
     },
     "badge": "Update available: {{version}}",
     "badgeReady": "Update {{version}} ready to install",
+    "homeAvailable": "Version {{version}} available",
+    "homeReady": "Install {{version}} and restart",
+    "homeBusy": "Updating to {{version}}…",
     "showLog": "Show the log",
     "logHint": "If the problem persists, send the updater.log file: this button opens its folder.",
     "logFailed": "The log could not be opened (it doesn't exist yet or access was denied)."

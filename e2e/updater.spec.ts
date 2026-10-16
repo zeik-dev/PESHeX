@@ -110,9 +110,22 @@ test("«Recordármelo luego» oculta el aviso y deja un botón en la cabecera pa
   const badge = page.getByTestId("update-badge");
   await expect(badge).toBeVisible();
   await expect(badge).toHaveAccessibleName("Actualización disponible: 9.9.9");
+  // En la pantalla de inicio es un boton con texto que sugiere descargar e instalar
+  await expect(badge).toContainText("Nueva versión 9.9.9 disponible");
+  await shot(page, "181-home-update-button-es-light");
   await badge.click();
   await expect(dialog(page)).toBeVisible();
   await expect(badge).toHaveCount(0);
+});
+
+test("sin version nueva el boton de actualizacion del inicio no existe", async ({ page }) => {
+  env = await setup(page);
+  env.bridge.updater.available = true;
+  env.bridge.updater.check = { status: "upToDate", current: "1.0.0", latest: "1.0.0" };
+  await silenceGamePrompt(page, null, "es");
+  await page.goto("/");
+  await expect(page.getByTestId("update-status")).toHaveText("Estás al día", { timeout: 15_000 });
+  await expect(page.getByTestId("update-badge")).toHaveCount(0);
 });
 
 test("una descarga en curso sigue al ocultar el dialogo y el boton de la cabecera la recupera", async ({ page }) => {

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { semantic } from "../../api/semantic";
 import { useT } from "../../lib/useT";
 import { useSession, toastError } from "../../stores/session";
-import { useSettings, type BallTheme, type ThemePref } from "../../stores/settings";
-import { Button, Card, Field, PageTitle, AppLogo, SelectField, Switch } from "../../ui";
-import type { LangPref } from "../../i18n";
+import { Button, Card, Field, PageTitle, SelectField } from "../../ui";
 import { ProfileCard } from "../shared/ProfileCard";
 import { ModeSwitch } from "../../app/ModeSwitch";
+import { AboutCard } from "./AboutCard";
 import { AssetsCard } from "./AssetsCard";
+import { GeneralCard } from "./GeneralCard";
 import { GameFolderCard } from "./GameFolderCard";
 import { GamesCard } from "./GamesCard";
 import { UpdatesCard } from "../updater/UpdatesCard";
@@ -19,7 +19,6 @@ const PROFILE_IDS = ["essentials_savedata", "essentials_legacy", "generic"] as c
 
 export function Settings() {
   const { t, dyn } = useT();
-  const s = useSettings();
   const profile = useSession((x) => x.profile);
   const setProfile = useSession((x) => x.setProfile);
   const pending = useSession((x) => x.pendingCount);
@@ -38,45 +37,7 @@ export function Settings() {
     <div className={shared.stack}>
       <PageTitle icon={<SettingsIcon />} title={t("settings.title")} />
 
-      <Card>
-        <div className={shared.formGrid}>
-          <Field label={t("settings.language")}>
-            {(id) => (
-              <SelectField id={id} value={s.lang as LangPref} onChange={(v) => s.setLang(v)}
-                options={[
-                  { value: "auto", label: t("settings.languageAuto") },
-                  { value: "es", label: "Español" },
-                  { value: "en", label: "English" },
-                ]} />
-            )}
-          </Field>
-          <Field label={t("settings.theme")}>
-            {(id) => (
-              <SelectField id={id} value={s.theme as ThemePref} onChange={(v) => s.setTheme(v)}
-                options={[
-                  { value: "auto", label: t("settings.themeAuto") },
-                  { value: "light", label: t("settings.themeLight") },
-                  { value: "dark", label: t("settings.themeDark") },
-                ]} />
-            )}
-          </Field>
-          <Field label={t("settings.ball")}>
-            {(id) => (
-              <SelectField id={id} value={s.ball as BallTheme} onChange={(v) => s.setBall(v)}
-                options={[
-                  { value: "classic", label: t("settings.ballClassic") },
-                  { value: "great", label: t("settings.ballGreat") },
-                  { value: "ultra", label: t("settings.ballUltra") },
-                  { value: "master", label: t("settings.ballMaster") },
-                ]} />
-            )}
-          </Field>
-        </div>
-        <label style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
-          <Switch checked={s.backup} onChange={s.setBackup} label={t("settings.backup")} />
-          {t("settings.backup")}
-        </label>
-      </Card>
+      <GeneralCard />
 
       <ZoomCard />
 
@@ -132,15 +93,7 @@ export function Settings() {
       <UpdatesCard />
       <AssetsCard />
 
-      <Card title={t("settings.about")}>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <AppLogo size={48} />
-          <div>
-            <strong>{t("app.name")}</strong> <span className="muted mono">{t("settings.version", { version: __APP_VERSION__ })}</span> — {t("app.tagline")}
-            <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>{t("app.disclaimer")}</p>
-          </div>
-        </div>
-      </Card>
+      <AboutCard />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { FolderOpen } from "lucide-react";
+import { FolderOpen, Settings as SettingsIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppLogo, PokeballSpinner, Button, Tabs, tabId, tabPanelId, cx } from "../ui";
@@ -11,6 +11,7 @@ import { UpdateStatus } from "../features/updater/UpdateStatus";
 import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
 import { useSettings, type OpenTab } from "../stores/settings";
+import { useUi } from "../stores/ui";
 import { LangSwitch, ThemeToggle } from "./AppearanceControls";
 import styles from "./app.module.css";
 
@@ -58,6 +59,7 @@ export function OpenScreen() {
   const savedTab = useSettings((s) => s.openTab);
   const setOpenTab = useSettings((s) => s.setOpenTab);
   const gamesCount = useGames((s) => s.games.length);
+  const openHomeSettings = useUi((s) => s.openHomeSettings);
   const [dropActive, setDropActive] = useState(false);
   // La pestaña se decide al entrar y no salta sola (p. ej. al quitar la última partida reciente se queda en esa pestaña).
   const [tab, setTab] = useState<OpenTab>(() => initialOpenTab(savedTab, recent.length));
@@ -76,7 +78,10 @@ export function OpenScreen() {
     <div className={styles.openPage}>
       <div className={styles.openTools}>
         <UpdateStatus />
-        <UpdateBadge />
+        <UpdateBadge variant="pill" />
+        <button type="button" className={styles.hbtn} onClick={openHomeSettings} data-testid="home-settings-button">
+          <SettingsIcon size={16} aria-hidden="true" /> {t("nav.settings")}
+        </button>
         <LangSwitch />
         <ThemeToggle />
       </div>

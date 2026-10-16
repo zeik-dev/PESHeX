@@ -11,11 +11,17 @@ import { initI18n } from "../i18n";
 import { useGames } from "../stores/games";
 import { useSession } from "../stores/session";
 import { useSettings } from "../stores/settings";
+import { resetUpdaterForTests, useUpdater } from "../stores/updater";
+import { useUi } from "../stores/ui";
 import { initialOpenTab, OpenScreen } from "./OpenScreen";
 
 const game = (id: string) => ({ id, root: `/j/${id}`, name: id, title: null, addedAt: 1, lastOpenedAt: null, saveDirs: [], lastScan: null, indexedAt: null, fingerprint: null });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  resetUpdaterForTests();
+  useUi.setState({ homeSettingsOpen: false });
+});
 
 beforeEach(() => {
   initI18n("es");
@@ -78,5 +84,35 @@ describe("OpenScreen", () => {
     useSession.setState({ opening: true });
     rerender(<OpenScreen />);
     await waitFor(() => expect(screen.queryByRole("tablist")).toBeNull());
+  });
+
+  it("el botón Ajustes abre los ajustes del inicio, sin necesidad de una partida", () => {
+    render(<OpenScreen />);
+    fireEvent.click(screen.getByRole("button", { name: "Ajustes" }));
+    expect(useUi.getState().homeSettingsOpen).toBe(true);
+  });
+
+  it("el botón de actualización está oculto salvo que haya una versión nueva, y al pulsarlo abre el diálogo", () => {
+    const { rerender } = render(<OpenScreen />);
+    expect(screen.queryByTestId("update-badge")).toBeNull();
+
+    const release = { tag: "v9.9.9", version: "9.9.9", name: "PESHeX 9.9.9", notes: "", url: "https://x", publishedAt: null, prerelease: false, asset: { name: "a.zip", url: "https://x/a.zip", size: 1 }, sumsUrl: "https://x/s" };
+    useUpdater.setState({ release, phase: "available", dialogOpen: false });
+    rerender(<OpenScreen />);
+    const pill = screen.getByTestId("update-badge");
+    expect(pill.textContent).toContain("Nueva versión 9.9.9 disponible");
+    fireEvent.click(pill);
+    expect(useUpdater.getState().dialogOpen).toBe(true);
+
+    // Con el diálogo abierto el botón se oculta (no se duplica)
+    rerender(<OpenScreen />);
+    expect(screen.queryByTestId("update-badge")).toBeNull();
+  });
+
+  it("el botón de actualización cambia su texto cuando la descarga está lista", () => {
+    const release = { tag: "v9.9.9", version: "9.9.9", name: "PESHeX 9.9.9", notes: "", url: "https://x", publishedAt: null, prerelease: false, asset: { name: "a.zip", url: "https://x/a.zip", size: 1 }, sumsUrl: "https://x/s" };
+    useUpdater.setState({ release, phase: "ready", dialogOpen: false });
+    render(<OpenScreen />);
+    expect(screen.getByTestId("update-badge").textContent).toContain("Instalar la 9.9.9 y reiniciar");
   });
 });

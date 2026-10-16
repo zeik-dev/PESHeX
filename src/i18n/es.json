@@ -698,6 +698,12 @@
     "gameFolder": "Carpeta del juego",
     "about": "Acerca de",
     "version": "v{{version}}",
+    "homeHint": "Aquí están los ajustes de la aplicación que no dependen de ninguna partida. Los de una partida (detección, carpeta del juego, modo HeX/HaX…) aparecen al abrirla.",
+    "aboutAuthor": "Autor",
+    "aboutLicense": "Licencia",
+    "aboutLinks": "Enlaces",
+    "aboutRepo": "Código fuente",
+    "aboutReleases": "Versiones publicadas",
     "zoom": {
       "title": "Zoom de la aplicación",
       "help": "Agranda o reduce toda la interfaz (50 %–200 %). Se aplica al instante y se recuerda; el valor por defecto es 100 %.",
@@ -1479,6 +1485,9 @@
     },
     "badge": "Actualización disponible: {{version}}",
     "badgeReady": "Actualización {{version}} lista para instalar",
+    "homeAvailable": "Nueva versión {{version}} disponible",
+    "homeReady": "Instalar la {{version}} y reiniciar",
+    "homeBusy": "Actualizando a la {{version}}…",
     "showLog": "Mostrar el registro",
     "logHint": "Si el problema sigue, envía el archivo updater.log: este botón abre su carpeta.",
     "logFailed": "No se pudo abrir el registro (todavía no existe o no hay permiso)."

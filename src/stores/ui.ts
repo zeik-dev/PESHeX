@@ -18,6 +18,10 @@ interface UiState {
   /** Destino al abrir "Mundo" desde la busqueda global. */
   worldTarget: { kind: WorldKind; q: string } | null;
   setWorldTarget: (t: { kind: WorldKind; q: string } | null) => void;
+  /** Ajustes de la pantalla de inicio (sin ninguna partida abierta). */
+  homeSettingsOpen: boolean;
+  openHomeSettings: () => void;
+  closeHomeSettings: () => void;
 }
 
 export const useUi = create<UiState>((set) => ({
@@ -32,4 +36,7 @@ export const useUi = create<UiState>((set) => ({
   setExportRef: (exportRef) => set({ exportRef }),
   worldTarget: null,
   setWorldTarget: (worldTarget) => set({ worldTarget }),
+  homeSettingsOpen: false,
+  openHomeSettings: () => set({ homeSettingsOpen: true }),
+  closeHomeSettings: () => set({ homeSettingsOpen: false }),
 }));

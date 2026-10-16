@@ -1,4 +1,5 @@
 import { useSession } from "../stores/session";
+import { useUi } from "../stores/ui";
 import { Toasts, cx } from "../ui";
 import { Advanced } from "../features/advanced/Advanced";
 import { Bag } from "../features/bag/Bag";
@@ -9,6 +10,7 @@ import { Overview } from "../features/overview/Overview";
 import { Party } from "../features/party/Party";
 import { Pokedex } from "../features/pokedex/Pokedex";
 import { PokemonEditorHost } from "../features/pokemon/PokemonEditor";
+import { HomeSettings } from "../features/settings/HomeSettings";
 import { Settings } from "../features/settings/Settings";
 import { Trainer } from "../features/trainer/Trainer";
 import { Unclassified } from "../features/unclassified/Unclassified";
@@ -47,6 +49,7 @@ const FILL_VIEWS = new Set(["party", "boxes", "pokedex"]);
 export default function App() {
   const filePath = useSession((s) => s.filePath);
   const fill = useSession((s) => FILL_VIEWS.has(s.view));
+  const homeSettings = useUi((s) => s.homeSettingsOpen);
   useAutoZoom();
   return (
     <>
@@ -64,6 +67,8 @@ export default function App() {
           <CommandPalette />
           <ShortcutsHost />
         </div>
+      ) : homeSettings ? (
+        <HomeSettings />
       ) : (
         <OpenScreen />
       )}
