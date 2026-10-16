@@ -212,6 +212,21 @@ Commands.register('open', needs_session: false) do |ctx, params|
   data
 end
 
+# Vuelve a leer el save del disco sin cerrar la sesion (lo guardo otro programa, p. ej. el juego): se conservan la carpeta del
+# juego vinculada y el modo, y se pierden los cambios sin guardar. Se lee y parsea ANTES de tocar la sesion: si el archivo esta a
+# medio escribir (FormatError) o no existe (FileNotFound), la sesion queda exactamente como estaba.
+Commands.register('reload', bumps: true) do |ctx, _params|
+  session = ctx.session
+  doc = load_document!(session.file_path)
+  session.replace_doc!(doc)
+
+  data = { roots: doc.roots.size, wrapper: doc.wrapper.to_s, fileSize: File.size(session.file_path),
+           indexState: 'idle', roundtripChecked: false, mode: session.mode }
+  data.merge!(Sem::Api.open_payload(session)) if defined?(Sem::Api)
+  Sem::GameApi.recalibrate!(session) if defined?(Sem::GameApi)
+  data
+end
+
 # Verificacion perezosa del roundtrip (la UI la pide justo despues de abrir).
 Commands.register('verify_roundtrip') do |ctx, _p|
   diff = ctx.session.roundtrip_diff

@@ -35,6 +35,22 @@ class Session
     @baseline_taken = false
   end
 
+  # Sustituye el documento por otro leido de nuevo del mismo archivo (el save cambio en el disco por fuera de PESHeX, p. ej.
+  # el jugador guardo desde el juego). Se pierde lo que dependia del documento anterior (cambios sin guardar, deshacer,
+  # indices, deteccion, linea base de legalidad); se conserva lo que no depende de el: carpeta del juego vinculada, modo,
+  # tamano de pagina y scripts. La revision no se reinicia (el que llama la sube) para que la UI no sirva datos viejos.
+  def replace_doc!(doc)
+    @doc = doc
+    @journal = Sem::Journal.new
+    @collector = nil
+    @oracle = nil
+    @semantic = nil
+    @roundtrip_diff = nil
+    @roundtrip_checked = false
+    reset_legality_baseline!
+    self
+  end
+
   # Verifica (una sola vez) que el documento se reconstruye byte a byte. Debe
   # ejecutarse ANTES de la primera mutacion, porque compara contra los bytes
   # originales; por eso es perezoso (cuesta ~1 s en un save de 9 MB) y el

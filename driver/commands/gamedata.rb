@@ -38,6 +38,16 @@ module Sem
       Api.state!(session).attach_game(nil, nil)
     end
 
+    # El save se volvio a leer del disco: la calibracion (cuanto coinciden sus Pokemon con los datos del juego) se recalcula con
+    # el save nuevo. Sin juego vinculado, o sin datos de especies, no hay nada que calibrar.
+    def recalibrate!(session)
+      return unless session.game&.species?
+
+      state = Api.state!(session)
+      session.game_calibration = GameData::Calibration.run(session.game, state.model)
+      state.attach_game(session.game, session.game_calibration)
+    end
+
     def link!(session, path, source)
       begin_link!(session, path, source)
       return if session.game_loading.nil?
