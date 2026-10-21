@@ -417,6 +417,11 @@ publica el Release con `SHA256SUMS.txt`.
 - Iconos de interfaz: [Lucide](https://lucide.dev) (ISC).
 - No se empaquetan sprites ni artwork oficiales: los gráficos se leen de la
   carpeta del juego del propio usuario.
-- Créditos de Archivos de Juegos y Assets (Juegos Testeados):
-    - [Pokémon Añil](https://lostiefangames.blogspot.com/p/pokemon-anil.html) - EricLostie
-    - [Pokémon Z](https://lostiefangames.blogspot.com/p/pokemon-z.html) - EricLostie
+
+## Créditos y Agradecimientos
+
+### Juegos probados y assets
+- [Pokémon Añil](https://lostiefangames.blogspot.com/p/pokemon-anil.html) - EricLostie
+- [Pokémon Z](https://lostiefangames.blogspot.com/p/pokemon-z.html) - EricLostie
+### Agradecimientos
+- **Kizuga** - Feedback y Testing
